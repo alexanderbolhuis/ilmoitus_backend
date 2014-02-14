@@ -1,5 +1,9 @@
 *.py[cod]
 
+# PyCharm settings
+.idea
+.idea/*
+
 # C extensions
 *.so
 
