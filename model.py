@@ -63,7 +63,7 @@ class DeclarationLine(db.Model):
 
 # DeclarationType Modelclass
 class DeclarationType(db.Model):
-    declaration_sub_types = db.ReferenceProperty(DeclarationSubType, collection_name="declarationSubTypes")
+    declaration_sub_types = db.ReferenceProperty(DeclarationSubType)
 
 # DeclarationSubType Modelclass
 class DeclarationSubType(db.Model):
