@@ -17,18 +17,15 @@ class Employee(Person):
 
 # AdministrativeEmployee Modelclass
 class AdministrativeEmployee(Employee):
-    def temp(self):
-        return True
+    pass
 
 # HumanResources Modelclass
 class HumanResources(AdministrativeEmployee):
-    def temp(self):
-        return True
+    pass
 
 # Supervisor Modelclass
 class Supervisor(AdministrativeEmployee):
-    def temp(self):
-        return True
+    pass
 
 # Department Modelclass
 class Department(db.Model):
@@ -39,10 +36,11 @@ class OpenDeclaration(polymodel.Polymodel):
     created_at = db.StringProperty() # DateProperty?
     created_by = db.ReferenceProperty(Employee)
     assigned_to = db.ReferenceProperty(Supervisor)
+    comment = db.StringProperty()
 
 # LockedDeclaration Modelclass
 class LockedDeclaration(OpenDeclaration):
-    assigned_to = db.ReferenceProperty(Supervisor, collection_name="assignedTo")
+    assigned_to = db.ReferenceProperty(Supervisor)
 
 # DeclinedDeclaration Modelclass
 class DeclinedDeclaration(LockedDeclaration):
@@ -73,5 +71,5 @@ class DeclarationSubType(db.Model):
     max_cost = db.IntegerProperty() # Optional
 
 class Attachment(db.Model):
-    declaration = db.ReferenceProperty(OpenDeclaration)
-    # Blob?
+    db.ReferenceProperty(OpenDeclaration)
+    blobstore.BlobReferenceProperty(required=True)
