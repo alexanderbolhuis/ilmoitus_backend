@@ -9,27 +9,49 @@ class Person(polymodel.Polymodel):
     last_name = db.StringProperty()
     email = db.StringProperty()
 
+    def details(self):
+        return {'id': self.key().id(),
+                'first_name': self.first_name,
+                'last_name': self.last_name,
+                'email': self.email}
+
 # Employee Modelclass
 class Employee(Person):
     employee_number = db.IntegerProperty()
     department = db.ReferenceProperty(Department)
     supervisor = db.ReferenceProperty(Supervisor)
 
+    def details(self):
+        super_dict = super(Person, self).details()
+        self_dict = {'employee_number': self.employee_number,
+                     'department': self.department,
+                     'supervisor': self.supervisor}
+        return dict(super_dict.items() + self_dict.items())
+
 # AdministrativeEmployee Modelclass
 class AdministrativeEmployee(Employee):
-    pass
+    def details(self):
+        super_dict = super(Employee, self).details()
+        return dict(super_dict.items())
 
 # HumanResources Modelclass
 class HumanResources(AdministrativeEmployee):
-    pass
+    def details(self):
+        super_dict = super(AdministrativeEmployee, self).details()
+        return dict(super_dict.items())
 
 # Supervisor Modelclass
 class Supervisor(AdministrativeEmployee):
-    pass
+    def details(self):
+        super_dict = super(AdministrativeEmployee, self).details()
+        return dict(super_dict.items())
 
 # Department Modelclass
 class Department(db.Model):
     name = db.StringProperty
+
+    def details(self):
+        return {'name': self.name}
 
 # OpenDeclaration Modelclass
 class OpenDeclaration(polymodel.Polymodel):
@@ -73,3 +95,8 @@ class DeclarationSubType(db.Model):
 class Attachment(db.Model):
     db.ReferenceProperty(OpenDeclaration)
     blobstore.BlobReferenceProperty(required=True)
+
+    def details(self):
+        # blobstore?
+        super_dict = super(Person, self).details()
+        return dict(super_dict.items())
