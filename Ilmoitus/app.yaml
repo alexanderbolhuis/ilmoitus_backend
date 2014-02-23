@@ -15,5 +15,5 @@ libraries:
 - name: PIL
   version: "1.1.7"
 
-#bullitins:
-#- appstats: on
+bullitins:
+- appstats: on

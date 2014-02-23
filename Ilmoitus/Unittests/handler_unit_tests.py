@@ -13,8 +13,7 @@ class EmployeeHandlerTest(PersonDataCreator):
             self.assertTrue(employee is not None)
 
     def test_get_all_employee_negative_no_employees(self):
-        pass
+        self.assertFalse(1 == 2)
 
     def test_get_all_employee_negative_no_persons(self):
-        pass
-
+        self.assertFalse(1 == 2)

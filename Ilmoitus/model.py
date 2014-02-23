@@ -5,38 +5,48 @@ from google.appengine.ext.ndb import polymodel
 from google.appengine.ext import blobstore
 
 
-# Person Modelclass
+# Person Model class
 class Person(polymodel.PolyModel):
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
     email = ndb.StringProperty()
 
 
-# Department Modelclass
+# Department Model class
 class Department(ndb.Model):
     name = ndb.StringProperty
-    f
 
-# Employee Modelclass
+
+# Employee Model class
 class Employee(Person):
     employee_number = ndb.IntegerProperty()
     department = ndb.KeyProperty(kind=Department)
-    supervisor = ndb.KeyProperty(kind=Supervisor)
+    supervisor = ndb.KeyProperty(kind="Supervisor")
+
+    @classmethod
+    def _get_kind(cls):
+        return "Employee"
 
 
 # AdministrativeEmployee Modelclass
 class AdministrativeEmployee(Employee):
-    pass
+    @classmethod
+    def _get_kind(cls):
+        return "AdministrativeEmployee"
 
 
 # HumanResources Modelclass
 class HumanResources(AdministrativeEmployee):
-    pass
+    @classmethod
+    def _get_kind(cls):
+        return "HumanResources"
 
 
 # Supervisor Modelclass
 class Supervisor(AdministrativeEmployee):
-    pass
+    @classmethod
+    def _get_kind(cls):
+        return "Supervisor"
 
 
 # OpenDeclaration Modelclass
@@ -67,12 +77,10 @@ class CompletelyApprovedDeclaration(SuperVisorApprovedDeclaration):
     approved_by = ndb.KeyProperty(kind=HumanResources)
 
 
-# DeclarationLine Modelclass
-class DeclarationLine(ndb.Model):
-    receipt_date = ndb.StringProperty()  # DateProperty?
-    cost = ndb.IntegerProperty()
-    declaration_type = ndb.KeyProperty(kind=DeclarationType)
-    declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
+# DeclarationSubType Modelclass
+class DeclarationSubType(ndb.Model):
+    name = ndb.StringProperty()
+    max_cost = ndb.IntegerProperty()  # Optional
 
 
 # DeclarationType Modelclass
@@ -80,10 +88,12 @@ class DeclarationType(ndb.Model):
     declaration_sub_types = ndb.KeyProperty(kind=DeclarationSubType)
 
 
-# DeclarationSubType Modelclass
-class DeclarationSubType(ndb.Model):
-    name = ndb.StringProperty()
-    max_cost = ndb.IntegerProperty()  # Optional
+# DeclarationLine Modelclass
+class DeclarationLine(ndb.Model):
+    receipt_date = ndb.StringProperty()  # DateProperty?
+    cost = ndb.IntegerProperty()
+    declaration_type = ndb.KeyProperty(kind=DeclarationType)
+    declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
 
 class Attachment(ndb.Model):

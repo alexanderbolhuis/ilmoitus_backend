@@ -41,6 +41,7 @@ class BaseTestClass(TestCase):
         self.testapp = webtest.TestApp(dummy_app)
         self.testbed = testbed.Testbed()
         self.testbed.activate()
+        self.testbed.init_memcache_stub()
         self.testbed.init_datastore_v3_stub()
 
     def tearDown(self):
@@ -49,7 +50,11 @@ class BaseTestClass(TestCase):
         This method simply deactivates the testbed application and is called
         automatically whenever a unittest class is finished with it's tests.
         """
-        self.testbed.deactivate()
+        try:
+            self.testbed.deactivate()
+        except AttributeError:
+            #If there was no testbed to begin with, return without doing anything
+            return
 
     def positive_test_stub_data_validity_model(self, data_object, header_string=None):
         """
