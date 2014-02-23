@@ -77,7 +77,7 @@ class LockedDeclaration(OpenDeclaration):
 # DeclinedDeclaration Model class
 class DeclinedDeclaration(LockedDeclaration):
     declined_by = ndb.KeyProperty(kind=AdministrativeEmployee)
-    
+
     def details(self):
         super_dict = super(DeclinedDeclaration, self).details()
         self_dict = {'declined_by': self.declined_by}
@@ -109,11 +109,11 @@ class DeclarationSubType(ndb.Model):
     name = ndb.StringProperty()
     max_cost = ndb.IntegerProperty()  # Optional
 
-    
+
 # DeclarationType Model class
 class DeclarationType(ndb.Model):
     declaration_sub_types = ndb.KeyProperty(kind=DeclarationSubType)
-    
+
     def details(self):
         return {'declaration_sub_types': self.declaration_sub_types}
 
@@ -124,7 +124,7 @@ class DeclarationLine(ndb.Model):
     cost = ndb.IntegerProperty()
     declaration_type = ndb.KeyProperty(kind=DeclarationType)
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
-    
+
     def details(self):
         return {'receipt_date': self.receipt_date,
                 'cost': self.cost,
