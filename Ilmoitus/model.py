@@ -1,49 +1,60 @@
 __author__ = 'alexanderbolhuis & sjorsboom'
 
-from google.appengine.ext import db
-from google.appengine.ext.db import polymodel
+from google.appengine.ext import ndb
+from google.appengine.ext.ndb import polymodel
+from google.appengine.ext import blobstore
 
 
-# Person ModelClass
-class Person(polymodel.Polymodel):
-    first_name = db.StringProperty()
-    last_name = db.StringProperty()
-    email = db.StringProperty()
+# Person Model class
+class Person(polymodel.PolyModel):
+    first_name = ndb.StringProperty()
+    last_name = ndb.StringProperty()
+    email = ndb.StringProperty()
 
 
-# Employee ModelClass
+# Department Model class
+class Department(ndb.Model):
+    name = ndb.StringProperty
+
+
+# Employee Model class
 class Employee(Person):
-    employee_number = db.IntegerProperty()
-    department = db.ReferenceProperty(Department)
-    supervisor = db.ReferenceProperty(Supervisor)
+    employee_number = ndb.IntegerProperty()
+    department = ndb.KeyProperty(kind=Department)
+    supervisor = ndb.KeyProperty(kind="Supervisor")
+
+    @classmethod
+    def _get_kind(cls):
+        return "Employee"
 
 
-# AdministrativeEmployee ModelClass
+# AdministrativeEmployee Model class
 class AdministrativeEmployee(Employee):
-    pass
+    @classmethod
+    def _get_kind(cls):
+        return "AdministrativeEmployee"
 
 
-# HumanResources ModelClass
+# HumanResources Model class
 class HumanResources(AdministrativeEmployee):
-    pass
+    @classmethod
+    def _get_kind(cls):
+        return "HumanResources"
 
 
-# Supervisor ModelClass
+# Supervisor Model class
 class Supervisor(AdministrativeEmployee):
-    pass
+    @classmethod
+    def _get_kind(cls):
+        return "Supervisor"
 
 
-# Department ModelClass
-class Department(db.Model):
-    name = db.StringProperty
-
-
-# OpenDeclaration ModelClass
-class OpenDeclaration(polymodel.Polymodel):
-    created_at = db.StringProperty()  # DateProperty?
-    created_by = db.ReferenceProperty(Employee)
-    assigned_to = db.ReferenceProperty(Supervisor)
-    comment = db.StringProperty()
+# OpenDeclaration Model class
+class OpenDeclaration(polymodel.PolyModel):
+    created_at = ndb.StringProperty()  # DateProperty?
+    created_by = ndb.KeyProperty(kind=Employee)
+    assigned_to = ndb.KeyProperty(kind=Supervisor)
+    comment = ndb.StringProperty()
 
     def details(self):
         return {'id': self.key().id(),
@@ -53,9 +64,9 @@ class OpenDeclaration(polymodel.Polymodel):
                 'comment': self.comment}
 
 
-# LockedDeclaration ModelClass
+# LockedDeclaration Model class
 class LockedDeclaration(OpenDeclaration):
-    assigned_to = db.ReferenceProperty(Supervisor)
+    assigned_to = ndb.KeyProperty(kind=Supervisor)
 
     def details(self):
         super_dict = super(LockedDeclaration, self).details()
@@ -63,9 +74,9 @@ class LockedDeclaration(OpenDeclaration):
         return dict(super_dict.items() + self_dict.items())
 
 
-# DeclinedDeclaration ModelClass
+# DeclinedDeclaration Model class
 class DeclinedDeclaration(LockedDeclaration):
-    declined_by = db.ReferenceProperty(AdministrativeEmployee)
+    declined_by = ndb.KeyProperty(kind=AdministrativeEmployee)
 
     def details(self):
         super_dict = super(DeclinedDeclaration, self).details()
@@ -73,9 +84,9 @@ class DeclinedDeclaration(LockedDeclaration):
         return dict(super_dict.items() + self_dict.items())
 
 
-# SuperVisorApprovedDeclaration ModelClass
+# SuperVisorApprovedDeclaration Model class
 class SuperVisorApprovedDeclaration(LockedDeclaration):
-    submitted_to_hr_by = db.ReferenceProperty(Supervisor)
+    submitted_to_hr_by = ndb.KeyProperty(kind=Supervisor)
 
     def details(self):
         super_dict = super(SuperVisorApprovedDeclaration, self).details()
@@ -83,9 +94,9 @@ class SuperVisorApprovedDeclaration(LockedDeclaration):
         return dict(super_dict.items() + self_dict.items())
 
 
-# CompletelyApprovedDeclaration ModelClass
+# CompletelyApprovedDeclaration Model class
 class CompletelyApprovedDeclaration(SuperVisorApprovedDeclaration):
-    approved_by = db.ReferenceProperty(HumanResources)
+    approved_by = ndb.KeyProperty(kind=HumanResources)
 
     def details(self):
         super_dict = super(CompletelyApprovedDeclaration, self).details()
@@ -93,12 +104,26 @@ class CompletelyApprovedDeclaration(SuperVisorApprovedDeclaration):
         return dict(super_dict.items() + self_dict.items())
 
 
-# DeclarationLine ModelClass
-class DeclarationLine(db.Model):
-    receipt_date = db.StringProperty()  # DateProperty?
-    cost = db.IntegerProperty()
-    declaration_type = db.ReferenceProperty(DeclarationType)
-    declaration_sub_type = db.ReferenceProperty(DeclarationSubType)
+# DeclarationSubType Model class
+class DeclarationSubType(ndb.Model):
+    name = ndb.StringProperty()
+    max_cost = ndb.IntegerProperty()  # Optional
+
+
+# DeclarationType Model class
+class DeclarationType(ndb.Model):
+    declaration_sub_types = ndb.KeyProperty(kind=DeclarationSubType)
+
+    def details(self):
+        return {'declaration_sub_types': self.declaration_sub_types}
+
+
+# DeclarationLine Model class
+class DeclarationLine(ndb.Model):
+    receipt_date = ndb.StringProperty()  # DateProperty?
+    cost = ndb.IntegerProperty()
+    declaration_type = ndb.KeyProperty(kind=DeclarationType)
+    declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
     def details(self):
         return {'receipt_date': self.receipt_date,
@@ -107,24 +132,6 @@ class DeclarationLine(db.Model):
                 'declaration_sub_type': self.declaration_sub_type}
 
 
-# DeclarationType ModelClass
-class DeclarationType(db.Model):
-    declaration_sub_types = db.ReferenceProperty(DeclarationSubType)
-
-    def details(self):
-        return {'declaration_sub_types': self.declaration_sub_types}
-
-
-# DeclarationSubType ModelClass
-class DeclarationSubType(db.Model):
-    name = db.StringProperty()
-    max_cost = db.IntegerProperty()  # Optional
-
-    def details(self):
-        return {'name': self.name,
-                'max_cost': self.max_cost}
-
-
-class Attachment(db.Model):
-    db.ReferenceProperty(OpenDeclaration)
+class Attachment(ndb.Model):
+    ndb.KeyProperty(kind=OpenDeclaration)
     blobstore.BlobReferenceProperty(required=True)
