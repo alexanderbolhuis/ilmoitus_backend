@@ -11,10 +11,19 @@ class Person(polymodel.PolyModel):
     last_name = ndb.StringProperty()
     email = ndb.StringProperty()
 
+    def details(self):
+        return {'id': self.key().id(),
+                'first_name': self.first_name,
+                'last_name': self.last_name,
+                'email': self.email}
+
 
 # Department Model class
 class Department(ndb.Model):
     name = ndb.StringProperty
+
+    def details(self):
+        return {'name': self.name}
 
 
 # Employee Model class
@@ -27,12 +36,23 @@ class Employee(Person):
     def _get_kind(cls):
         return "Employee"
 
+    def details(self):
+        super_dict = super(Person, self).details()
+        self_dict = {'employee_number': self.employee_number,
+                     'department': self.department,
+                     'supervisor': self.supervisor}
+        return dict(super_dict.items() + self_dict.items())
+
 
 # AdministrativeEmployee Model class
 class AdministrativeEmployee(Employee):
     @classmethod
     def _get_kind(cls):
         return "AdministrativeEmployee"
+
+    def details(self):
+        super_dict = super(Employee, self).details()
+        return dict(super_dict.items())
 
 
 # HumanResources Model class
@@ -41,12 +61,20 @@ class HumanResources(AdministrativeEmployee):
     def _get_kind(cls):
         return "HumanResources"
 
+    def details(self):
+        super_dict = super(AdministrativeEmployee, self).details()
+        return dict(super_dict.items())
+
 
 # Supervisor Model class
 class Supervisor(AdministrativeEmployee):
     @classmethod
     def _get_kind(cls):
         return "Supervisor"
+
+    def details(self):
+        super_dict = super(AdministrativeEmployee, self).details()
+        return dict(super_dict.items())
 
 
 # OpenDeclaration Model class
@@ -135,3 +163,6 @@ class DeclarationLine(ndb.Model):
 class Attachment(ndb.Model):
     ndb.KeyProperty(kind=OpenDeclaration)
     blobstore.BlobReferenceProperty(required=True)
+
+    def details(self):
+        return {'':""} # TODO details
