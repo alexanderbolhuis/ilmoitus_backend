@@ -12,6 +12,11 @@ class Person(polymodel.PolyModel):
     email = ndb.StringProperty()
 
 
+# Department Modelclass
+class Department(ndb.Model):
+    name = ndb.StringProperty
+    f
+
 # Employee Modelclass
 class Employee(Person):
     employee_number = ndb.IntegerProperty()
@@ -32,11 +37,6 @@ class HumanResources(AdministrativeEmployee):
 # Supervisor Modelclass
 class Supervisor(AdministrativeEmployee):
     pass
-
-
-# Department Modelclass
-class Department(ndb.Model):
-    name = ndb.StringProperty
 
 
 # OpenDeclaration Modelclass
