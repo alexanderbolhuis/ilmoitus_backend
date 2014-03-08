@@ -15,8 +15,25 @@ class BaseRequestHandler(webapp.RequestHandler):
         return limit
 
     def get_header_offset(self):
-        offset = self.request.get("offset", default_value=20)
+        offset = self.request.get("offset", default_value=0)
         return offset
+
+
+class DefaultHandler(BaseRequestHandler):
+    def get(self):
+        html_data = """
+<html>
+ <head>
+  <title>Default Home Page</title>
+ </head>
+ <body>
+  <h1>Default Home Page</h1>
+    <p>This is the default home page, meaning that the requested url:<br /><a href=\"""" + str(self.request.url) \
+                    + """\">""" + str(self.request.uri) + """</a><br />did NOT
+    match on any known urls. Check for typo's and try again.</p>
+ </body>
+</html>"""
+        response_module.give_hard_response(self, html_data)
 
 
 class AllPersonsHandler(BaseRequestHandler):
@@ -54,7 +71,8 @@ application = webapp.WSGIApplication(
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
         ('/employees', AllEmployeesHandler),
-        ('/employees/(.*)', SpecificEmployeeHandler)
+        ('/employees/(.*)', SpecificEmployeeHandler),
+        ('.*', DefaultHandler)
     ],
     debug=True)  # if debug is set to false,
-    # any uncaught exceptions will only trigger a server error without any details
+# any uncaught exceptions will only trigger a server error without any details

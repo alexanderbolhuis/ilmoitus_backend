@@ -2,6 +2,7 @@ __author__ = 'Sjors van Lemmen'
 from unittest import TestCase
 import webtest
 import webapp2
+import json
 from google.appengine.ext import testbed
 
 
@@ -136,7 +137,7 @@ class BaseTestClass(TestCase):
                 print e.msg
 
     def positive_test_stub_handler(self, path, request_type, response_body_should_be_defined=True,
-                                   expected_content_type='application/json'):
+                                   expected_content_type='application/json', body_data_should_have_results=True):
         """
         This method serves as a base stub for all positive request handler unit tests. It will get
         the response from the testapp on the given URL path and the given request type, or fail
@@ -152,7 +153,7 @@ class BaseTestClass(TestCase):
             The path parameter specifies to which url the testapp should post the request.
         :param request_type:
             A string that specifies what type of request should be sent to the testapp
-            (i.e. a GET-, POST-, PUT- or DELETE request).
+            (i.e. a GET-, POST-, PUT- or DELETE request). Will be transformed to lowercase.
         :param response_body_should_be_defined:
             (Optional) Used to indicate whether this method should also check if the given response's
             body field is set (is not None). Default value is True.
@@ -160,10 +161,15 @@ class BaseTestClass(TestCase):
             (Optional) A string that indicates what the type of the response should be
             (i.e. 'text/html', 'application/json' etc.). If this is set to None, this check will be
             skipped. Default value is "application/json".
+        :param body_data_should_have_results:
+            (Optional) Used to indicate whether this method should also check if the given response's
+            body field actually contains results (used for checking non empty lists and dictionaries).
+            Default value is True.
         """
         #Retrieve the correct request reference
         try:
-            request_reference = getattr(self.testapp, request_type)
+            lowercase_request_type = request_type.lower()
+            request_reference = getattr(self.testapp, lowercase_request_type)
         except AttributeError:
             self.fail("No valid method found for the request_type of '" + str(request_type) +
                       "'.\nrequest_type must be a string that indicates what type of request should be " +
@@ -178,7 +184,7 @@ class BaseTestClass(TestCase):
                       "\n\tError Message:" +
                       "\n\t\t" + str(appError.message))
         except Exception:
-            self.fail("Error while trying to send the request to the testapp. Are you sure that the given request-type"
+            self.fail("Error while trying to send the request to the testapp. Are you sure that the given request-type "
                       "is a valid http request method (i.e. GET, POST, PUT or DELETE)?")
 
         #Execute the basic tests
@@ -190,6 +196,13 @@ class BaseTestClass(TestCase):
             self.assertEqual(response.content_type, expected_content_type)
         if response_body_should_be_defined:
             self.assertIsNotNone(response.body)
+        if body_data_should_have_results:
+            try:
+                body_data = json.loads(response.body)
+            except ValueError:
+                self.fail("Test failed! The response body did not contain valid JSON data.")
+            self.assertTrue(len(body_data) > 0,
+                            "Test failed! There should be results in the response, but none were found.")
 
     def negative_test_stub_handler(self, path, request_type, expected_error_code):
         """
@@ -231,7 +244,7 @@ class BaseTestClass(TestCase):
             #We want this to happen! See if the appError variable is properly initialized.
             self.assertIsNotNone(appError)
             self.assertTrue(
-                expected_error_code
+                str(expected_error_code)
                 in appError.message)  # Bit ugly, but only way possible to check for the given code specifically
             print "Succesfully detected an error on path: '" + path + "':"
             print "\t" + appError.message

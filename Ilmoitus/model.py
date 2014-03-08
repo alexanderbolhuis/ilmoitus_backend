@@ -12,7 +12,7 @@ class Person(polymodel.PolyModel):
     email = ndb.StringProperty()
 
     def details(self):
-        return {'id': self.key().id(),
+        return {'id': self.key.integer_id(),
                 'first_name': self.first_name,
                 'last_name': self.last_name,
                 'email': self.email}
@@ -37,10 +37,11 @@ class Employee(Person):
         return "Employee"
 
     def details(self):
-        super_dict = super(Person, self).details()
+        super_obj = super(Employee, self)
+        super_dict = super_obj.details()
         self_dict = {'employee_number': self.employee_number,
-                     'department': self.department,
-                     'supervisor': self.supervisor}
+                     'department': self.department.integer_id(),
+                     'supervisor': self.supervisor.integer_id()}
         return dict(super_dict.items() + self_dict.items())
 
 
@@ -51,7 +52,7 @@ class AdministrativeEmployee(Employee):
         return "AdministrativeEmployee"
 
     def details(self):
-        super_dict = super(Employee, self).details()
+        super_dict = super(AdministrativeEmployee, self).details()
         return dict(super_dict.items())
 
 
@@ -62,7 +63,7 @@ class HumanResources(AdministrativeEmployee):
         return "HumanResources"
 
     def details(self):
-        super_dict = super(AdministrativeEmployee, self).details()
+        super_dict = super(HumanResources, self).details()
         return dict(super_dict.items())
 
 
@@ -73,7 +74,7 @@ class Supervisor(AdministrativeEmployee):
         return "Supervisor"
 
     def details(self):
-        super_dict = super(AdministrativeEmployee, self).details()
+        super_dict = super(Supervisor, self).details()
         return dict(super_dict.items())
 
 
@@ -87,8 +88,8 @@ class OpenDeclaration(polymodel.PolyModel):
     def details(self):
         return {'id': self.key().id(),
                 'created_at': self.created_at,
-                'created_by': self.created_by,
-                'assigned_to': self.assigned_to,
+                'created_by': self.created_by.integer_id(),
+                'assigned_to': self.assigned_to.integer_id(),
                 'comment': self.comment}
 
 
@@ -98,7 +99,7 @@ class LockedDeclaration(OpenDeclaration):
 
     def details(self):
         super_dict = super(LockedDeclaration, self).details()
-        self_dict = {'assigned_to': self.assigned_to}
+        self_dict = {'assigned_to': self.assigned_to.integer_id()}
         return dict(super_dict.items() + self_dict.items())
 
 
@@ -108,7 +109,7 @@ class DeclinedDeclaration(LockedDeclaration):
 
     def details(self):
         super_dict = super(DeclinedDeclaration, self).details()
-        self_dict = {'declined_by': self.declined_by}
+        self_dict = {'declined_by': self.declined_by.integer_id()}
         return dict(super_dict.items() + self_dict.items())
 
 
@@ -118,7 +119,7 @@ class SuperVisorApprovedDeclaration(LockedDeclaration):
 
     def details(self):
         super_dict = super(SuperVisorApprovedDeclaration, self).details()
-        self_dict = {'submitted_to_hr_by': self.submitted_to_hr_by}
+        self_dict = {'submitted_to_hr_by': self.submitted_to_hr_by.integer_id()}
         return dict(super_dict.items() + self_dict.items())
 
 
@@ -128,7 +129,7 @@ class CompletelyApprovedDeclaration(SuperVisorApprovedDeclaration):
 
     def details(self):
         super_dict = super(CompletelyApprovedDeclaration, self).details()
-        self_dict = {'approved_by': self.approved_by}
+        self_dict = {'approved_by': self.approved_by.integer_id()}
         return dict(super_dict.items() + self_dict.items())
 
 
@@ -143,7 +144,7 @@ class DeclarationType(ndb.Model):
     declaration_sub_types = ndb.KeyProperty(kind=DeclarationSubType)
 
     def details(self):
-        return {'declaration_sub_types': self.declaration_sub_types}
+        return {'declaration_sub_types': self.declaration_sub_types.integer_id()}
 
 
 # DeclarationLine Model class
@@ -156,8 +157,8 @@ class DeclarationLine(ndb.Model):
     def details(self):
         return {'receipt_date': self.receipt_date,
                 'cost': self.cost,
-                'declaration_type': self.declaration_type,
-                'declaration_sub_type': self.declaration_sub_type}
+                'declaration_type': self.declaration_type.integer_id(),
+                'declaration_sub_type': self.declaration_sub_type.integer_id()}
 
 
 class Attachment(ndb.Model):
