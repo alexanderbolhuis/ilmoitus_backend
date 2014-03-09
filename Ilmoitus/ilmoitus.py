@@ -135,10 +135,15 @@ class LogoutHandler(BaseRequestHandler):
 class DetailsHandler(BaseRequestHandler):
 
     def get(self):
-        user = users.get_current_user()
-        if user is not None:
-            print "ingelogd"
-            response_module.respond_with_object_details_by_id(self, model.Employee, user.key.integer_id())
+        current_logged_in_user = users.get_current_user()
+        if current_logged_in_user is not None:
+            person = model.Person.query().filter(model.Person.email == current_logged_in_user.email())
+            temp = person.get()
+            if temp is not None:
+                response_module.give_response(self, temp)
+            else:
+                print "Persoon bestaat niet"
+                self.abort(500)
         else:
             print "NIET ingelogd"
             self.abort(500)

@@ -229,6 +229,15 @@ class AuthorizationStatusHandler(BaseTestClass):
         #We will try to make a request for person2's status whilst we are logged in as person (number one)
         self.negative_test_stub_handler(path, "get", 404)
 
+    def testje(self):
+        user_is_logged_in = True
+        user_is_admin = '1'
+
+        path = "/details/"
+        self.set_up_custom_path([(path, main_application.DetailsHandler)])
+
+        self.positive_test_stub_handler(path, "get")
+
 class EmployeeDetailsHandlerTest(BaseTestClass):
     def test_get_employee_details_not_logged_in(self):
         path = "/details/"
