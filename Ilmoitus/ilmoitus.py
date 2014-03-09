@@ -131,6 +131,11 @@ class LogoutHandler(BaseRequestHandler):
             #TODO: research/discuss how to make this work cross platform (how will iOS & Android handle redirects?)
             self.redirect("/login_page")
 
+class SpecificEmployeeDetailsHandler(BaseRequestHandler):
+    def get(self, employee_id):
+        response_module.respond_with_object_details_by_id(self,
+                                                          model.Employee,
+                                                          employee_id)
 
 application = webapp.WSGIApplication(
     [
@@ -138,6 +143,7 @@ application = webapp.WSGIApplication(
         ('/persons/(.*)', SpecificPersonHandler),
         ('/employees', AllEmployeesHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
+        ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('/auth/login/(.*)', LoginHandler),
         ('/auth/logout/(.*)', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!

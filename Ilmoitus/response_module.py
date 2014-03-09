@@ -15,7 +15,7 @@ def respond_with_object_details_by_id(request_handler, class_reference, object_i
         #TODO: give proper error response here
         request_handler.abort(404)
     #TODO: make generic method in model that will dump JSON data
-    give_response(request_handler, json.dumps(item))
+    give_response(request_handler, json.dumps(item.details()))
 
 
 def respond_with_object_collection_by_class(request_handler, class_reference, limit, offset):
