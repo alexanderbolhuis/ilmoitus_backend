@@ -204,6 +204,8 @@ class BaseTestClass(TestCase):
             self.assertTrue(len(body_data) > 0,
                             "Test failed! There should be results in the response, but none were found.")
 
+        return response
+
     def negative_test_stub_handler(self, path, request_type, expected_error_code):
         """
         This method serves as a base stub for all negative request handler unit tests. It will get

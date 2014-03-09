@@ -2,6 +2,8 @@ __author__ = 'Sjors van Lemmen'
 import webapp2 as webapp
 import response_module
 import model
+import json
+from google.appengine.api import users
 
 
 class BaseRequestHandler(webapp.RequestHandler):
@@ -66,12 +68,79 @@ class SpecificEmployeeHandler(BaseRequestHandler):
                                                           employee_id)
 
 
+class AuthorizationStatusHandler(BaseRequestHandler):
+    def get(self, user_id):
+        safe_id = 0
+        try:
+            safe_id = int(user_id)
+        except ValueError:
+            #TODO: error messages;
+            # the given user id was of an invalid format; request could not be handled
+            self.abort(400)
+
+        person = model.Person.get_by_id(safe_id)
+        #Create a default data dictionary to limit code duplication
+        response_data = {"id": user_id, "is_logged_in": False,
+                         "is_application_admin": False}
+        if person is not None:
+            user = users.get_current_user()
+            if user is not None:
+                if user.email() == person.email:  # One can only ask status on him/herself!
+                    response_data["is_logged_in"] = True
+                    response_data["is_application_admin"] = users.is_current_user_admin()
+                    response_module.give_response(self, json.dumps(response_data))
+                else:
+                    #TODO: error messages;
+                    # the request attempted to retrieve the status of someone else, which is illegal
+                    self.abort(500)
+            else:
+                #Requested user was not logged in, which makes it impossible to check if
+                #   a. The id of the requested user belonged to the logged in user (since there is none)
+                #   b. The id of the requested user belonged to an admin account
+                #      (since we don't know what Google account belongs to the account)
+                response_data["is_application_admin"] = "unknown"
+                response_module.give_response(self, json.dumps(response_data))
+        else:
+            #TODO: error messages;
+            #Person is not known in the application
+            self.abort(404)
+
+
+class LoginHandler(BaseRequestHandler):
+    def get(self, user_id):
+        user = users.get_current_user()
+        if user is None:
+            self.redirect(users.create_login_url('/auth/login/' + str(user_id)))
+            # We will return to the same url after logging in since this handler will than check if the login
+            # was really successful, and automatically redirect to the main page if so.
+        else:
+            #TODO: redirect here to the actual "main" page
+            #TODO: research/discuss how to make this work cross platform (how will iOS & Android handle redirects?)
+            self.redirect("/main_page")
+
+
+class LogoutHandler(BaseRequestHandler):
+    def get(self, user_id):
+        user = users.get_current_user()
+        if user is not None:
+            self.redirect(users.create_logout_url('/auth/logout/' + str(user_id)))
+            # We will return to the same url after logging out since this handler will than check if the login
+            # was really successful, and automatically redirect to the login page if so.
+        else:
+            #TODO: redirect here to the actual login page
+            #TODO: research/discuss how to make this work cross platform (how will iOS & Android handle redirects?)
+            self.redirect("/login_page")
+
+
 application = webapp.WSGIApplication(
     [
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
         ('/employees', AllEmployeesHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
+        ('/auth/login/(.*)', LoginHandler),
+        ('/auth/logout/(.*)', LogoutHandler),
+        ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
         ('.*', DefaultHandler)
     ],
     debug=True)  # if debug is set to false,
