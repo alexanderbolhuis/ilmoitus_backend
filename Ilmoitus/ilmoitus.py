@@ -48,7 +48,7 @@ class AllPersonsHandler(BaseRequestHandler):
 
 class SpecificPersonHandler(BaseRequestHandler):
     def get(self, person_id):
-        response_module.respond_with_object_details_by_id(self,
+        response_module.respond_with_object_by_id(self,
                                                           model.Employee,
                                                           person_id)  # Since NDB, keynames are also valid ID's!
 
@@ -63,7 +63,7 @@ class AllEmployeesHandler(BaseRequestHandler):
 
 class SpecificEmployeeHandler(BaseRequestHandler):
     def get(self, employee_id):
-        response_module.respond_with_object_details_by_id(self,
+        response_module.respond_with_object_by_id(self,
                                                           model.Employee,
                                                           employee_id)
 
