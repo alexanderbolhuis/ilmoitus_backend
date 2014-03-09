@@ -1,5 +1,6 @@
 __author__ = 'Sjors van Lemmen'
 import model
+import random
 
 
 class PersonDataCreator():
@@ -25,6 +26,7 @@ class PersonDataCreator():
         employee.supervisor = supervisor.key
         employee.department = department.key
         employee.employee_number = employee_number
+        employee.wants_email_notifications = bool(random.randint(0, 1))
         employee.put()
         return employee
 

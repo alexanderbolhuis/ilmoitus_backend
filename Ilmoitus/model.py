@@ -31,6 +31,7 @@ class Employee(Person):
     employee_number = ndb.IntegerProperty()
     department = ndb.KeyProperty(kind=Department)
     supervisor = ndb.KeyProperty(kind="Supervisor")
+    wants_email_notifications = ndb.BooleanProperty()
 
     @classmethod
     def _get_kind(cls):
@@ -41,7 +42,8 @@ class Employee(Person):
         super_dict = super_obj.details()
         self_dict = {'employee_number': self.employee_number,
                      'department': self.department.integer_id(),
-                     'supervisor': self.supervisor.integer_id()}
+                     'supervisor': self.supervisor.integer_id(),
+                     'wants_email_notifications': self.wants_email_notifications}
         return dict(super_dict.items() + self_dict.items())
 
 

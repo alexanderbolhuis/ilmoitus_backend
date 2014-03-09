@@ -264,3 +264,17 @@ class EmployeeDetailsHandlerTest(BaseTestClass):
         path = "/employees/details/"
 
         self.negative_test_stub_handler(path, "get", 500)
+
+
+class UserSettingsHandlerTest(BaseTestClass):
+    def test_get_user_settings(self):
+        path = "/user/settings/(.*)"
+        self.set_up_custom_path([(path, main_application.UserSettingsHandler)])
+
+        number_of_employees = random.randint(1, 10)
+        test_person = PersonDataCreator.create_valid_employee_data(0)
+        for i in range(0, number_of_employees):
+            PersonDataCreator.create_valid_employee_data(i+1)
+
+        path = '/user/settings/' + str(test_person.key.integer_id())
+        self.positive_test_stub_handler(path, "get")

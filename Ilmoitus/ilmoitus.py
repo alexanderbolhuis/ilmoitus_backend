@@ -49,8 +49,8 @@ class AllPersonsHandler(BaseRequestHandler):
 class SpecificPersonHandler(BaseRequestHandler):
     def get(self, person_id):
         response_module.respond_with_object_by_id(self,
-                                                          model.Employee,
-                                                          person_id)  # Since NDB, keynames are also valid ID's!
+                                                  model.Employee,
+                                                  person_id)  # Since NDB, keynames are also valid ID's!
 
 
 class AllEmployeesHandler(BaseRequestHandler):
@@ -64,8 +64,8 @@ class AllEmployeesHandler(BaseRequestHandler):
 class SpecificEmployeeHandler(BaseRequestHandler):
     def get(self, employee_id):
         response_module.respond_with_object_by_id(self,
-                                                          model.Employee,
-                                                          employee_id)
+                                                  model.Employee,
+                                                  employee_id)
 
 
 class AuthorizationStatusHandler(BaseRequestHandler):
@@ -131,16 +131,26 @@ class LogoutHandler(BaseRequestHandler):
             #TODO: research/discuss how to make this work cross platform (how will iOS & Android handle redirects?)
             self.redirect("/login_page")
 
+
 class SpecificEmployeeDetailsHandler(BaseRequestHandler):
     def get(self, employee_id):
         response_module.respond_with_object_details_by_id(self,
                                                           model.Employee,
                                                           employee_id)
 
+
+class UserSettingsHandler(BaseRequestHandler):
+    def get(self, user_id):
+        response_module.respond_with_object_details_by_id(self,
+                                                          model.Employee,
+                                                          user_id)
+
+
 application = webapp.WSGIApplication(
     [
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
+        ('/user/settings/(.*)', UserSettingsHandler),
         ('/employees', AllEmployeesHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
