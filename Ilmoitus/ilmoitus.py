@@ -132,15 +132,15 @@ class LogoutHandler(BaseRequestHandler):
             self.redirect("/login_page")
 
 
-class DetailsHandler(BaseRequestHandler):
-
+class CurrentUserDetailsHandler(BaseRequestHandler):
+    #todo: new global function for getting the current user
     def get(self):
         current_logged_in_user = users.get_current_user()
         if current_logged_in_user is not None:
-            person = model.Person.query().filter(model.Person.email == current_logged_in_user.email())
-            temp = person.get()
-            if temp is not None:
-                response_module.give_response(self, temp)
+            employee_query = model.Employee.query().filter(model.Employee.email == current_logged_in_user.email())
+            query_result = employee_query.get()
+            if query_result is not None:
+                response_module.give_response(self, query_result.details())
             else:
                 print "Persoon bestaat niet"
                 self.abort(500)
@@ -155,7 +155,7 @@ application = webapp.WSGIApplication(
         ('/persons/(.*)', SpecificPersonHandler),
         ('/employees', AllEmployeesHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
-        ('/details/', DetailsHandler),
+        ('/current_user_details/', CurrentUserDetailsHandler),
         ('/auth/login/(.*)', LoginHandler),
         ('/auth/logout/(.*)', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
