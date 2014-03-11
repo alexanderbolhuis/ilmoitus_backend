@@ -2,6 +2,20 @@ __author__ = 'Sjors van Lemmen'
 import webapp2 as webapp
 import response_module
 import model
+from google.appengine.api import users
+
+
+def get_current_employee(self):
+    current_logged_in_user = users.get_current_user()
+    if current_logged_in_user is not None:
+        employee_query = model.Employee.query().filter(model.Employee.email == current_logged_in_user.email())
+        query_result = employee_query.get()
+        if query_result is not None:
+            return query_result
+        else:
+            return False
+    else:
+        return False
 
 
 class BaseRequestHandler(webapp.RequestHandler):
