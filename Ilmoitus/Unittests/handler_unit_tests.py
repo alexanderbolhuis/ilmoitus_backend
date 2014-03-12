@@ -1,6 +1,7 @@
 __author__ = 'Sjors van Lemmen'
 import random
 import json
+
 import ilmoitus as main_application
 from test_data_creator import PersonDataCreator
 from Base.base_test_methods import BaseTestClass
@@ -39,20 +40,12 @@ class EmployeeHandlerTest(BaseTestClass):
         self.negative_test_stub_handler(path, "get", 404)
 
 
-class AuthorizationStatusHandler(BaseTestClass):
-    """
-        These tests all rely on the users API, and therefore in each test, the users stub will be initialized along
-        the memcache and datastore stub.
-
-        This test consists of several parts: one that checks for a user that is logged in but not an admin,
-        one that checks for when a user is not logged in (admin is then unknown) and one that checks for when
-        a user is logged in AND is an admin.
-    """
-
-    def setup_user_data(self, user_is_logged_in, user_is_admin):
+class BaseAuthorizationHandler(BaseTestClass):
+    def setup_server_with_user(self, handler_routes, user_is_logged_in, user_is_admin):
         """
             Helper method to set-up all data needed in these unit tests.
 
+            :param handler_routes: List of tuples that contain all url and handlers that will be set-up for this test.
             :param user_is_logged_in: Boolean that indicates whether a user mock-up should be made or not.
             :param user_is_admin: String that indicates whether or not the user is admin or not.
                 Only valid values are '0' (no admin) and '1' (is admin). Any other values will raise an Exception.
@@ -62,7 +55,8 @@ class AuthorizationStatusHandler(BaseTestClass):
                     -"path" : A url path that contains the id of the random person at the end (example: "/auth/531857")
         """
         path = '/auth/(.*)'
-        self.set_up_custom_path([(path, main_application.AuthorizationStatusHandler)])
+
+        self.set_up_custom_path(handler_routes)
         self.testbed.init_user_stub()
 
         number_of_persons = random.randint(3, 10)
@@ -94,7 +88,8 @@ class AuthorizationStatusHandler(BaseTestClass):
         user_is_logged_in = True
         user_is_admin = '0'
 
-        setup_data = self.setup_user_data(user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)],
+                                                 user_is_logged_in, user_is_admin)
         path = setup_data["path"]
         random_person = setup_data["random_person"]
 
@@ -127,7 +122,8 @@ class AuthorizationStatusHandler(BaseTestClass):
         user_is_logged_in = False
         user_is_admin = '1'  # have to set it to something, but doesn't matter since we won't know for sure
 
-        setup_data = self.setup_user_data(user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)],
+                                                 user_is_logged_in, user_is_admin)
         path = setup_data["path"]
         random_person = setup_data["random_person"]
 
@@ -160,7 +156,8 @@ class AuthorizationStatusHandler(BaseTestClass):
         user_is_logged_in = True
         user_is_admin = '1'
 
-        setup_data = self.setup_user_data(user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)],
+                                                 user_is_logged_in, user_is_admin)
         path = setup_data["path"]
         random_person = setup_data["random_person"]
 
@@ -193,7 +190,8 @@ class AuthorizationStatusHandler(BaseTestClass):
         user_is_logged_in = False  # these don't matter since we expect an error response before the handler checks this
         user_is_admin = '1'
 
-        self.setup_user_data(user_is_logged_in, user_is_admin)
+        self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)], user_is_logged_in,
+                                    user_is_admin)
         path = "/auth/some_string_key_which_is_invalid"  # create an invalid id format: a string instead of an integer
 
         self.negative_test_stub_handler(path, "get", 400)
@@ -202,7 +200,8 @@ class AuthorizationStatusHandler(BaseTestClass):
         user_is_logged_in = False  # these don't matter since we expect an error response before the handler checks this
         user_is_admin = '1'
 
-        self.setup_user_data(user_is_logged_in, user_is_admin)
+        self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)], user_is_logged_in,
+                                    user_is_admin)
         path = "/auth/"  # create an invalid id format: don't give an id at all
 
         self.negative_test_stub_handler(path, "get", 400)
@@ -211,7 +210,8 @@ class AuthorizationStatusHandler(BaseTestClass):
         user_is_logged_in = True
         user_is_admin = '0'
 
-        setup_data = self.setup_user_data(user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)],
+                                                 user_is_logged_in, user_is_admin)
         random_person2 = setup_data["random_person2"]
         path = "/auth/" + str(random_person2.key.integer_id())
 
@@ -222,7 +222,8 @@ class AuthorizationStatusHandler(BaseTestClass):
         user_is_logged_in = True  # these don't matter since we expect an error response before the handler checks this
         user_is_admin = '0'
 
-        self.setup_user_data(user_is_logged_in, user_is_admin)
+        self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)], user_is_logged_in,
+                                    user_is_admin)
         path = "/auth/" + str(9871 + random.randint(84, 711))  # create a path with an unknown integer id
 
         #We will try to make a request for person2's status whilst we are logged in as person (number one)
