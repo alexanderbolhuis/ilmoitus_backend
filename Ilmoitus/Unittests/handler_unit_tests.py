@@ -1,6 +1,7 @@
 __author__ = 'Sjors van Lemmen'
 import random
 import json
+
 import ilmoitus as main_application
 from test_data_creator import PersonDataCreator
 from Base.base_test_methods import BaseTestClass
@@ -87,7 +88,8 @@ class BaseAuthorizationHandler(BaseTestClass):
         user_is_logged_in = True
         user_is_admin = '0'
 
-        setup_data = self.setup_user_data(user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)],
+                                                 user_is_logged_in, user_is_admin)
         path = setup_data["path"]
         random_person = setup_data["random_person"]
 
@@ -120,7 +122,8 @@ class BaseAuthorizationHandler(BaseTestClass):
         user_is_logged_in = False
         user_is_admin = '1'  # have to set it to something, but doesn't matter since we won't know for sure
 
-        setup_data = self.setup_user_data(user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)],
+                                                 user_is_logged_in, user_is_admin)
         path = setup_data["path"]
         random_person = setup_data["random_person"]
 
@@ -153,7 +156,8 @@ class BaseAuthorizationHandler(BaseTestClass):
         user_is_logged_in = True
         user_is_admin = '1'
 
-        setup_data = self.setup_user_data(user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)],
+                                                 user_is_logged_in, user_is_admin)
         path = setup_data["path"]
         random_person = setup_data["random_person"]
 
@@ -186,7 +190,8 @@ class BaseAuthorizationHandler(BaseTestClass):
         user_is_logged_in = False  # these don't matter since we expect an error response before the handler checks this
         user_is_admin = '1'
 
-        self.setup_user_data(user_is_logged_in, user_is_admin)
+        self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)], user_is_logged_in,
+                                    user_is_admin)
         path = "/auth/some_string_key_which_is_invalid"  # create an invalid id format: a string instead of an integer
 
         self.negative_test_stub_handler(path, "get", 400)
@@ -195,7 +200,8 @@ class BaseAuthorizationHandler(BaseTestClass):
         user_is_logged_in = False  # these don't matter since we expect an error response before the handler checks this
         user_is_admin = '1'
 
-        self.setup_user_data(user_is_logged_in, user_is_admin)
+        self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)], user_is_logged_in,
+                                    user_is_admin)
         path = "/auth/"  # create an invalid id format: don't give an id at all
 
         self.negative_test_stub_handler(path, "get", 400)
@@ -204,7 +210,8 @@ class BaseAuthorizationHandler(BaseTestClass):
         user_is_logged_in = True
         user_is_admin = '0'
 
-        setup_data = self.setup_user_data(user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)],
+                                                 user_is_logged_in, user_is_admin)
         random_person2 = setup_data["random_person2"]
         path = "/auth/" + str(random_person2.key.integer_id())
 
@@ -215,7 +222,8 @@ class BaseAuthorizationHandler(BaseTestClass):
         user_is_logged_in = True  # these don't matter since we expect an error response before the handler checks this
         user_is_admin = '0'
 
-        self.setup_user_data(user_is_logged_in, user_is_admin)
+        self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)], user_is_logged_in,
+                                    user_is_admin)
         path = "/auth/" + str(9871 + random.randint(84, 711))  # create a path with an unknown integer id
 
         #We will try to make a request for person2's status whilst we are logged in as person (number one)
