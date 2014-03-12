@@ -39,20 +39,12 @@ class EmployeeHandlerTest(BaseTestClass):
         self.negative_test_stub_handler(path, "get", 404)
 
 
-class AuthorizationStatusHandler(BaseTestClass):
-    """
-        These tests all rely on the users API, and therefore in each test, the users stub will be initialized along
-        the memcache and datastore stub.
-
-        This test consists of several parts: one that checks for a user that is logged in but not an admin,
-        one that checks for when a user is not logged in (admin is then unknown) and one that checks for when
-        a user is logged in AND is an admin.
-    """
-
-    def setup_user_data(self, user_is_logged_in, user_is_admin):
+class BaseAuthorizationHandler(BaseTestClass):
+    def setup_server_with_user(self, handler_routes, user_is_logged_in, user_is_admin):
         """
             Helper method to set-up all data needed in these unit tests.
 
+            :param handler_routes: List of tuples that contain all url and handlers that will be set-up for this test.
             :param user_is_logged_in: Boolean that indicates whether a user mock-up should be made or not.
             :param user_is_admin: String that indicates whether or not the user is admin or not.
                 Only valid values are '0' (no admin) and '1' (is admin). Any other values will raise an Exception.
@@ -62,7 +54,8 @@ class AuthorizationStatusHandler(BaseTestClass):
                     -"path" : A url path that contains the id of the random person at the end (example: "/auth/531857")
         """
         path = '/auth/(.*)'
-        self.set_up_custom_path([(path, main_application.AuthorizationStatusHandler)])
+
+        self.set_up_custom_path(handler_routes)
         self.testbed.init_user_stub()
 
         number_of_persons = random.randint(3, 10)

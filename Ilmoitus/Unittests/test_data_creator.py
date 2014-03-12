@@ -7,11 +7,11 @@ class PersonDataCreator():
         pass
 
     @staticmethod
-    def create_valid_person_data(id):
+    def create_valid_person_data(email_added_id):
         person = model.Person()
         person.first_name = "Rogier"
         person.last_name = "Boleij"
-        person.email = "r.boleij" + str(id) + "@gmail.com"
+        person.email = "r.boleij" + str(email_added_id) + "@gmail.com"
 
         person.put()
         return person
