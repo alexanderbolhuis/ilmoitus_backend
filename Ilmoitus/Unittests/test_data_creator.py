@@ -27,6 +27,7 @@ class PersonDataCreator():
         employee.department = department.key
         employee.employee_number = employee_number
         employee.wants_email_notifications = bool(random.randint(0, 1))
+        employee.wants_phone_notifications = not bool(employee.wants_email_notifications)
         employee.put()
         return employee
 

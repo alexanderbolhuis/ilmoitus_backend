@@ -32,6 +32,7 @@ class Employee(Person):
     department = ndb.KeyProperty(kind=Department)
     supervisor = ndb.KeyProperty(kind="Supervisor")
     wants_email_notifications = ndb.BooleanProperty()
+    wants_phone_notifications = ndb.BooleanProperty()
 
     @classmethod
     def _get_kind(cls):
@@ -43,8 +44,13 @@ class Employee(Person):
         self_dict = {'employee_number': self.employee_number,
                      'department': self.department.integer_id(),
                      'supervisor': self.supervisor.integer_id(),
-                     'wants_email_notifications': self.wants_email_notifications}
+                     'wants_email_notifications': self.wants_email_notifications,
+                     'wants_phone_notifications': self.wants_phone_notifications}
         return dict(super_dict.items() + self_dict.items())
+
+    def settings(self):
+        return {'wants_email_notifications': self.wants_email_notifications,
+                'wants_phone_notifications': self.wants_phone_notifications}
 
 
 # AdministrativeEmployee Model class
