@@ -81,7 +81,7 @@ class Supervisor(AdministrativeEmployee):
 # OpenDeclaration Model class
 class OpenDeclaration(polymodel.PolyModel):
     created_at = ndb.DateTimeProperty(auto_now_add=True)
-    created_by = ndb.KeyProperty(kind=Employee)
+    created_by = ndb.KeyProperty(kind=Person)
     assigned_to = ndb.KeyProperty(kind=Supervisor)
     comment = ndb.StringProperty()
 
@@ -166,4 +166,4 @@ class Attachment(ndb.Model):
     blobstore.BlobReferenceProperty(required=True)
 
     def details(self):
-        return {'':""} # TODO details
+        return {'': ""}  # TODO details

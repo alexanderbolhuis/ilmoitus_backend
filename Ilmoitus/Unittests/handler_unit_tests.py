@@ -1,7 +1,8 @@
 __author__ = 'Sjors van Lemmen'
 import random
 import json
-
+import model
+from google.appengine.ext import ndb
 import ilmoitus as main_application
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
 from Base.base_test_methods import BaseTestClass
@@ -51,8 +52,12 @@ class BaseAuthorizationHandler(BaseTestClass):
                 Only valid values are '0' (no admin) and '1' (is admin). Any other values will raise an Exception.
 
             :returns: A dictionary with the following key-value pairs:
+
                 -"random_person" : A random person of which the contents can be checked later on
-                    -"path" : A url path that contains the id of the random person at the end (example: "/auth/531857")
+
+                -"path" : A url path that contains the id of the random person at the end (example: "/auth/531857")
+
+                -"random_person2" : Another person object that will always be different from the first.
         """
         path = "/auth"
         self.set_up_custom_path(handler_routes)
@@ -186,9 +191,21 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
     def test_positive_get_all(self):
         user_is_logged_in = True
         user_is_admin = '0'
+        path = '/open_declarations/employee'
 
-        self.setup_server_with_user(
+        setup_data = self.setup_server_with_user(
             [('/open_declarations/employee', main_application.AllOpenDeclarationsForEmployeeHandler)],
             user_is_logged_in, user_is_admin)
 
-        open_declaration = DeclarationsDataCreator.create_valid_open_declaration()
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.__class__ = model.Employee
+        logged_in_person._key = ndb.Key(model.Person, logged_in_person.key.integer_id(), model.Employee,
+                                        logged_in_person.key.integer_id())
+
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        logged_in_person.supervisor = supervisor.key
+        logged_in_person.put()
+        open_declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+
+        self.positive_test_stub_handler(path, "get")
