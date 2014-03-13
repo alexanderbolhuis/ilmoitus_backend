@@ -181,50 +181,6 @@ class AuthorizationHandlerTest(BaseAuthorizationHandler):
                       "Full error message:\n"
                       + str(error))
 
-    def test_get_user_status_negative_invalid_id_format(self):
-        user_is_logged_in = False  # these don't matter since we expect an error response before the handler checks this
-        user_is_admin = '1'
-
-        self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)], user_is_logged_in,
-                                    user_is_admin)
-        path = "/auth/some_string_key_which_is_invalid"  # create an invalid id format: a string instead of an integer
-
-        self.negative_test_stub_handler(path, "get", 400)
-
-    def test_get_user_status_negative_invalid_id_none_given(self):
-        user_is_logged_in = False  # these don't matter since we expect an error response before the handler checks this
-        user_is_admin = '1'
-
-        self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)], user_is_logged_in,
-                                    user_is_admin)
-        path = "/auth/"  # create an invalid id format: don't give an id at all
-
-        self.negative_test_stub_handler(path, "get", 400)
-
-    def test_get_user_status_negative_request_other_users_status(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-
-        setup_data = self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)],
-                                                 user_is_logged_in, user_is_admin)
-        random_person2 = setup_data["random_person2"]
-        path = "/auth/" + str(random_person2.key.integer_id())
-
-        #We will try to make a request for person2's status whilst we are logged in as person (number one)
-        self.negative_test_stub_handler(path, "get", 500)
-
-    def test_get_user_status_negative_unknown_person(self):
-        user_is_logged_in = True  # these don't matter since we expect an error response before the handler checks this
-        user_is_admin = '0'
-
-        self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)], user_is_logged_in,
-                                    user_is_admin)
-        path = "/auth/" + str(9871 + random.randint(84, 711))  # create a path with an unknown integer id
-
-        #We will try to make a request for person2's status whilst we are logged in as person (number one)
-        self.negative_test_stub_handler(path, "get", 404)
-
-
 class EmployeeDetailsHandlerTest(BaseTestClass):
     def test_get_employee_details(self):
         path = "/employees/details/(.*)"
@@ -262,15 +218,35 @@ class EmployeeDetailsHandlerTest(BaseTestClass):
         self.negative_test_stub_handler(path, "get", 500)
 
 
-class UserSettingsHandlerTest(BaseTestClass):
+class UserSettingsHandlerTest(AuthorizationHandlerTest):
     def test_get_user_settings(self):
-        path = "/user/settings/(.*)"
-        self.set_up_custom_path([(path, main_application.UserSettingsHandler)])
+        path = "/user/settings/"
+        user_is_logged_in = True
+        user_is_admin = "0"
+        self.setup_server_with_user([(path, main_application.UserSettingsHandler)],
+                                    user_is_logged_in, user_is_admin)
 
-        number_of_employees = random.randint(1, 10)
-        test_person = PersonDataCreator.create_valid_employee_data(0)
-        for i in range(0, number_of_employees):
-            PersonDataCreator.create_valid_employee_data(i+1)
-
-        path = '/user/settings/' + str(test_person.key.integer_id())
+        path = '/user/settings/'
         self.positive_test_stub_handler(path, "get")
+
+    def test_put_correct_user_settings(self):
+        path = "/user/settings/"
+        user_is_logged_in = True
+        user_is_admin = "0"
+        self.setup_server_with_user([(path, main_application.UserSettingsHandler)],
+                                    user_is_logged_in, user_is_admin)
+        params = {'wants_email_notifications': True, 'wants_phone_notifications': True}
+        self.testapp.put(path, params)
+        self.assertEqual(main_application.get_current_person(self).settings(), params)
+
+    def test_put_incorrect_user_settings(self):
+        path = "/user/settings/"
+        user_is_logged_in = True
+        user_is_admin = "0"
+        self.setup_server_with_user([(path, main_application.UserSettingsHandler)],
+                                    user_is_logged_in, user_is_admin)
+        params = {'wants_email_notifications': "hello there", 'wants_phone_notifications': 2}
+        settings = main_application.get_current_person(self).settings()
+        self.testapp.put(path, params)
+        current_user = main_application.get_current_person(self)
+        self.assertNotEqual(current_user.settings(), settings)

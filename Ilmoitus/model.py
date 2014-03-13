@@ -10,12 +10,20 @@ class Person(polymodel.PolyModel):
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
     email = ndb.StringProperty()
+    wants_email_notifications = ndb.BooleanProperty()
+    wants_phone_notifications = ndb.BooleanProperty()
 
     def details(self):
         return {'id': self.key.integer_id(),
                 'first_name': self.first_name,
                 'last_name': self.last_name,
-                'email': self.email}
+                'email': self.email,
+                'wants_email_notifications': self.wants_email_notifications,
+                'wants_phone_notifications': self.wants_phone_notifications}
+
+    def settings(self):
+        return {'wants_email_notifications': self.wants_email_notifications,
+                'wants_phone_notifications': self.wants_phone_notifications}
 
 
 # Department Model class
@@ -31,8 +39,6 @@ class Employee(Person):
     employee_number = ndb.IntegerProperty()
     department = ndb.KeyProperty(kind=Department)
     supervisor = ndb.KeyProperty(kind="Supervisor")
-    wants_email_notifications = ndb.BooleanProperty()
-    wants_phone_notifications = ndb.BooleanProperty()
 
     @classmethod
     def _get_kind(cls):
@@ -43,14 +49,8 @@ class Employee(Person):
         super_dict = super_obj.details()
         self_dict = {'employee_number': self.employee_number,
                      'department': self.department.integer_id(),
-                     'supervisor': self.supervisor.integer_id(),
-                     'wants_email_notifications': self.wants_email_notifications,
-                     'wants_phone_notifications': self.wants_phone_notifications}
+                     'supervisor': self.supervisor.integer_id()}
         return dict(super_dict.items() + self_dict.items())
-
-    def settings(self):
-        return {'wants_email_notifications': self.wants_email_notifications,
-                'wants_phone_notifications': self.wants_phone_notifications}
 
 
 # AdministrativeEmployee Model class

@@ -13,6 +13,8 @@ class PersonDataCreator():
         person.first_name = "Rogier"
         person.last_name = "Boleij"
         person.email = "r.boleij" + str(email_added_id) + "@gmail.com"
+        person.wants_email_notifications = bool(random.randint(0, 1))
+        person.wants_phone_notifications = not bool(person.wants_email_notifications)
 
         person.put()
         return person
@@ -26,8 +28,6 @@ class PersonDataCreator():
         employee.supervisor = supervisor.key
         employee.department = department.key
         employee.employee_number = employee_number
-        employee.wants_email_notifications = bool(random.randint(0, 1))
-        employee.wants_phone_notifications = not bool(employee.wants_email_notifications)
         employee.put()
         return employee
 
