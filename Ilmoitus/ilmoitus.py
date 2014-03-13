@@ -6,7 +6,7 @@ import json
 from google.appengine.api import users
 
 
-def get_current_person(self):
+def get_current_employee(self):
     current_logged_in_user = users.get_current_user()
     if current_logged_in_user is not None:
         employee_query = model.Person.query().filter(model.Employee.email == current_logged_in_user.email())
@@ -14,9 +14,9 @@ def get_current_person(self):
         if query_result is not None:
             return query_result
         else:
-            return None
+            return False
     else:
-        return None
+        return False
 
 
 class BaseRequestHandler(webapp.RequestHandler):
@@ -83,8 +83,8 @@ class SpecificEmployeeHandler(BaseRequestHandler):
 
 class AuthorizationStatusHandler(BaseRequestHandler):
     def get(self):
-        person = get_current_person(self)
-        if person is not None:
+        person = get_current_employee(self)
+        if person is not False:  # TODO: update this to a lookup in the dict instead of a boolean check
             #Create a default data dictionary to limit code duplication
             response_data = {"person_id": person.key.integer_id(), "is_logged_in": True,
                              "is_application_admin": users.is_current_user_admin()}
@@ -96,8 +96,8 @@ class AuthorizationStatusHandler(BaseRequestHandler):
 
 class LoginHandler(BaseRequestHandler):
     def get(self):
-        person = get_current_person(self)
-        if person is None:
+        person = get_current_employee(self)
+        if person is False:  # TODO: update this to a lookup in the dict instead of a boolean check
             self.redirect(users.create_login_url('/auth/login'))
             # We will return to the same url after logging in since this handler will than check if the login
             # was really successful, and automatically redirect to the main page if so.
@@ -109,8 +109,8 @@ class LoginHandler(BaseRequestHandler):
 
 class LogoutHandler(BaseRequestHandler):
     def get(self):
-        person = get_current_person(self)
-        if person is not None:
+        person = get_current_employee(self)
+        if person is not False:  # TODO: update this to a lookup in the dict instead of a boolean check
             self.redirect(users.create_logout_url('/auth/logout/'))
             # We will return to the same url after logging out since this handler will than check if the login
             # was really successful, and automatically redirect to the login page if so.
