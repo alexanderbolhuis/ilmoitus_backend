@@ -121,12 +121,26 @@ class LogoutHandler(BaseRequestHandler):
             self.redirect("/login_page")
 
 
+class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
+    def get(self):
+        person = get_current_employee(self)
+        if person is not False:
+            declaration_query = model.OpenDeclaration.query(model.OpenDeclaration.created_by == person)
+            query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+
+            response_module.respond_with_existing__model_object_collection(self, query_result)
+        else:
+            #TODO: error messages:
+            #User is not logged in/registered; he/she needs to login first
+            self.abort(401)
+
 application = webapp.WSGIApplication(
     [
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
         ('/employees', AllEmployeesHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
+        ('/open_declarations/employee', AllOpenDeclarationsForEmployeeHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!

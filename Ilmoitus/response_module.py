@@ -27,6 +27,13 @@ def respond_with_object_collection_by_class(request_handler, class_reference, li
         give_response(request_handler, None)
 
 
+def respond_with_existing__model_object_collection(request_handler, collection):
+    if len(collection) > 0:
+        give_response(request_handler, json.dumps(map(lambda item: item.details(), collection)))
+    else:
+        give_response(request_handler, None)
+
+
 def give_response(request_handler, json_data):
     request_handler.response.headers['Content-Type'] = "application/json"
     if json_data is not None:

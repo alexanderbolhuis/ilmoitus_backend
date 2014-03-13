@@ -44,3 +44,23 @@ class PersonDataCreator():
         department.name = department_name
         department.put()
         return department
+
+
+class DeclarationsDataCreator():
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def create_valid_open_declaration(employee, supervisor):
+        employee_key = employee.key
+        supervisor_key = supervisor.key
+
+        employee.supervisor = supervisor_key
+
+        open_declaration = model.OpenDeclaration()
+        open_declaration.created_by = employee_key
+        open_declaration.assigned_to = supervisor_key
+        open_declaration.comment = "Thanks for taking care of this for me!"
+
+        open_declaration.put()
+        return open_declaration

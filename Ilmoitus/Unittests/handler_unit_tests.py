@@ -3,7 +3,7 @@ import random
 import json
 
 import ilmoitus as main_application
-from test_data_creator import PersonDataCreator
+from test_data_creator import PersonDataCreator, DeclarationsDataCreator
 from Base.base_test_methods import BaseTestClass
 
 
@@ -180,3 +180,15 @@ class AuthorizationHandlerTest(BaseAuthorizationHandler):
                       "______________________\n"
                       "Full error message:\n"
                       + str(error))
+
+
+class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
+    def test_positive_get_all(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+
+        self.setup_server_with_user(
+            [('/open_declarations/employee', main_application.AllOpenDeclarationsForEmployeeHandler)],
+            user_is_logged_in, user_is_admin)
+
+        open_declaration = DeclarationsDataCreator.create_valid_open_declaration()
