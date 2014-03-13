@@ -4,20 +4,22 @@ import response_module
 import model
 import json
 from google.appengine.api import users
-from google.appengine.api import users
 
 
-def get_current_employee(self):
+def get_current_employee():
     current_logged_in_user = users.get_current_user()
+    print current_logged_in_user
     if current_logged_in_user is not None:
-        employee_query = model.Person.query().filter(model.Employee.email == current_logged_in_user.email())
-        query_result = employee_query.get()
+        #employee_query = model.Employee.query().filter(model.Employee.email == current_logged_in_user.email())
+        person_query = model.Person.query().filter(model.Person.email == current_logged_in_user.email())
+        query_result = person_query.get()
+        print query_result
         if query_result is not None:
             return query_result
         else:
-            return False
+            return None
     else:
-        return False
+        return None
 
 
 class BaseRequestHandler(webapp.RequestHandler):
@@ -83,23 +85,48 @@ class SpecificEmployeeHandler(BaseRequestHandler):
 
 
 class AuthorizationStatusHandler(BaseRequestHandler):
-    def get(self):
-        person = get_current_employee(self)
-        if person is not False:  # TODO: update this to a lookup in the dict instead of a boolean check
-            #Create a default data dictionary to limit code duplication
-            response_data = {"person_id": person.key.integer_id(), "is_logged_in": True,
-                             "is_application_admin": users.is_current_user_admin()}
-            response_module.give_response(self, json.dumps(response_data))
+    def get(self, user_id):
+        safe_id = 0
+        try:
+            safe_id = int(user_id)
+        except ValueError:
+            #TODO: error messages;
+            # the given user id was of an invalid format; request could not be handled
+            self.abort(400)
+
+        person = model.Person.get_by_id(safe_id)
+        #Create a default data dictionary to limit code duplication
+        response_data = {"id": user_id, "is_logged_in": False,
+                         "is_application_admin": False}
+        if person is not None:
+            user = users.get_current_user()
+            if user is not None:
+                if user.email() == person.email:  # One can only ask status on him/herself!
+                    response_data["is_logged_in"] = True
+                    response_data["is_application_admin"] = users.is_current_user_admin()
+                    response_module.give_response(self, json.dumps(response_data))
+                else:
+                    #TODO: error messages;
+                    # the request attempted to retrieve the status of someone else, which is illegal
+                    self.abort(500)
+            else:
+                #Requested user was not logged in, which makes it impossible to check if
+                #   a. The id of the requested user belonged to the logged in user (since there is none)
+                #   b. The id of the requested user belonged to an admin account
+                #      (since we don't know what Google account belongs to the account)
+                response_data["is_application_admin"] = "unknown"
+                response_module.give_response(self, json.dumps(response_data))
         else:
-            #Person is either not logged in, or not known in the application's model
-            response_module.give_response(self, json.dumps({"is_logged_in": False}))
+            #TODO: error messages;
+            #Person is not known in the application
+            self.abort(404)
 
 
 class LoginHandler(BaseRequestHandler):
-    def get(self):
-        person = get_current_employee(self)
-        if person is False:  # TODO: update this to a lookup in the dict instead of a boolean check
-            self.redirect(users.create_login_url('/auth/login'))
+    def get(self, user_id):
+        user = users.get_current_user()
+        if user is None:
+            self.redirect(users.create_login_url('/auth/login/' + str(user_id)))
             # We will return to the same url after logging in since this handler will than check if the login
             # was really successful, and automatically redirect to the main page if so.
         else:
@@ -109,10 +136,10 @@ class LoginHandler(BaseRequestHandler):
 
 
 class LogoutHandler(BaseRequestHandler):
-    def get(self):
-        person = get_current_employee(self)
-        if person is not False:  # TODO: update this to a lookup in the dict instead of a boolean check
-            self.redirect(users.create_logout_url('/auth/logout/'))
+    def get(self, user_id):
+        user = users.get_current_user()
+        if user is not None:
+            self.redirect(users.create_logout_url('/auth/logout/' + str(user_id)))
             # We will return to the same url after logging out since this handler will than check if the login
             # was really successful, and automatically redirect to the login page if so.
         else:
@@ -121,15 +148,25 @@ class LogoutHandler(BaseRequestHandler):
             self.redirect("/login_page")
 
 
+class CurrentUserDetailsHandler(BaseRequestHandler):
+    def get(self):
+        current_logged_in_employee = get_current_employee(self)
+        print current_logged_in_employee
+        if current_logged_in_employee is not False:
+            response_module.give_response(self, current_logged_in_employee.details())
+        else:
+            self.abort(500)
+
 application = webapp.WSGIApplication(
     [
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
         ('/employees', AllEmployeesHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
-        ('/auth/login', LoginHandler),
-        ('/auth/logout', LogoutHandler),
-        ('/auth', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
+        ('/current_user_details/', CurrentUserDetailsHandler),
+        ('/auth/login/(.*)', LoginHandler),
+        ('/auth/logout/(.*)', LogoutHandler),
+        ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
         ('.*', DefaultHandler)
     ],
     debug=True)  # if debug is set to false,
