@@ -129,9 +129,12 @@ class SpecificEmployeeDetailsHandler(BaseRequestHandler):
 
 class UserSettingsHandler(BaseRequestHandler):
     def get(self, user_id):
-        response_module.respond_with_object_details_by_id(self,
-                                                          model.Employee,
-                                                          user_id)
+        employee = model.Employee.get_by_id(long(user_id))
+        if employee is not None:
+            response_module.give_response(self,
+                                          json.dumps(employee.details()))
+        #TODO what to do when employee is None?
+
 
 
 application = webapp.WSGIApplication(
