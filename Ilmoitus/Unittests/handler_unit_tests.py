@@ -54,8 +54,7 @@ class BaseAuthorizationHandler(BaseTestClass):
                 -"random_person" : A random person of which the contents can be checked later on
                     -"path" : A url path that contains the id of the random person at the end (example: "/auth/531857")
         """
-        path = '/auth/(.*)'
-
+        path = "/auth"
         self.set_up_custom_path(handler_routes)
         self.testbed.init_user_stub()
 
@@ -78,17 +77,18 @@ class BaseAuthorizationHandler(BaseTestClass):
                         USER_EMAIL=random_person.email,
                         USER_ID=str(random_person.key.integer_id()),
                         USER_IS_ADMIN=user_is_admin)
-                path = "/auth/" + str(random_person.key.integer_id())
             elif i == random_person_index2:
                 random_person2 = person
 
         return {"random_person": random_person, "path": path, "random_person2": random_person2}
 
+
+class AuthorizationHandlerTest(BaseAuthorizationHandler):
     def test_get_user_status_positive_logged_in_no_admin(self):
         user_is_logged_in = True
         user_is_admin = '0'
 
-        setup_data = self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)],
+        setup_data = self.setup_server_with_user([('/auth', main_application.AuthorizationStatusHandler)],
                                                  user_is_logged_in, user_is_admin)
         path = setup_data["path"]
         random_person = setup_data["random_person"]
@@ -97,11 +97,11 @@ class BaseAuthorizationHandler(BaseTestClass):
         response_data = json.loads(response.body)
 
         try:
-            self.assertIsNotNone(response_data["id"])
+            self.assertIsNotNone(response_data["person_id"])
             self.assertIsNotNone(response_data["is_logged_in"])
             self.assertIsNotNone(response_data["is_application_admin"])
 
-            self.assertEqual(response_data["id"], str(random_person.key.integer_id()))
+            self.assertEqual(response_data["person_id"], random_person.key.integer_id())
             self.assertEqual(response_data["is_logged_in"], user_is_logged_in)
             self.assertEqual(response_data["is_application_admin"], False)
         except KeyError as error:
@@ -122,22 +122,17 @@ class BaseAuthorizationHandler(BaseTestClass):
         user_is_logged_in = False
         user_is_admin = '1'  # have to set it to something, but doesn't matter since we won't know for sure
 
-        setup_data = self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)],
+        setup_data = self.setup_server_with_user([('/auth', main_application.AuthorizationStatusHandler)],
                                                  user_is_logged_in, user_is_admin)
         path = setup_data["path"]
-        random_person = setup_data["random_person"]
 
         response = self.positive_test_stub_handler(path, "get")
         response_data = json.loads(response.body)
 
         try:
-            self.assertIsNotNone(response_data["id"])
             self.assertIsNotNone(response_data["is_logged_in"])
-            self.assertIsNotNone(response_data["is_application_admin"])
 
-            self.assertEqual(response_data["id"], str(random_person.key.integer_id()))
             self.assertEqual(response_data["is_logged_in"], user_is_logged_in)
-            self.assertEqual(response_data["is_application_admin"], "unknown")
         except KeyError as error:
             self.fail("Test Failed! Expected the key: " + str(
                 error) + " to be present in the response, but it was not found. Found only: " + str(response_data))
@@ -156,7 +151,7 @@ class BaseAuthorizationHandler(BaseTestClass):
         user_is_logged_in = True
         user_is_admin = '1'
 
-        setup_data = self.setup_server_with_user([('/auth/(.*)', main_application.AuthorizationStatusHandler)],
+        setup_data = self.setup_server_with_user([('/auth', main_application.AuthorizationStatusHandler)],
                                                  user_is_logged_in, user_is_admin)
         path = setup_data["path"]
         random_person = setup_data["random_person"]
@@ -165,11 +160,11 @@ class BaseAuthorizationHandler(BaseTestClass):
         response_data = json.loads(response.body)
 
         try:
-            self.assertIsNotNone(response_data["id"])
+            self.assertIsNotNone(response_data["person_id"])
             self.assertIsNotNone(response_data["is_logged_in"])
             self.assertIsNotNone(response_data["is_application_admin"])
 
-            self.assertEqual(response_data["id"], str(random_person.key.integer_id()))
+            self.assertEqual(response_data["person_id"], (random_person.key.integer_id()))
             self.assertEqual(response_data["is_logged_in"], user_is_logged_in)
             self.assertEqual(response_data["is_application_admin"], True)
         except KeyError as error:
