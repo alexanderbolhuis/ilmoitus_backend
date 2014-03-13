@@ -26,9 +26,9 @@ def get_current_person(person_class_reference=model.Person):
     return_data = {"user_is_logged_in": False, "person_value": None}
     if current_logged_in_user is not None:
         return_data["user_is_logged_in"] = True
-        employee_query = person_class_reference.query().filter(person_class_reference.email ==
-                                                               current_logged_in_user.email())
-        query_result = employee_query.get()
+        person_query = person_class_reference.query().filter(person_class_reference.email ==
+                                                             current_logged_in_user.email())
+        query_result = person_query.get()
         if query_result is not None:
             return_data["person_value"] = query_result
     return return_data
@@ -98,20 +98,28 @@ class SpecificEmployeeHandler(BaseRequestHandler):
 
 class AuthorizationStatusHandler(BaseRequestHandler):
     def get(self):
-        person = get_current_person(self)
+        """
+         Note on this function: we don't need to check if the user is logged in. If he is not logged in _OR_
+         he doesn't exist in the model, we return the same dictionary. This means that if we were to check on login
+         is True, we still have to check if person value is not None. by directly checking person is not None, we
+         get the same result with less code.
+        """
+        person_data = get_current_person()
+        person = person_data["person_value"]
         if person is not None:
             #Create a default data dictionary to limit code duplication
             response_data = {"person_id": person.key.integer_id(), "is_logged_in": True,
                              "is_application_admin": users.is_current_user_admin()}
             response_module.give_response(self, json.dumps(response_data))
         else:
-            #Person is either not logged in, or not known in the application's model
+            #Person is not known in the application's model
             response_module.give_response(self, json.dumps({"is_logged_in": False}))
 
 
 class LoginHandler(BaseRequestHandler):
     def get(self):
-        person = get_current_person(self)
+        person_data = get_current_person()
+        person = person_data["person_value"]
         if person is None:
             self.redirect(users.create_login_url('/auth/login'))
             # We will return to the same url after logging in since this handler will than check if the login
@@ -124,7 +132,8 @@ class LoginHandler(BaseRequestHandler):
 
 class LogoutHandler(BaseRequestHandler):
     def get(self):
-        person = get_current_person(self)
+        person_data = get_current_person()
+        person = person_data["person_value"]
         if person is not None:
             self.redirect(users.create_logout_url('/auth/logout/'))
             # We will return to the same url after logging out since this handler will than check if the login
@@ -137,7 +146,9 @@ class LogoutHandler(BaseRequestHandler):
 
 class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
-        person = get_current_employee(self)
+        #model.Employee as param since this handler handles calls from their POV.
+        person_data = get_current_person(model.Employee)
+        person = person_data["person_value"]
         if person is not False:
             declaration_query = model.OpenDeclaration.query(model.OpenDeclaration.created_by == person.key)
             query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
@@ -147,6 +158,7 @@ class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
             #TODO: error messages:
             #User is not logged in/registered; he/she needs to login first
             self.abort(401)
+
 
 application = webapp.WSGIApplication(
     [

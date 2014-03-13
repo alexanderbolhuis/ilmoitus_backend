@@ -201,6 +201,7 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
         logged_in_person.__class__ = model.Employee
         logged_in_person._key = ndb.Key(model.Person, logged_in_person.key.integer_id(), model.Employee,
                                         logged_in_person.key.integer_id())
+        logged_in_person.put()
 
         supervisor = PersonDataCreator.create_valid_supervisor()
 

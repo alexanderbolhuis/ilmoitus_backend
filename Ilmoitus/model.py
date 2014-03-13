@@ -81,7 +81,7 @@ class Supervisor(AdministrativeEmployee):
 # OpenDeclaration Model class
 class OpenDeclaration(polymodel.PolyModel):
     created_at = ndb.DateTimeProperty(auto_now_add=True)
-    created_by = ndb.KeyProperty(kind=Person)
+    created_by = ndb.KeyProperty(kind=Employee)
     assigned_to = ndb.KeyProperty(kind=Supervisor)
     comment = ndb.StringProperty()
 
