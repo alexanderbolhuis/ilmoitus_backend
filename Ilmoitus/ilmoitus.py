@@ -4,20 +4,34 @@ import response_module
 import model
 import json
 from google.appengine.api import users
-from google.appengine.api import users
 
 
-def get_current_employee(self):
+def get_current_person(person_class_reference=model.Person):
+    """
+     Global function that will retrieve the user that is currently logged in (through Google's users API)
+     and fetch the person model object of this application that belongs to it through the email field.
+
+     :param person_class_reference: (Optional) A reference to a person model class that should be used to find
+     the model class object that belongs to the logged in user. If not provided, model.Person will be used.
+
+     :returns: A dictionary containing two key-value pairs:
+
+         -"user_is_logged_in": Boolean that indicates whether a user is logged into the users API of Google.
+
+         -"person_value": Model object of the Person type (or any subclass, indicated by the person_class_reference
+        parameter). If there is either no user logged into Google's users API _OR_ the logged in user isn't found
+        in the model class, this will be None
+    """
     current_logged_in_user = users.get_current_user()
+    return_data = {"user_is_logged_in": False, "person_value": None}
     if current_logged_in_user is not None:
-        employee_query = model.Person.query().filter(model.Employee.email == current_logged_in_user.email())
+        return_data["user_is_logged_in"] = True
+        employee_query = person_class_reference.query().filter(person_class_reference.email ==
+                                                               current_logged_in_user.email())
         query_result = employee_query.get()
         if query_result is not None:
-            return query_result
-        else:
-            return False
-    else:
-        return False
+            return_data["person_value"] = query_result
+    return return_data
 
 
 class BaseRequestHandler(webapp.RequestHandler):
@@ -84,8 +98,8 @@ class SpecificEmployeeHandler(BaseRequestHandler):
 
 class AuthorizationStatusHandler(BaseRequestHandler):
     def get(self):
-        person = get_current_employee(self)
-        if person is not False:  # TODO: update this to a lookup in the dict instead of a boolean check
+        person = get_current_person(self)
+        if person is not None:
             #Create a default data dictionary to limit code duplication
             response_data = {"person_id": person.key.integer_id(), "is_logged_in": True,
                              "is_application_admin": users.is_current_user_admin()}
@@ -97,8 +111,8 @@ class AuthorizationStatusHandler(BaseRequestHandler):
 
 class LoginHandler(BaseRequestHandler):
     def get(self):
-        person = get_current_employee(self)
-        if person is False:  # TODO: update this to a lookup in the dict instead of a boolean check
+        person = get_current_person(self)
+        if person is None:
             self.redirect(users.create_login_url('/auth/login'))
             # We will return to the same url after logging in since this handler will than check if the login
             # was really successful, and automatically redirect to the main page if so.
@@ -110,8 +124,8 @@ class LoginHandler(BaseRequestHandler):
 
 class LogoutHandler(BaseRequestHandler):
     def get(self):
-        person = get_current_employee(self)
-        if person is not False:  # TODO: update this to a lookup in the dict instead of a boolean check
+        person = get_current_person(self)
+        if person is not None:
             self.redirect(users.create_logout_url('/auth/logout/'))
             # We will return to the same url after logging out since this handler will than check if the login
             # was really successful, and automatically redirect to the login page if so.
