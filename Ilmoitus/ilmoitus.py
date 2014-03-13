@@ -4,19 +4,20 @@ import response_module
 import model
 import json
 from google.appengine.api import users
+from google.appengine.api import users
 
 
-def get_current_person():
+def get_current_employee(self):
     current_logged_in_user = users.get_current_user()
     if current_logged_in_user is not None:
-        person_query = model.Person.query().filter(model.Person.email == current_logged_in_user.email())
-        query_result = person_query.get()
+        employee_query = model.Person.query().filter(model.Employee.email == current_logged_in_user.email())
+        query_result = employee_query.get()
         if query_result is not None:
             return query_result
         else:
-            return None
+            return False
     else:
-        return None
+        return False
 
 
 class BaseRequestHandler(webapp.RequestHandler):
