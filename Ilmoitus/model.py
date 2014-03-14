@@ -5,19 +5,6 @@ from google.appengine.ext.ndb import polymodel
 from google.appengine.ext import blobstore
 
 
-# Person Model class
-class Person(polymodel.PolyModel):
-    first_name = ndb.StringProperty()
-    last_name = ndb.StringProperty()
-    email = ndb.StringProperty()
-
-    def details(self):
-        return {'id': self.key.integer_id(),
-                'first_name': self.first_name,
-                'last_name': self.last_name,
-                'email': self.email}
-
-
 # Department Model class
 class Department(ndb.Model):
     name = ndb.StringProperty
@@ -26,111 +13,53 @@ class Department(ndb.Model):
         return {'name': self.name}
 
 
-# Employee Model class
-class Employee(Person):
+# Person Model class
+class User(polymodel.PolyModel):
+    class_name = ndb.StringProperty()
+    first_name = ndb.StringProperty()
+    last_name = ndb.StringProperty()
+    email = ndb.StringProperty()
     employee_number = ndb.IntegerProperty()
     department = ndb.KeyProperty(kind=Department)
-    supervisor = ndb.KeyProperty(kind="Supervisor")
+    supervisor = ndb.KeyProperty(kind="User")
+
+    def details(self):
+        return {'id': self.key.integer_id(),
+                'first_name': self.first_name,
+                'last_name': self.last_name,
+                'email': self.email,
+                'employee_number': self.employee_number}
+        #        'department': self.department.id(),
+        #        'supervisor': self.supervisor.id()}
 
     @classmethod
     def _get_kind(cls):
-        return "Employee"
-
-    def details(self):
-        super_obj = super(Employee, self)
-        super_dict = super_obj.details()
-        self_dict = {'employee_number': self.employee_number,
-                     'department': self.department.integer_id(),
-                     'supervisor': self.supervisor.integer_id()}
-        return dict(super_dict.items() + self_dict.items())
-
-
-# AdministrativeEmployee Model class
-class AdministrativeEmployee(Employee):
-    @classmethod
-    def _get_kind(cls):
-        return "AdministrativeEmployee"
-
-    def details(self):
-        super_dict = super(AdministrativeEmployee, self).details()
-        return dict(super_dict.items())
-
-
-# HumanResources Model class
-class HumanResources(AdministrativeEmployee):
-    @classmethod
-    def _get_kind(cls):
-        return "HumanResources"
-
-    def details(self):
-        super_dict = super(HumanResources, self).details()
-        return dict(super_dict.items())
-
-
-# Supervisor Model class
-class Supervisor(AdministrativeEmployee):
-    @classmethod
-    def _get_kind(cls):
-        return "Supervisor"
-
-    def details(self):
-        super_dict = super(Supervisor, self).details()
-        return dict(super_dict.items())
+        return "User"  # TODO
 
 
 # OpenDeclaration Model class
-class OpenDeclaration(polymodel.PolyModel):
+class Declaration(polymodel.PolyModel):
     created_at = ndb.DateTimeProperty(auto_now_add=True)
-    created_by = ndb.KeyProperty(kind=Employee)
-    assigned_to = ndb.KeyProperty(kind=Supervisor)
+    created_by = ndb.KeyProperty(kind=User)
+    assigned_to = ndb.KeyProperty(kind=User)
     comment = ndb.StringProperty()
+    declined_by = ndb.KeyProperty(kind=User)
+    submitted_to_hr_by = ndb.KeyProperty(kind=User)
+    approved_by = ndb.KeyProperty(kind=User)
 
     def details(self):
         return {'id': self.key().id(),
                 'created_at': str(self.created_at),
                 'created_by': self.created_by.integer_id(),
                 'assigned_to': self.assigned_to.integer_id(),
-                'comment': self.comment}
+                'comment': self.comment,
+                'declined_by': self.declined_by.integer_id(),
+                'submitted_to_hr_by': self.submitted_to_hr_by.integer_id(),
+                'approved_by': self.approved_by.integer_id()}
 
-
-# LockedDeclaration Model class
-class LockedDeclaration(OpenDeclaration):
-    assigned_to = ndb.KeyProperty(kind=Supervisor)
-
-    def details(self):
-        super_dict = super(LockedDeclaration, self).details()
-        self_dict = {'assigned_to': self.assigned_to.integer_id()}
-        return dict(super_dict.items() + self_dict.items())
-
-
-# DeclinedDeclaration Model class
-class DeclinedDeclaration(LockedDeclaration):
-    declined_by = ndb.KeyProperty(kind=AdministrativeEmployee)
-
-    def details(self):
-        super_dict = super(DeclinedDeclaration, self).details()
-        self_dict = {'declined_by': self.declined_by.integer_id()}
-        return dict(super_dict.items() + self_dict.items())
-
-
-# SuperVisorApprovedDeclaration Model class
-class SuperVisorApprovedDeclaration(LockedDeclaration):
-    submitted_to_hr_by = ndb.KeyProperty(kind=Supervisor)
-
-    def details(self):
-        super_dict = super(SuperVisorApprovedDeclaration, self).details()
-        self_dict = {'submitted_to_hr_by': self.submitted_to_hr_by.integer_id()}
-        return dict(super_dict.items() + self_dict.items())
-
-
-# CompletelyApprovedDeclaration Model class
-class CompletelyApprovedDeclaration(SuperVisorApprovedDeclaration):
-    approved_by = ndb.KeyProperty(kind=HumanResources)
-
-    def details(self):
-        super_dict = super(CompletelyApprovedDeclaration, self).details()
-        self_dict = {'approved_by': self.approved_by.integer_id()}
-        return dict(super_dict.items() + self_dict.items())
+    @property
+    def id(self):
+        return self.key.integer_id()
 
 
 # DeclarationSubType Model class
@@ -162,7 +91,7 @@ class DeclarationLine(ndb.Model):
 
 
 class Attachment(ndb.Model):
-    ndb.KeyProperty(kind=OpenDeclaration)
+    ndb.KeyProperty(kind=Declaration)
     blobstore.BlobReferenceProperty(required=True)
 
     def details(self):

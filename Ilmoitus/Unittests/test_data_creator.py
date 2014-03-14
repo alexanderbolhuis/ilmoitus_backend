@@ -8,7 +8,7 @@ class PersonDataCreator():
 
     @staticmethod
     def create_valid_person_data(email_added_id):
-        person = model.Person()
+        person = model.User()
         person.first_name = "Rogier"
         person.last_name = "Boleij"
         person.email = "r.boleij" + str(email_added_id) + "@gmail.com"
@@ -18,7 +18,7 @@ class PersonDataCreator():
 
     @staticmethod
     def create_valid_employee_data(employee_number=0):
-        employee = model.Employee()
+        employee = PersonDataCreator.create_valid_person_data(employee_number)
         department = PersonDataCreator.create_valid_department()
         supervisor = PersonDataCreator.create_valid_supervisor(None, employee_number + 1)
 
@@ -30,7 +30,7 @@ class PersonDataCreator():
 
     @staticmethod
     def create_valid_supervisor(supervisors_supervisor=None, employee_number=0):
-        supervisor = model.Supervisor()
+        supervisor = model.User()
         supervisor.department = PersonDataCreator.create_valid_department().key
         if supervisors_supervisor is not None:
             supervisor.supervisor = supervisors_supervisor.key
@@ -57,7 +57,7 @@ class DeclarationsDataCreator():
 
         employee.supervisor = supervisor_key
 
-        open_declaration = model.OpenDeclaration()
+        open_declaration = model.Declaration()
         open_declaration.created_by = employee_key
         open_declaration.assigned_to = supervisor_key
         open_declaration.comment = "Thanks for taking care of this for me!"

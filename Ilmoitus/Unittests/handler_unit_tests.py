@@ -27,7 +27,7 @@ class EmployeeHandlerTest(BaseTestClass):
         self.set_up_custom_path([(path, main_application.AllEmployeesHandler)])
         number_of_persons = random.randint(1, 10)
         for i in range(0, number_of_persons):
-            PersonDataCreator.create_valid_person_data(i)
+            PersonDataCreator.create_valid_employee_data(i)
 
         self.negative_test_stub_handler(path, "get", 404)
 
@@ -198,8 +198,8 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
             user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
-        logged_in_person.__class__ = model.Employee
-        logged_in_person._key = ndb.Key(model.Person, logged_in_person.key.integer_id(), model.Employee,
+        logged_in_person.__class__ = model.User
+        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
                                         logged_in_person.key.integer_id())
         logged_in_person.put()
 
