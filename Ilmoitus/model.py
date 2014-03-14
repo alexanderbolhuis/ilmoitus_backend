@@ -57,10 +57,6 @@ class Declaration(polymodel.PolyModel):
                 'submitted_to_hr_by': self.submitted_to_hr_by.integer_id(),
                 'approved_by': self.approved_by.integer_id()}
 
-    @property
-    def id(self):
-        return self.key.integer_id()
-
 
 # DeclarationSubType Model class
 class DeclarationSubType(ndb.Model):
