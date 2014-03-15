@@ -4,23 +4,6 @@ from google.appengine.ext import ndb
 from google.appengine.ext.ndb import polymodel
 from google.appengine.ext import blobstore
 
-#global function:
-def get_dict_attr(object_to_check, attribute_to_find):
-    """
-     Function to search the object parameter for the given attribute (instance variables, properties, functions etc).
-     If found, return a REFERENCE to this attribute, otherwise raise an AttributeError
-
-     :param object_to_check: The object that has to be searched for the specified attribute.
-     :param attribute_to_find: The attribute that has to be found within the specified object.
-
-     :returns: A reference to the attribute (call-able function, reference to a property, etc.) if found.
-     :raises AttributeError: If the attribute is not found, an AttributeError will be raised.
-    """
-    for object_to_check in [object_to_check] + object_to_check.__class__.mro():
-        if attribute_to_find in object_to_check.__dict__:
-            return object_to_check.__dict__[attribute_to_find]
-    raise AttributeError
-
 
 # Department Model class
 class Department(ndb.Model):
@@ -55,7 +38,7 @@ class User(polymodel.PolyModel):
 
 
 # OpenDeclaration Model class
-class Declaration(polymodel.PolyModel):
+class Declaration(ndb.Model):
     class_name = ndb.StringProperty()
     created_at = ndb.DateTimeProperty(auto_now_add=True)
     created_by = ndb.KeyProperty(kind=User)
@@ -96,26 +79,30 @@ class Declaration(polymodel.PolyModel):
         Uses the handle_custom_property_set_operation function to actually determine if the value should be changed
         or not.
         """
-        permissions = {"open_declaration": [get_dict_attr(self, "created_at"), get_dict_attr(self, "created_by"),
-                                            get_dict_attr(self, "assigned_to"), get_dict_attr(self, "comment")],
-                       "closed_declaration": [get_dict_attr(self, "created_at"), get_dict_attr(self, "created_by"),
-                                              get_dict_attr(self, "assigned_to"), get_dict_attr(self, "comment"),
-                                              get_dict_attr(self, "declined_by"),
-                                              get_dict_attr(self, "submitted_to_hr_by")]}  # etc
+        all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                 "submitted_to_hr_by"]
+        if key in all_custom_properties:
+            permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
+                           "closed_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                                  "submitted_to_hr_by"]}  # etc
 
-        self.__dict__[key] = self.handle_custom_property_set_operation(permissions, key, value)
+            object.__setattr__(self, key, self.handle_custom_property_set_operation(permissions, key, value))
+        else:
+            object.__setattr__(self, key, value)
 
     def handle_custom_property_set_operation(self, permissions, key, value):
         #todo: make global function?
-        default_value = self.__dict__[key]
+        try:
+            default_value = self.__dict__[key]
+        except KeyError:
+            default_value = None
         # check if the requested key exists within the list of the permission dictionary that belongs to this class'
         #list
         if key in permissions[self.class_name]:
             #It's allowed; return the new value
             return value
         else:
-            raise AttributeError  # TODO find right error
-
+            return default_value
 
 
 # DeclarationSubType Model class

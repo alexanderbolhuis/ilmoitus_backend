@@ -61,10 +61,11 @@ class DeclarationsDataCreator():
         employee.supervisor = supervisor_key
 
         open_declaration = model.Declaration()
+        open_declaration.class_name = "open_declaration"
         open_declaration.created_by = employee_key
         open_declaration.assigned_to = supervisor_key
         open_declaration.comment = "Thanks for taking care of this for me!"
-        open_declaration.class_name = "open_declaration"
+
 
         open_declaration.put()
         return open_declaration

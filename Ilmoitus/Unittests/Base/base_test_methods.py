@@ -5,6 +5,8 @@ import webapp2
 import json
 from google.appengine.ext import testbed
 
+import ilmoitus as main_application
+
 
 class BaseTestClass(TestCase):
     """
@@ -15,7 +17,7 @@ class BaseTestClass(TestCase):
     fashion, but they also reduce code bloating by a significant margin.
     """
 
-    def set_up_custom_path(self, handler_routes=None):
+    def set_up_custom_path(self, handler_routes=([(None, None)])):
         """
         This method sets up a testbed object using the given handlers and paths.
         allows tests to specify specific paths to be used for handlers
@@ -31,12 +33,22 @@ class BaseTestClass(TestCase):
             to their handler value. If it's None, no urls and no handlers will be
             mapped to the test application.
         """
-        #Set handler_routes to it's default value if it hasn't been set.
-        if handler_routes is None:
-            handler_routes = [(None, None)]
+
 
         # Create a WSGI application.
         dummy_app = webapp2.WSGIApplication(handler_routes)
+
+        # Wrap the app with WebTests TestApp and activate it with a datastore stub.
+        self.testapp = webtest.TestApp(dummy_app)
+        self.testbed = testbed.Testbed()
+        self.testbed.activate()
+        self.testbed.init_memcache_stub()
+        self.testbed.init_datastore_v3_stub()
+
+    def setup_dummy_server_without_handlers(self):
+        # Create a WSGI application.
+        dummy_app = webapp2.WSGIApplication(
+            [(None, None)])  # shouldn't matter since we won't be sending requests
 
         # Wrap the app with WebTests TestApp and activate it with a datastore stub.
         self.testapp = webtest.TestApp(dummy_app)
