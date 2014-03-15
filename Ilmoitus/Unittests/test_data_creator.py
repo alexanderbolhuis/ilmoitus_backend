@@ -12,19 +12,21 @@ class PersonDataCreator():
         person.first_name = "Rogier"
         person.last_name = "Boleij"
         person.email = "r.boleij" + str(email_added_id) + "@gmail.com"
+        person.class_name = "person"
 
         person.put()
         return person
 
     @staticmethod
     def create_valid_employee_data(employee_number=0):
-        employee = PersonDataCreator.create_valid_person_data(employee_number)
+        employee = model.User()
         department = PersonDataCreator.create_valid_department()
         supervisor = PersonDataCreator.create_valid_supervisor(None, employee_number + 1)
 
         employee.supervisor = supervisor.key
         employee.department = department.key
         employee.employee_number = employee_number
+        employee.class_name = "employee"
         employee.put()
         return employee
 
@@ -35,6 +37,7 @@ class PersonDataCreator():
         if supervisors_supervisor is not None:
             supervisor.supervisor = supervisors_supervisor.key
         supervisor.employee_number = employee_number
+        supervisor.class_name = "supervisor"
         supervisor.put()
         return supervisor
 
@@ -61,6 +64,7 @@ class DeclarationsDataCreator():
         open_declaration.created_by = employee_key
         open_declaration.assigned_to = supervisor_key
         open_declaration.comment = "Thanks for taking care of this for me!"
+        open_declaration.class_name = "open_declaration"
 
         open_declaration.put()
         return open_declaration
