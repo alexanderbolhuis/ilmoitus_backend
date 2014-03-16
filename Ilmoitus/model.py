@@ -36,6 +36,35 @@ class User(polymodel.PolyModel):
     def _get_kind(cls):
         return "User"  # TODO
 
+    def __setattr__(self, key, value):
+        all_custom_properties = ["first_name", "last_name", "email", "employee_number", "department",
+                                 "supervisor"]
+        if key in all_custom_properties:
+            permissions = {"user": ["first_name", "last_name", "email"],
+                           "employee": ["first_name", "last_name", "email", "employee_number", "department",
+                                        "supervisor"],
+                           "supervisor": ["first_name", "last_name", "email", "employee_number", "department",
+                                          "supervisor"],
+                           "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
+                                               "supervisor"]}
+            object.__setattr__(self, key, self.handle_custom_property_set_operation(permissions, key, value))
+        else:
+            object.__setattr__(self, key, value)
+
+    def handle_custom_property_set_operation(self, permissions, key, value):
+        #todo: make global function?
+        try:
+            default_value = self.__dict__[key]
+        except KeyError:
+            default_value = None
+        # check if the requested key exists within the list of the permission dictionary that belongs to this class'
+        #list
+        if key in permissions[self.class_name]:
+            #It's allowed; return the new value
+            return value
+        else:
+            return default_value
+
 
 # OpenDeclaration Model class
 class Declaration(ndb.Model):
@@ -84,7 +113,11 @@ class Declaration(ndb.Model):
         if key in all_custom_properties:
             permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
                            "closed_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                                  "submitted_to_hr_by"]}  # etc
+                                                  "submitted_to_hr_by"],
+                           "declined_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                                    "submitted_to_hr_by"],
+                           "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                                    "submitted_to_hr_by"]}
 
             object.__setattr__(self, key, self.handle_custom_property_set_operation(permissions, key, value))
         else:
