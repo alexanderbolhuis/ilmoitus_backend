@@ -10,12 +10,20 @@ class Person(polymodel.PolyModel):
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
     email = ndb.StringProperty()
+    wants_email_notifications = ndb.BooleanProperty()
+    wants_phone_notifications = ndb.BooleanProperty()
 
     def details(self):
         return {'id': self.key.integer_id(),
                 'first_name': self.first_name,
                 'last_name': self.last_name,
-                'email': self.email}
+                'email': self.email,
+                'wants_email_notifications': self.wants_email_notifications,
+                'wants_phone_notifications': self.wants_phone_notifications}
+
+    def settings(self):
+        return {'wants_email_notifications': self.wants_email_notifications,
+                'wants_phone_notifications': self.wants_phone_notifications}
 
 
 # Department Model class

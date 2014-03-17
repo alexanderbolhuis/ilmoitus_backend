@@ -159,17 +159,41 @@ class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
             #User is not logged in/registered; he/she needs to login first
             self.abort(401)
 
+			
+class SpecificEmployeeDetailsHandler(BaseRequestHandler):
+    def get(self, employee_id):
+        response_module.respond_with_object_details_by_id(self,
+                                                          model.Employee,
+                                                          employee_id)
+
+
+class UserSettingsHandler(BaseRequestHandler):
+    def get(self):
+        employee = get_current_person(self)
+        if employee is not None:
+            response_module.give_response(self,
+                                          json.dumps(employee.details()))
+        #TODO what to do when employee is None?
+
+    def put(self):
+        employee = get_current_person(self)
+        if employee is not None:
+            employee.wants_email_notifications = bool(self.request.get("wants_email_notifications"))
+            employee.wants_phone_notifications = bool(self.request.get("wants_phone_notifications"))
+        #TODO what to do when employee is None?
 
 application = webapp.WSGIApplication(
     [
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
+        ('/user/settings/', UserSettingsHandler),
         ('/employees', AllEmployeesHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/open_declarations/employee', AllOpenDeclarationsForEmployeeHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
-        ('/auth', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
+        ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
+        ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('.*', DefaultHandler)
     ],
     debug=True)  # if debug is set to false,

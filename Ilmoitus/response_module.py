@@ -2,7 +2,7 @@ __author__ = 'Sjors van Lemmen'
 import json
 
 
-def respond_with_object_details_by_id(request_handler, class_reference, object_id):
+def respond_with_object_by_id(request_handler, class_reference, object_id):
     safe_id = 0
     try:
         safe_id = long(object_id)
@@ -16,6 +16,22 @@ def respond_with_object_details_by_id(request_handler, class_reference, object_i
         request_handler.abort(404)
     #TODO: make generic method in model that will dump JSON data
     give_response(request_handler, json.dumps(item))
+
+
+def respond_with_object_details_by_id(request_handler, class_reference, object_id):
+    safe_id = 0
+    try:
+        safe_id = long(object_id)
+    except ValueError:
+        #TODO: give proper error response here
+        request_handler.abort(500)
+
+    item = class_reference.get_by_id(safe_id)
+    if item is None:
+        #TODO: give proper error response here
+        request_handler.abort(404)
+    #TODO: make generic method in model that will dump JSON data
+    give_response(request_handler, json.dumps(item.details()))
 
 
 def respond_with_object_collection_by_class(request_handler, class_reference, limit, offset):
