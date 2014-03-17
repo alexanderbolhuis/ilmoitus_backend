@@ -46,7 +46,11 @@ class BaseAuthorizationHandler(BaseTestClass):
         """
             Helper method to set-up all data needed in these unit tests.
 
+<<<<<<< HEAD
             :param handler_routes: List of tuples that contain all url and handlers that will be set-up for this test.
+=======
+        :rtype : object
+>>>>>>> origin/details-development
             :param user_is_logged_in: Boolean that indicates whether a user mock-up should be made or not.
             :param user_is_admin: String that indicates whether or not the user is admin or not.
                 Only valid values are '0' (no admin) and '1' (is admin). Any other values will raise an Exception.
@@ -213,40 +217,13 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
 
 		
 class EmployeeDetailsHandlerTest(BaseTestClass):
-    def test_get_employee_details(self):
-        path = "/employees/details/(.*)"
-        self.set_up_custom_path([(path, main_application.SpecificEmployeeDetailsHandler)])
-        number_of_employees = random.randint(1, 10)
-        test_person = PersonDataCreator.create_valid_employee_data(0)
-        for i in range(0, number_of_employees):
-            PersonDataCreator.create_valid_employee_data(i+1)
-
-        path = "/employees/details/" + str(test_person.key.integer_id())
-
-        self.positive_test_stub_handler(path, "get")
-
-    def test_get_employee_details_invalid_id_format(self):
-        path = "/employees/details/(.*)"
-        self.set_up_custom_path([(path, main_application.SpecificEmployeeDetailsHandler)])
-
-        number_of_employees = random.randint(1, 10)
-        for i in range(0, number_of_employees):
-            PersonDataCreator.create_valid_employee_data(i)
-
-        path = "/employees/details/invalid_key_format"
-        self.negative_test_stub_handler(path, "get", 500)
-
-    def test_get_user_status_negative_invalid_id_none_given(self):
-        path = "/employees/details/(.*)"
-        self.set_up_custom_path([(path, main_application.SpecificEmployeeDetailsHandler)])
-
-        number_of_employees = random.randint(1, 10)
-        for i in range(0, number_of_employees):
-            PersonDataCreator.create_valid_employee_data(i)
-
-        path = "/employees/details/"
+    def test_get_employee_details_not_logged_in(self):
+        path = "/current_user_details/"
+        self.set_up_custom_path([(path, main_application.CurrentUserDetailsHandler)])
 
         self.negative_test_stub_handler(path, "get", 500)
+
+    #TODO: def test_get_employee_details_logged_in(self):
 
 
 class UserSettingsHandlerTest(BaseAuthorizationHandler):

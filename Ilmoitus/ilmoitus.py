@@ -144,6 +144,7 @@ class LogoutHandler(BaseRequestHandler):
             self.redirect("/login_page")
 
 
+
 class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
         #model.Employee as param since this handler handles calls from their POV.
@@ -159,12 +160,29 @@ class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
             #User is not logged in/registered; he/she needs to login first
             self.abort(401)
 
-			
+
 class SpecificEmployeeDetailsHandler(BaseRequestHandler):
     def get(self, employee_id):
         response_module.respond_with_object_details_by_id(self,
                                                           model.Employee,
                                                           employee_id)
+
+
+class CurrentUserDetailsHandler(BaseRequestHandler):
+    #todo: new global function for getting the current user
+    def get(self):
+        current_logged_in_user = users.get_current_user()
+        if current_logged_in_user is not None:
+            employee_query = model.Employee.query().filter(model.Employee.email == current_logged_in_user.email())
+            query_result = employee_query.get()
+            if query_result is not None:
+                response_module.give_response(self, query_result.details())
+            else:
+                print "Persoon bestaat niet"
+                self.abort(500)
+        else:
+            print "NIET ingelogd"
+            self.abort(500)
 
 
 class UserSettingsHandler(BaseRequestHandler):
@@ -187,13 +205,15 @@ application = webapp.WSGIApplication(
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
         ('/user/settings/', UserSettingsHandler),
+        ('/details/', CurrentUserDetailsHandler),
         ('/employees', AllEmployeesHandler),
+        ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/open_declarations/employee', AllOpenDeclarationsForEmployeeHandler),
+        ('/current_user_details/', CurrentUserDetailsHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
-        ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('.*', DefaultHandler)
     ],
     debug=True)  # if debug is set to false,
