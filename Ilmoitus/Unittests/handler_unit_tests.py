@@ -27,7 +27,7 @@ class EmployeeHandlerTest(BaseTestClass):
         self.set_up_custom_path([(path, main_application.AllEmployeesHandler)])
         number_of_persons = random.randint(1, 10)
         for i in range(0, number_of_persons):
-            PersonDataCreator.create_valid_employee_data(i)
+            PersonDataCreator.create_valid_person_data(i)
 
         self.negative_test_stub_handler(path, "get", 404)
 
@@ -199,7 +199,7 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
             user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
-        logged_in_person.__class__ = model.User
+        logged_in_person.class_name = "employee"
         logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
                                         logged_in_person.key.integer_id())
         logged_in_person.put()
@@ -213,45 +213,17 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
         self.positive_test_stub_handler(path, "get")
 
 
-class EmployeeDetailsHandlerTest(BaseTestClass):
+class EmployeeDetailsHandlerTest(BaseAuthorizationHandler):
     def test_get_employee_details_not_logged_in(self):
         path = "/current_user_details/"
         self.set_up_custom_path([(path, main_application.CurrentUserDetailsHandler)])
 
         self.negative_test_stub_handler(path, "get", 500)
 
-    #TODO: def test_get_employee_details_logged_in(self):
-
-
-class UserSettingsHandlerTest(BaseAuthorizationHandler):
-    def test_get_user_settings(self):
-        path = "/user/settings/"
+    def test_get_employee_details_logged_in(self):
         user_is_logged_in = True
-        user_is_admin = "0"
-        self.setup_server_with_user([(path, main_application.UserSettingsHandler)],
-                                    user_is_logged_in, user_is_admin)
+        user_is_admin = '0'
+        path = "/current_user_details/"
+        self.setup_server_with_user([(path, main_application.CurrentUserDetailsHandler)], user_is_logged_in, user_is_admin)
 
-        path = '/user/settings/'
         self.positive_test_stub_handler(path, "get")
-
-    def test_put_correct_user_settings(self):
-        path = "/user/settings/"
-        user_is_logged_in = True
-        user_is_admin = "0"
-        self.setup_server_with_user([(path, main_application.UserSettingsHandler)],
-                                    user_is_logged_in, user_is_admin)
-        params = {'wants_email_notifications': True, 'wants_phone_notifications': True}
-        self.testapp.put(path, params)
-        self.assertEqual(main_application.get_current_person(self).settings(), params)
-
-    def test_put_incorrect_user_settings(self):
-        path = "/user/settings/"
-        user_is_logged_in = True
-        user_is_admin = "0"
-        self.setup_server_with_user([(path, main_application.UserSettingsHandler)],
-                                    user_is_logged_in, user_is_admin)
-        params = {'wants_email_notifications': "hello there", 'wants_phone_notifications': 2}
-        settings = main_application.get_current_person(self).settings()
-        self.testapp.put(path, params)
-        current_user = main_application.get_current_person(self)
-        self.assertNotEqual(current_user.settings(), settings)

@@ -6,12 +6,12 @@ import json
 from google.appengine.api import users
 
 
-def get_current_person(person_class_reference=model.User):
+def get_current_person(class_name=None):
     """
      Global function that will retrieve the user that is currently logged in (through Google's users API)
      and fetch the person model object of this application that belongs to it through the email field.
 
-     :param person_class_reference: (Optional) A reference to a person model class that should be used to find
+     :param class_name: (Optional) A reference to a person model class that should be used to find
      the model class object that belongs to the logged in user. If not provided, model.Person will be used.
 
      :returns: A dictionary containing two key-value pairs:
@@ -26,8 +26,11 @@ def get_current_person(person_class_reference=model.User):
     return_data = {"user_is_logged_in": False, "person_value": None}
     if current_logged_in_user is not None:
         return_data["user_is_logged_in"] = True
-        person_query = person_class_reference.query().filter(person_class_reference.email ==
-                                                             current_logged_in_user.email())
+        if class_name is None:
+            person_query = model.User.query(model.User.email == current_logged_in_user.email())
+        else:
+            person_query = model.User.query(model.User.email == current_logged_in_user.email(), model.User.class_name ==
+                                                                                                class_name)
         query_result = person_query.get()
         if query_result is not None:
             return_data["person_value"] = query_result
@@ -86,7 +89,8 @@ class AllEmployeesHandler(BaseRequestHandler):
         response_module.respond_with_object_collection_by_class(self,
                                                                 model.User,  # Will only get Employees or subclasses
                                                                 self.get_header_limit(),
-                                                                self.get_header_offset())
+                                                                self.get_header_offset(),
+                                                                "employee")
 
 
 class SpecificEmployeeHandler(BaseRequestHandler):
@@ -144,11 +148,10 @@ class LogoutHandler(BaseRequestHandler):
             self.redirect("/login_page")
 
 
-
 class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
         #model.Employee as param since this handler handles calls from their POV.
-        person_data = get_current_person(model.User)
+        person_data = get_current_person("employee")
         person = person_data["person_value"]
         if person is not False:
             declaration_query = model.Declaration.query(model.Declaration.created_by == person.key)
@@ -173,10 +176,10 @@ class CurrentUserDetailsHandler(BaseRequestHandler):
     def get(self):
         current_logged_in_user = users.get_current_user()
         if current_logged_in_user is not None:
-            employee_query = model.Employee.query().filter(model.Employee.email == current_logged_in_user.email())
+            employee_query = model.User.query(model.User.email == current_logged_in_user.email())
             query_result = employee_query.get()
             if query_result is not None:
-                response_module.give_response(self, query_result.details())
+                response_module.give_response(self, json.dumps(query_result.details()))
             else:
                 print "Persoon bestaat niet"
                 self.abort(500)
@@ -187,14 +190,14 @@ class CurrentUserDetailsHandler(BaseRequestHandler):
 
 class UserSettingsHandler(BaseRequestHandler):
     def get(self):
-        employee = get_current_person(self)
+        employee = get_current_person()
         if employee is not None:
             response_module.give_response(self,
                                           json.dumps(employee.details()))
         #TODO what to do when employee is None?
 
     def put(self):
-        employee = get_current_person(self)
+        employee = get_current_person()
         if employee is not None:
             employee.wants_email_notifications = bool(self.request.get("wants_email_notifications"))
             employee.wants_phone_notifications = bool(self.request.get("wants_phone_notifications"))
@@ -205,7 +208,6 @@ application = webapp.WSGIApplication(
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
         ('/user/settings/', UserSettingsHandler),
-        ('/details/', CurrentUserDetailsHandler),
         ('/employees', AllEmployeesHandler),
         ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),

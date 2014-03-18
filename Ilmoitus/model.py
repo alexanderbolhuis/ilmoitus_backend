@@ -23,31 +23,58 @@ class User(polymodel.PolyModel):
     department = ndb.KeyProperty(kind=Department)
     supervisor = ndb.KeyProperty(kind="User")
 
-    def details(self):
-        return {'id': self.key.integer_id(),
-                'first_name': self.first_name,
-                'last_name': self.last_name,
-                'email': self.email,
-                'employee_number': self.employee_number}
-        #        'department': self.department.id(),
-        #        'supervisor': self.supervisor.id()}
+    all_custom_properties = ["first_name", "last_name", "email", "employee_number", "department",
+                             "supervisor"]
+    permissions = {"user": ["first_name", "last_name", "email"],
+                   "employee": ["first_name", "last_name", "email", "employee_number", "department",
+                                "supervisor"],
+                   "supervisor": ["first_name", "last_name", "email", "employee_number", "department",
+                                  "supervisor"],
+                   "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
+                                       "supervisor"]}
+
+    def details(self): #  TODO make this method react to the permissions property
+        if self.class_name == "user":
+            return {'id': self.key.integer_id(),
+                    'class_name': self.class_name,
+                    'first_name': self.first_name,
+                    'last_name': self.last_name,
+                    'email': self.email}
+        if self.class_name == "employee":
+            return {'id': self.key.integer_id(),
+                    'class_name': self.class_name,
+                    'first_name': self.first_name,
+                    'last_name': self.last_name,
+                    'email': self.email,
+                    'employee_number': self.employee_number,
+                    'department': self.department.id(),
+                    'supervisor': self.supervisor.id()}
+        if self.class_name == "supervisor":
+            return {'id': self.key.integer_id(),
+                    'class_name': self.class_name,
+                    'first_name': self.first_name,
+                    'last_name': self.last_name,
+                    'email': self.email,
+                    'employee_number': self.employee_number,
+                    'department': self.department.id(),
+                    'supervisor': self.supervisor.id()}
+        if self.class_name == "human_resources":
+            return {'id': self.key.integer_id(),
+                    'class_name': self.class_name,
+                    'first_name': self.first_name,
+                    'last_name': self.last_name,
+                    'email': self.email,
+                    'employee_number': self.employee_number,
+                    'department': self.department.id(),
+                    'supervisor': self.supervisor.id()}
 
     @classmethod
     def _get_kind(cls):
         return "User"  # TODO
 
     def __setattr__(self, key, value):
-        all_custom_properties = ["first_name", "last_name", "email", "employee_number", "department",
-                                 "supervisor"]
-        if key in all_custom_properties:
-            permissions = {"user": ["first_name", "last_name", "email"],
-                           "employee": ["first_name", "last_name", "email", "employee_number", "department",
-                                        "supervisor"],
-                           "supervisor": ["first_name", "last_name", "email", "employee_number", "department",
-                                          "supervisor"],
-                           "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
-                                               "supervisor"]}
-            object.__setattr__(self, key, self.handle_custom_property_set_operation(permissions, key, value))
+        if key in self.all_custom_properties:
+            object.__setattr__(self, key, self.handle_custom_property_set_operation(self.permissions, key, value))
         else:
             object.__setattr__(self, key, value)
 
@@ -77,15 +104,40 @@ class Declaration(ndb.Model):
     submitted_to_hr_by = ndb.KeyProperty(kind=User)
     approved_by = ndb.KeyProperty(kind=User)
 
-    def details(self):
-        return {'id': self.key().id(),
-                'created_at': str(self.created_at),
-                'created_by': self.created_by.integer_id(),
-                'assigned_to': self.assigned_to.integer_id(),
-                'comment': self.comment,
-                'declined_by': self.declined_by.integer_id(),
-                'submitted_to_hr_by': self.submitted_to_hr_by.integer_id(),
-                'approved_by': self.approved_by.integer_id()}
+    all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                 "submitted_to_hr_by"]
+    permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
+                           "closed_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                                  "submitted_to_hr_by"],
+                           "declined_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by"],
+                           "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                                    "submitted_to_hr_by", "approved_by"]}
+    def details(self): #  TODO make this method react to the permissions property
+        if self.class_name == "open_declaration":
+            return {'id': self.key.integer_id(),
+                    "class_name": self.class_name,
+                    'created_at': str(self.created_at),
+                    'created_by': self.created_by.integer_id(),
+                    'assigned_to': self.assigned_to.integer_id(),
+                    'comment': self.comment}
+        if self.class_name == "declined_declaration":
+                        return {'id': self.key.integer_id(),
+                    "class_name": self.class_name,
+                    'created_at': str(self.created_at),
+                    'created_by': self.created_by.integer_id(),
+                    'assigned_to': self.assigned_to.integer_id(),
+                    'comment': self.comment,
+                    'declined_by': self.declined_by.integer_id()}
+        if self.class_name == "approved_declaration":
+            return {'id': self.key.integer_id(),
+                    "class_name": self.class_name,
+                    'created_at': str(self.created_at),
+                    'created_by': self.created_by.integer_id(),
+                    'assigned_to': self.assigned_to.integer_id(),
+                    'comment': self.comment,
+                    'declined_by': self.declined_by.integer_id(),
+                    'submitted_to_hr_by': self.submitted_to_hr_by.integer_id(),
+                    'approved_by': self.approved_by.integer_id()}
 
     def __setattr__(self, key, value):
         """
@@ -108,18 +160,8 @@ class Declaration(ndb.Model):
         Uses the handle_custom_property_set_operation function to actually determine if the value should be changed
         or not.
         """
-        all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                 "submitted_to_hr_by"]
-        if key in all_custom_properties:
-            permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
-                           "closed_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                                  "submitted_to_hr_by"],
-                           "declined_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                                    "submitted_to_hr_by"],
-                           "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                                    "submitted_to_hr_by"]}
-
-            object.__setattr__(self, key, self.handle_custom_property_set_operation(permissions, key, value))
+        if key in self.all_custom_properties:
+            object.__setattr__(self, key, self.handle_custom_property_set_operation(self.permissions, key, value))
         else:
             object.__setattr__(self, key, value)
 
