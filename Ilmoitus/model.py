@@ -5,27 +5,6 @@ from google.appengine.ext.ndb import polymodel
 from google.appengine.ext import blobstore
 
 
-# Person Model class
-class Person(polymodel.PolyModel):
-    first_name = ndb.StringProperty()
-    last_name = ndb.StringProperty()
-    email = ndb.StringProperty()
-    wants_email_notifications = ndb.BooleanProperty()
-    wants_phone_notifications = ndb.BooleanProperty()
-
-    def details(self):
-        return {'id': self.key.integer_id(),
-                'first_name': self.first_name,
-                'last_name': self.last_name,
-                'email': self.email,
-                'wants_email_notifications': self.wants_email_notifications,
-                'wants_phone_notifications': self.wants_phone_notifications}
-
-    def settings(self):
-        return {'wants_email_notifications': self.wants_email_notifications,
-                'wants_phone_notifications': self.wants_phone_notifications}
-
-
 # Department Model class
 class Department(ndb.Model):
     name = ndb.StringProperty
@@ -34,111 +13,129 @@ class Department(ndb.Model):
         return {'name': self.name}
 
 
-# Employee Model class
-class Employee(Person):
+# Person Model class
+class User(polymodel.PolyModel):
+    class_name = ndb.StringProperty()
+    first_name = ndb.StringProperty()
+    last_name = ndb.StringProperty()
+    email = ndb.StringProperty()
     employee_number = ndb.IntegerProperty()
     department = ndb.KeyProperty(kind=Department)
-    supervisor = ndb.KeyProperty(kind="Supervisor")
+    supervisor = ndb.KeyProperty(kind="User")
+
+    def details(self):
+        return {'id': self.key.integer_id(),
+                'first_name': self.first_name,
+                'last_name': self.last_name,
+                'email': self.email,
+                'employee_number': self.employee_number}
+        #        'department': self.department.id(),
+        #        'supervisor': self.supervisor.id()}
 
     @classmethod
     def _get_kind(cls):
-        return "Employee"
+        return "User"  # TODO
 
-    def details(self):
-        super_obj = super(Employee, self)
-        super_dict = super_obj.details()
-        self_dict = {'employee_number': self.employee_number,
-                     'department': self.department.integer_id(),
-                     'supervisor': self.supervisor.integer_id()}
-        return dict(super_dict.items() + self_dict.items())
+    def __setattr__(self, key, value):
+        all_custom_properties = ["first_name", "last_name", "email", "employee_number", "department",
+                                 "supervisor"]
+        if key in all_custom_properties:
+            permissions = {"user": ["first_name", "last_name", "email"],
+                           "employee": ["first_name", "last_name", "email", "employee_number", "department",
+                                        "supervisor"],
+                           "supervisor": ["first_name", "last_name", "email", "employee_number", "department",
+                                          "supervisor"],
+                           "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
+                                               "supervisor"]}
+            object.__setattr__(self, key, self.handle_custom_property_set_operation(permissions, key, value))
+        else:
+            object.__setattr__(self, key, value)
 
-
-# AdministrativeEmployee Model class
-class AdministrativeEmployee(Employee):
-    @classmethod
-    def _get_kind(cls):
-        return "AdministrativeEmployee"
-
-    def details(self):
-        super_dict = super(AdministrativeEmployee, self).details()
-        return dict(super_dict.items())
-
-
-# HumanResources Model class
-class HumanResources(AdministrativeEmployee):
-    @classmethod
-    def _get_kind(cls):
-        return "HumanResources"
-
-    def details(self):
-        super_dict = super(HumanResources, self).details()
-        return dict(super_dict.items())
-
-
-# Supervisor Model class
-class Supervisor(AdministrativeEmployee):
-    @classmethod
-    def _get_kind(cls):
-        return "Supervisor"
-
-    def details(self):
-        super_dict = super(Supervisor, self).details()
-        return dict(super_dict.items())
+    def handle_custom_property_set_operation(self, permissions, key, value):
+        #todo: make global function?
+        try:
+            default_value = self.__dict__[key]
+        except KeyError:
+            default_value = None
+        # check if the requested key exists within the list of the permission dictionary that belongs to this class'
+        #list
+        if key in permissions[self.class_name]:
+            #It's allowed; return the new value
+            return value
+        else:
+            return default_value
 
 
 # OpenDeclaration Model class
-class OpenDeclaration(polymodel.PolyModel):
+class Declaration(ndb.Model):
+    class_name = ndb.StringProperty()
     created_at = ndb.DateTimeProperty(auto_now_add=True)
-    created_by = ndb.KeyProperty(kind=Employee)
-    assigned_to = ndb.KeyProperty(kind=Supervisor)
+    created_by = ndb.KeyProperty(kind=User)
+    assigned_to = ndb.KeyProperty(kind=User)
     comment = ndb.StringProperty()
+    declined_by = ndb.KeyProperty(kind=User)
+    submitted_to_hr_by = ndb.KeyProperty(kind=User)
+    approved_by = ndb.KeyProperty(kind=User)
 
     def details(self):
         return {'id': self.key().id(),
                 'created_at': str(self.created_at),
                 'created_by': self.created_by.integer_id(),
                 'assigned_to': self.assigned_to.integer_id(),
-                'comment': self.comment}
+                'comment': self.comment,
+                'declined_by': self.declined_by.integer_id(),
+                'submitted_to_hr_by': self.submitted_to_hr_by.integer_id(),
+                'approved_by': self.approved_by.integer_id()}
 
+    def __setattr__(self, key, value):
+        """
+         Function that overrides the default setting of properties within python. Take the following code:
 
-# LockedDeclaration Model class
-class LockedDeclaration(OpenDeclaration):
-    assigned_to = ndb.KeyProperty(kind=Supervisor)
+         class Foo(object):
+            bar = 5
 
-    def details(self):
-        super_dict = super(LockedDeclaration, self).details()
-        self_dict = {'assigned_to': self.assigned_to.integer_id()}
-        return dict(super_dict.items() + self_dict.items())
+        baz = Foo()
+        baz.bar = 10
 
+        The statement baz.bar = 10 will now come in this method where things can be checked before deciding to set
+        the property (or not).
 
-# DeclinedDeclaration Model class
-class DeclinedDeclaration(LockedDeclaration):
-    declined_by = ndb.KeyProperty(kind=AdministrativeEmployee)
+        This implementation specifically will check if the requested set operation for a specific property is
+        allowed with the current value of the class_name property. If that value is "open_declaration" for instance,
+        the declined_by property is not allowed to be set (but is when the class_name property is set to
+        "closed_declaration").
 
-    def details(self):
-        super_dict = super(DeclinedDeclaration, self).details()
-        self_dict = {'declined_by': self.declined_by.integer_id()}
-        return dict(super_dict.items() + self_dict.items())
+        Uses the handle_custom_property_set_operation function to actually determine if the value should be changed
+        or not.
+        """
+        all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                 "submitted_to_hr_by"]
+        if key in all_custom_properties:
+            permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
+                           "closed_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                                  "submitted_to_hr_by"],
+                           "declined_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                                    "submitted_to_hr_by"],
+                           "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                                    "submitted_to_hr_by"]}
 
+            object.__setattr__(self, key, self.handle_custom_property_set_operation(permissions, key, value))
+        else:
+            object.__setattr__(self, key, value)
 
-# SuperVisorApprovedDeclaration Model class
-class SuperVisorApprovedDeclaration(LockedDeclaration):
-    submitted_to_hr_by = ndb.KeyProperty(kind=Supervisor)
-
-    def details(self):
-        super_dict = super(SuperVisorApprovedDeclaration, self).details()
-        self_dict = {'submitted_to_hr_by': self.submitted_to_hr_by.integer_id()}
-        return dict(super_dict.items() + self_dict.items())
-
-
-# CompletelyApprovedDeclaration Model class
-class CompletelyApprovedDeclaration(SuperVisorApprovedDeclaration):
-    approved_by = ndb.KeyProperty(kind=HumanResources)
-
-    def details(self):
-        super_dict = super(CompletelyApprovedDeclaration, self).details()
-        self_dict = {'approved_by': self.approved_by.integer_id()}
-        return dict(super_dict.items() + self_dict.items())
+    def handle_custom_property_set_operation(self, permissions, key, value):
+        #todo: make global function?
+        try:
+            default_value = self.__dict__[key]
+        except KeyError:
+            default_value = None
+        # check if the requested key exists within the list of the permission dictionary that belongs to this class'
+        #list
+        if key in permissions[self.class_name]:
+            #It's allowed; return the new value
+            return value
+        else:
+            return default_value
 
 
 # DeclarationSubType Model class
@@ -170,7 +167,7 @@ class DeclarationLine(ndb.Model):
 
 
 class Attachment(ndb.Model):
-    ndb.KeyProperty(kind=OpenDeclaration)
+    ndb.KeyProperty(kind=Declaration)
     blobstore.BlobReferenceProperty(required=True)
 
     def details(self):

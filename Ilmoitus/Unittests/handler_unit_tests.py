@@ -27,7 +27,7 @@ class EmployeeHandlerTest(BaseTestClass):
         self.set_up_custom_path([(path, main_application.AllEmployeesHandler)])
         number_of_persons = random.randint(1, 10)
         for i in range(0, number_of_persons):
-            PersonDataCreator.create_valid_person_data(i)
+            PersonDataCreator.create_valid_employee_data(i)
 
         self.negative_test_stub_handler(path, "get", 404)
 
@@ -46,11 +46,8 @@ class BaseAuthorizationHandler(BaseTestClass):
         """
             Helper method to set-up all data needed in these unit tests.
 
-<<<<<<< HEAD
             :param handler_routes: List of tuples that contain all url and handlers that will be set-up for this test.
-=======
-        :rtype : object
->>>>>>> origin/details-development
+            :rtype : object
             :param user_is_logged_in: Boolean that indicates whether a user mock-up should be made or not.
             :param user_is_admin: String that indicates whether or not the user is admin or not.
                 Only valid values are '0' (no admin) and '1' (is admin). Any other values will raise an Exception.
@@ -202,8 +199,8 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
             user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
-        logged_in_person.__class__ = model.Employee
-        logged_in_person._key = ndb.Key(model.Person, logged_in_person.key.integer_id(), model.Employee,
+        logged_in_person.__class__ = model.User
+        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
                                         logged_in_person.key.integer_id())
         logged_in_person.put()
 
@@ -215,7 +212,7 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
 
         self.positive_test_stub_handler(path, "get")
 
-		
+
 class EmployeeDetailsHandlerTest(BaseTestClass):
     def test_get_employee_details_not_logged_in(self):
         path = "/current_user_details/"

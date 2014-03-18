@@ -6,7 +6,7 @@ import json
 from google.appengine.api import users
 
 
-def get_current_person(person_class_reference=model.Person):
+def get_current_person(person_class_reference=model.User):
     """
      Global function that will retrieve the user that is currently logged in (through Google's users API)
      and fetch the person model object of this application that belongs to it through the email field.
@@ -69,7 +69,7 @@ class DefaultHandler(BaseRequestHandler):
 class AllPersonsHandler(BaseRequestHandler):
     def get(self):
         response_module.respond_with_object_collection_by_class(self,  # passing self is unusual, but needed to generate
-                                                                model.Person,  # an HTTP response
+                                                                model.User,  # an HTTP response
                                                                 self.get_header_limit(),
                                                                 self.get_header_offset())
 
@@ -77,14 +77,14 @@ class AllPersonsHandler(BaseRequestHandler):
 class SpecificPersonHandler(BaseRequestHandler):
     def get(self, person_id):
         response_module.respond_with_object_details_by_id(self,
-                                                          model.Employee,
+                                                          model.User,
                                                           person_id)  # Since NDB, keynames are also valid ID's!
 
 
 class AllEmployeesHandler(BaseRequestHandler):
     def get(self):
         response_module.respond_with_object_collection_by_class(self,
-                                                                model.Employee,  # Will only get Employees or subclasses
+                                                                model.User,  # Will only get Employees or subclasses
                                                                 self.get_header_limit(),
                                                                 self.get_header_offset())
 
@@ -92,7 +92,7 @@ class AllEmployeesHandler(BaseRequestHandler):
 class SpecificEmployeeHandler(BaseRequestHandler):
     def get(self, employee_id):
         response_module.respond_with_object_details_by_id(self,
-                                                          model.Employee,
+                                                          model.User,
                                                           employee_id)
 
 
@@ -148,10 +148,10 @@ class LogoutHandler(BaseRequestHandler):
 class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
         #model.Employee as param since this handler handles calls from their POV.
-        person_data = get_current_person(model.Employee)
+        person_data = get_current_person(model.User)
         person = person_data["person_value"]
         if person is not False:
-            declaration_query = model.OpenDeclaration.query(model.OpenDeclaration.created_by == person.key)
+            declaration_query = model.Declaration.query(model.Declaration.created_by == person.key)
             query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
             response_module.respond_with_existing__model_object_collection(self, query_result)
