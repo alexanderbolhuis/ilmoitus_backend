@@ -2,6 +2,8 @@ __author__ = 'Sjors van Lemmen'
 import random
 import json
 import ilmoitus_model
+import data_bootstrapper
+import webtest
 from google.appengine.ext import ndb
 import ilmoitus as main_application
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
@@ -11,7 +13,7 @@ from Base.base_test_methods import BaseTestClass
 class EmployeeHandlerTest(BaseTestClass):
     def test_get_all_employee_positive(self):
         path = "/employees"
-        self.set_up_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
         number_of_employees = random.randint(1, 10)
         for i in range(0, number_of_employees):
             PersonDataCreator.create_valid_employee_data(i)
@@ -24,7 +26,7 @@ class EmployeeHandlerTest(BaseTestClass):
          of it's superclass Person, but none that match on the Employee class.
         """
         path = "/employees"
-        self.set_up_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
         number_of_persons = random.randint(1, 10)
         for i in range(0, number_of_persons):
             PersonDataCreator.create_valid_person_data(i)
@@ -36,7 +38,7 @@ class EmployeeHandlerTest(BaseTestClass):
          This test will test if the right error is given when there are no persons whatsoever.
         """
         path = "/employees"
-        self.set_up_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
 
         self.negative_test_stub_handler(path, "get", 404)
 
@@ -60,7 +62,7 @@ class BaseAuthorizationHandler(BaseTestClass):
                 -"random_person2" : Another person object that will always be different from the first.
         """
         path = "/auth"
-        self.set_up_test_server_with_custom_routes(handler_routes)
+        self.setup_test_server_with_custom_routes(handler_routes)
         self.testbed.init_user_stub()
 
         number_of_persons = random.randint(3, 10)
@@ -213,7 +215,7 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
 class EmployeeDetailsHandlerTest(BaseAuthorizationHandler):
     def test_get_employee_details_not_logged_in(self):
         path = "/current_user_details/"
-        self.set_up_test_server_with_custom_routes([(path, main_application.CurrentUserDetailsHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.CurrentUserDetailsHandler)])
 
         self.negative_test_stub_handler(path, "get", 500)
 
@@ -238,7 +240,6 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "employee"
-        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id())
         logged_in_person.put()
 
         supervisor = PersonDataCreator.create_valid_supervisor()
@@ -260,7 +261,6 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "employee"
-        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id())
         logged_in_person.put()
 
         supervisor = PersonDataCreator.create_valid_supervisor()
@@ -279,7 +279,6 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "supervisor"
-        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id())
         logged_in_person.put()
 
         employee = PersonDataCreator.create_valid_employee_data()
@@ -324,5 +323,5 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
     def test_negative_get_all_not_logged_in(self):
         path = '/declarations/hr'
-        self.set_up_test_server_with_custom_routes([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
         self.negative_test_stub_handler(path, "get", 401)

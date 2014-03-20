@@ -4,7 +4,7 @@ import response_module
 import ilmoitus_model
 import json
 import logging
-
+import data_bootstrapper
 from google.appengine.api import users
 from error_response_module import give_error_response
 from google.appengine.ext import ndb
@@ -255,7 +255,6 @@ class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
             self.abort(401)
 
 
-
 class CurrentUserAssociatedDeclarations(BaseRequestHandler):
     def get(self):
         person_data = get_current_person()
@@ -272,7 +271,7 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
         if query_result != []:
             return_list = []
             for declaration in query_result:
-                return_list.append(declaration.details())
+                return_list.append(declaration.get_object_as_data_dict())
             response_module.give_response(self, json.dumps(return_list))
         else:
             self.abort(404)
@@ -294,6 +293,9 @@ application = webapp.WSGIApplication(
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
+        ('/clear', data_bootstrapper.ClearHandler),
+        ('/fill', data_bootstrapper.FillHandler),
+        ('/create', data_bootstrapper.CreateDataHandler),
         ('.*', DefaultHandler)
     ],
     debug=True)  # if debug is set to false,

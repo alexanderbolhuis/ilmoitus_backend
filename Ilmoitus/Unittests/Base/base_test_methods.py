@@ -1,8 +1,8 @@
 __author__ = 'Sjors van Lemmen'
 from unittest import TestCase
-import webtest
 import webapp2
 import json
+import webtest
 from google.appengine.ext import testbed
 
 import ilmoitus as main_application
@@ -17,7 +17,7 @@ class BaseTestClass(TestCase):
     fashion, but they also reduce code bloating by a significant margin.
     """
 
-    def set_up_test_server_with_custom_routes(self, handler_routes=([(None, None)])):
+    def setup_test_server_with_custom_routes(self, handler_routes=([(None, None)])):
         """
         This method sets up a testbed object using the given handlers and paths.
         This allows tests to specify specific paths to be used for the given handler.

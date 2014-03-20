@@ -47,12 +47,12 @@ class PersonDataCreator():
     @staticmethod
     def create_valid_human_resource(human_resources_human_resource=None, employee_number=0):
         human_resource = ilmoitus_model.Person()
-        human_resource.class_name = "human_resource"
+        human_resource.class_name = "human_resources"
         human_resource.department = DepartmentDataCreator.create_valid_department().key
         if human_resources_human_resource is not None:
             human_resource.human_resource = human_resources_human_resource.key
         human_resource.employee_number = employee_number
-        human_resource.put
+        human_resource.put()
         return human_resource
 
 
