@@ -7,6 +7,7 @@ import logging
 
 from google.appengine.api import users
 from error_response_module import give_error_response
+from google.appengine.ext import ndb
 
 
 def get_current_person(class_name=None):
@@ -254,6 +255,30 @@ class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
             self.abort(401)
 
 
+
+class CurrentUserAssociatedDeclarations(BaseRequestHandler):
+    def get(self):
+        person_data = get_current_person()
+        current_user = person_data["person_value"]
+
+        key = current_user.key
+        declaration = ilmoitus_model.Declaration
+        query = ilmoitus_model.Declaration.query(ndb.OR(declaration.created_by == key,
+                                 declaration.assigned_to == key,
+                                 declaration.approved_by == key,
+                                 declaration.submitted_to_hr_by == key,
+                                 declaration.declined_by == key))
+        query_result = query.fetch()
+        if query_result != []:
+            return_list = []
+            for declaration in query_result:
+                return_list.append(declaration.details())
+            response_module.give_response(self, json.dumps(return_list))
+        else:
+            self.abort(404)
+
+
+
 application = webapp.WSGIApplication(
     [
         ('/persons', AllPersonsHandler),
@@ -265,6 +290,7 @@ application = webapp.WSGIApplication(
         ('/open_declarations/employee', AllOpenDeclarationsForEmployeeHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
         ('/current_user_details/', CurrentUserDetailsHandler),
+        ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!

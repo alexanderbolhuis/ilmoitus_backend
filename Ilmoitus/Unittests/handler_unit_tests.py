@@ -221,7 +221,81 @@ class EmployeeDetailsHandlerTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/current_user_details/"
-        self.setup_server_with_user([(path, main_application.CurrentUserDetailsHandler)], user_is_logged_in, user_is_admin)
+        self.setup_server_with_user([(path, main_application.CurrentUserDetailsHandler)],
+                                    user_is_logged_in,
+                                    user_is_admin)
+
+        self.positive_test_stub_handler(path, "get")
+
+
+class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
+    def test_get_current_employee_associated_declarations(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/current_user/associated_declarations"
+        setup_data = self.setup_server_with_user([(path, main_application.CurrentUserAssociatedDeclarations)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id())
+        logged_in_person.put()
+
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        logged_in_person.supervisor = supervisor.key
+        logged_in_person.put()
+        DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+
+        self.positive_test_stub_handler(path, "get")
+
+    def test_get_current_employee_none_associated_declarations(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/current_user/associated_declarations"
+        setup_data = self.setup_server_with_user([(path, main_application.CurrentUserAssociatedDeclarations)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id())
+        logged_in_person.put()
+
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        logged_in_person.supervisor = supervisor.key
+        logged_in_person.put()
+
+        self.negative_test_stub_handler(path, "get", 404)
+
+    def test_get_current_supervisor_associated_declarations_assigned_to(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/current_user/associated_declarations"
+        setup_data = self.setup_server_with_user([(path, main_application.CurrentUserAssociatedDeclarations)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id())
+        logged_in_person.put()
+
+        employee = PersonDataCreator.create_valid_employee_data()
+        employee.supervisor = logged_in_person.key
+        employee.put()
+        DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
+
+        employee = PersonDataCreator.create_valid_employee_data()
+        employee.supervisor = logged_in_person.key
+        employee.put()
+        DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
+
+        employee = PersonDataCreator.create_valid_employee_data()
+        employee.supervisor = logged_in_person.key
+        employee.put()
+        DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
 
         self.positive_test_stub_handler(path, "get")
 
