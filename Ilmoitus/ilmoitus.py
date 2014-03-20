@@ -3,7 +3,9 @@ import webapp2 as webapp
 import response_module
 import model
 import json
+import logging
 from google.appengine.api import users
+from Unittests import test_data_creator
 
 
 def get_current_person(class_name=None):
@@ -43,6 +45,8 @@ class BaseRequestHandler(webapp.RequestHandler):
     limit and/or offset is for a request
     """
 
+    http_status_code = -1
+
     def get_header_limit(self):
         limit = self.request.get("limit", default_value=20)
         return limit
@@ -50,6 +54,25 @@ class BaseRequestHandler(webapp.RequestHandler):
     def get_header_offset(self):
         offset = self.request.get("offset", default_value=0)
         return offset
+
+    def handle_exception(self, exception, debug):
+        logging.debug(self.request)
+        if debug:
+            logging.exception(exception)
+
+        self.response.write(self.request.body)
+        self.response.set_status(self.http_status_code)
+
+    def prepare_error_response(self, status_code, user_message, developer_message="", error_code=0,
+                               more_info=""):
+        response_data = {"status_code": status_code, "developer_message": developer_message,
+                         "user_message": user_message,
+                         "error_code": error_code, "more_info": more_info}
+        response = self.response
+        response.headers['Content-Type'] = "application/json"
+
+        self.request.body = json.dumps(response_data)
+        self.http_status_code = status_code
 
 
 class DefaultHandler(BaseRequestHandler):
@@ -71,10 +94,13 @@ class DefaultHandler(BaseRequestHandler):
 
 class AllPersonsHandler(BaseRequestHandler):
     def get(self):
-        response_module.respond_with_object_collection_by_class(self,  # passing self is unusual, but needed to generate
-                                                                model.User,  # an HTTP response
-                                                                self.get_header_limit(),
-                                                                self.get_header_offset())
+        self.prepare_error_response(500, "The request went wrong")
+        self.abort(400)
+        # test_data_creator.PersonDataCreator.create_valid_person_data(1)
+        # response_module.respond_with_object_collection_by_class(self,  # passing self is unusual, but needed to generate
+        #                                                         model.User,  # an HTTP response
+        #                                                         self.get_header_limit(),
+        #                                                         self.get_header_offset())
 
 
 class SpecificPersonHandler(BaseRequestHandler):
@@ -194,14 +220,15 @@ class UserSettingsHandler(BaseRequestHandler):
         if employee is not None:
             response_module.give_response(self,
                                           json.dumps(employee.details()))
-        #TODO what to do when employee is None?
+            #TODO what to do when employee is None?
 
     def put(self):
         employee = get_current_person()
         if employee is not None:
             employee.wants_email_notifications = bool(self.request.get("wants_email_notifications"))
             employee.wants_phone_notifications = bool(self.request.get("wants_phone_notifications"))
-        #TODO what to do when employee is None?
+            #TODO what to do when employee is None?
+
 
 application = webapp.WSGIApplication(
     [
