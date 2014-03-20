@@ -4,6 +4,7 @@ import response_module
 import model
 import json
 from google.appengine.api import users
+from google.appengine.ext import ndb
 
 
 def get_current_person(class_name=None):
@@ -203,6 +204,30 @@ class UserSettingsHandler(BaseRequestHandler):
             employee.wants_phone_notifications = bool(self.request.get("wants_phone_notifications"))
         #TODO what to do when employee is None?
 
+
+class CurrentUserAssociatedDeclarations(BaseRequestHandler):
+    def get(self):
+        person_data = get_current_person()
+        current_user = person_data["person_value"]
+
+        key = current_user.key
+        declaration = model.Declaration
+        query = model.Declaration.query(ndb.OR(declaration.created_by == key,
+                                 declaration.assigned_to == key,
+                                 declaration.approved_by == key,
+                                 declaration.submitted_to_hr_by == key,
+                                 declaration.declined_by == key))
+        query_result = query.fetch()
+        if query_result != []:
+            return_list = []
+            for declaration in query_result:
+                return_list.append(declaration.details())
+            response_module.give_response(self, json.dumps(return_list))
+        else:
+            self.abort(404)
+
+
+
 application = webapp.WSGIApplication(
     [
         ('/persons', AllPersonsHandler),
@@ -213,6 +238,7 @@ application = webapp.WSGIApplication(
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/open_declarations/employee', AllOpenDeclarationsForEmployeeHandler),
         ('/current_user_details/', CurrentUserDetailsHandler),
+        ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
