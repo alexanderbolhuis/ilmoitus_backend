@@ -84,6 +84,16 @@ class Declaration(ndb.Model):
         "approved_declaration_hr": "Goedgekeurd",
     }
 
+    #'Static' dictionary with readable states
+    readable_states = {
+                    "open_declaration": "Open",
+                    "locked_declaration": "In behandeling",                 #User story (leidinggevende kan declaratie locken)
+                    "declined_declaration": "Afgekeurd leidinggevende",
+                    "approved_declaration": "Goedgekeurd leidinggevende",
+                    "closed_declaration": "Afgekeurd",                      #Declined bij hr i suppose?
+                    "approved_declaration_hr": "Goedgekeurd",
+    }
+
     all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "declined_by",
                              "submitted_to_hr_by"]
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
@@ -101,6 +111,9 @@ class Declaration(ndb.Model):
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
+
+    def readable_state(self):
+        return self.readable_states[self.class_name];
 
     def readable_state(self):
         return self.readable_states[self.class_name];

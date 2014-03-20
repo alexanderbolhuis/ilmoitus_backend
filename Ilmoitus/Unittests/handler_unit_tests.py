@@ -189,14 +189,14 @@ class AuthorizationHandlerTest(BaseAuthorizationHandler):
                       + str(error))
 
 
-class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
+class DeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
     def test_positive_get_all(self):
         user_is_logged_in = True
         user_is_admin = '0'
-        path = '/open_declarations/employee'
+        path = '/declarations/employee'
 
         setup_data = self.setup_server_with_user(
-            [('/open_declarations/employee', main_application.AllOpenDeclarationsForEmployeeHandler)],
+            [('/declarations/employee', main_application.AllDeclarationsForEmployeeHandler)],
             user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
@@ -207,9 +207,16 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
 
         logged_in_person.supervisor = supervisor.key
         logged_in_person.put()
-        open_declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
 
         self.positive_test_stub_handler(path, "get")
+
+    def test_negative_get_all_not_logged_in(self):
+        path = '/declarations/employee'
+        self.setup_test_server_with_custom_routes([(path, main_application.AllDeclarationsForEmployeeHandler)])
+        self.negative_test_stub_handler(path, "get", 401)
+
+
 
 
 class EmployeeDetailsHandlerTest(BaseAuthorizationHandler):
@@ -299,6 +306,7 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
         self.positive_test_stub_handler(path, "get")
 
 
+
 class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
     def test_positive_get_all(self):
         user_is_logged_in = True
@@ -323,5 +331,6 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
     def test_negative_get_all_not_logged_in(self):
         path = '/declarations/hr'
+
         self.setup_test_server_with_custom_routes([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
         self.negative_test_stub_handler(path, "get", 401)

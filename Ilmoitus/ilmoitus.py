@@ -81,7 +81,10 @@ class BaseRequestHandler(webapp.RequestHandler):
             logging.exception(exception)
 
         self.response.write(self.request.body)
-        self.response.set_status(exception.code)
+        try:
+            self.response.set_status(exception.code)
+        except:
+            print exception
 
 
 class DefaultHandler(BaseRequestHandler):
@@ -180,13 +183,15 @@ class LogoutHandler(BaseRequestHandler):
             self.redirect("/login_page")
 
 
-class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
+class AllDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
         #model.Employee as param since this handler handles calls from their POV.
         person_data = get_current_person("employee")
         person = person_data["person_value"]
-        if person is not False:
+
+        if person is not None:
             declaration_query = ilmoitus_model.Declaration.query(ilmoitus_model.Declaration.created_by == person.key)
+
             query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
             response_module.respond_with_existing_model_object_collection(self, query_result)
@@ -286,8 +291,8 @@ application = webapp.WSGIApplication(
         ('/employees', AllEmployeesHandler),
         ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
-        ('/open_declarations/employee', AllOpenDeclarationsForEmployeeHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
+        ('/declarations/employee', AllDeclarationsForEmployeeHandler),
         ('/current_user_details/', CurrentUserDetailsHandler),
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
         ('/auth/login', LoginHandler),
