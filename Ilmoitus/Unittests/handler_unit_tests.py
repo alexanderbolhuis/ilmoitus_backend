@@ -241,10 +241,6 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "human_resources"
-        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
-                                        logged_in_person.key.integer_id())
-        logged_in_person.put()
-
         human_resource = PersonDataCreator.create_valid_human_resource()
 
         logged_in_person.human_resource = human_resource.key
@@ -257,3 +253,34 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
         path = '/declarations/hr'
         self.set_up_custom_path([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
         self.negative_test_stub_handler(path, "get", 401)
+
+
+class CurrentUserSupervisorsHandlerTest(BaseAuthorizationHandler):
+    def test_get_employee_supervisor_not_logged_in(self):
+        path = "/supervisors/"
+        #('/supervisors/', CurrentUserSupervisors),
+        self.set_up_custom_path([(path, main_application.CurrentUserSupervisors)])
+
+        self.negative_test_stub_handler(path, "get", 500)
+
+    def test_positive_get_all(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = '/supervisors/'
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.CurrentUserSupervisors)],
+            user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
+                                        logged_in_person.key.integer_id())
+        logged_in_person.put()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        supervisor2 = PersonDataCreator.create_valid_supervisor()
+
+        logged_in_person.supervisor = supervisor.key
+        logged_in_person.put()
+
+        self.positive_test_stub_handler(path, "get")
