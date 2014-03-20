@@ -2,6 +2,8 @@ __author__ = 'Sjors van Lemmen'
 import random
 import json
 import model
+import data_bootstrapper
+import webtest
 from google.appengine.ext import ndb
 import ilmoitus as main_application
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
@@ -255,3 +257,19 @@ class UserSettingsHandlerTest(BaseAuthorizationHandler):
         self.testapp.put(path, params)
         current_user = main_application.get_current_person(self)
         self.assertNotEqual(current_user.settings(), settings)
+
+class BootStrapHandler(BaseTestClass):
+    def test_create_handler(self):
+        self.setup_dummy_server_without_handlers()
+        create = data_bootstrapper.CreateDataHandler()
+        create.get()
+
+    def test_clear_handler(self):
+        self.setup_dummy_server_without_handlers()
+        clear = data_bootstrapper.ClearHandler()
+        clear.get()
+
+    def test_fill_handler(self):
+        self.setup_dummy_server_without_handlers()
+        fill = data_bootstrapper.FillHandler()
+        fill.get()
