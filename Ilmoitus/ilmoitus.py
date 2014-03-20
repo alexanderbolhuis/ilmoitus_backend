@@ -194,14 +194,38 @@ class UserSettingsHandler(BaseRequestHandler):
         if employee is not None:
             response_module.give_response(self,
                                           json.dumps(employee.details()))
-        #TODO what to do when employee is None?
+            #TODO what to do when employee is None?
 
     def put(self):
         employee = get_current_person()
         if employee is not None:
             employee.wants_email_notifications = bool(self.request.get("wants_email_notifications"))
             employee.wants_phone_notifications = bool(self.request.get("wants_phone_notifications"))
-        #TODO what to do when employee is None?
+            #TODO what to do when employee is None?
+
+
+class CurrentUserSupervisors(BaseRequestHandler):
+    def get(self):
+        #TODO now this function gets all supervisors, we need to know if it only need supervisors of current person
+        employee = get_current_person()
+        if employee["user_is_logged_in"]:
+            supervisor_query = model.User.query(model.User.class_name == "supervisor")
+
+            return_json = "{"
+            results = supervisor_query.fetch()
+            for user in results:
+                return_json += json.dumps(user.details()) + ","
+            return_json += "}"
+
+            print json.dumps(return_json)
+
+            #TODO check if there are supervisors
+            response_module.give_response(self, json.dumps(return_json))
+
+        else:
+            print "#User needs to login"
+            self.abort(500)
+
 
 application = webapp.WSGIApplication(
     [
@@ -213,6 +237,7 @@ application = webapp.WSGIApplication(
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/open_declarations/employee', AllOpenDeclarationsForEmployeeHandler),
         ('/current_user_details/', CurrentUserDetailsHandler),
+        ('/supervisors/', CurrentUserSupervisors),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!

@@ -56,8 +56,7 @@ class User(polymodel.PolyModel):
                     'last_name': self.last_name,
                     'email': self.email,
                     'employee_number': self.employee_number,
-                    'department': self.department.id(),
-                    'supervisor': self.supervisor.id()}
+                    'department': self.department.id()}
         if self.class_name == "human_resources":
             return {'id': self.key.integer_id(),
                     'class_name': self.class_name,
