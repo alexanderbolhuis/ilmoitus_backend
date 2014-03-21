@@ -213,24 +213,6 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
         self.positive_test_stub_handler(path, "get")
 
 
-class EmployeeDetailsHandlerTest(BaseAuthorizationHandler):
-    def test_get_employee_details_not_logged_in(self):
-        path = "/current_user_details/"
-        self.set_up_custom_path([(path, main_application.CurrentUserDetailsHandler)])
-
-        self.negative_test_stub_handler(path, "get", 500)
-
-    def test_get_employee_details_logged_in(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/current_user_details/"
-        self.setup_server_with_user([(path, main_application.CurrentUserDetailsHandler)],
-                                    user_is_logged_in,
-                                    user_is_admin)
-
-        self.positive_test_stub_handler(path, "get")
-
-
 class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
     def test_positive_get_current_employee_associated_declarations(self):
         user_is_logged_in = True
@@ -297,7 +279,23 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
         employee.put()
         DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
 
+class CurrentUserDetailHandlerTest(BaseAuthorizationHandler):
+    def test_get_employee_details_logged_in(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/current_user/details"
+
+        self.setup_server_with_user(
+            [(path, main_application.CurrentUserDetailsHandler)],
+            user_is_logged_in, user_is_admin)
+
         self.positive_test_stub_handler(path, "get")
+
+    def test_get_employee_details_not_logged_in(self):
+        path = "/current_user/details"
+        self.set_up_custom_path([(path, main_application.CurrentUserDetailsHandler)])
+
+        self.negative_test_stub_handler(path, "get", 401)
 
 
 class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
