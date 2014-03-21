@@ -3,7 +3,10 @@ import webapp2 as webapp
 import response_module
 import model
 import json
+import logging
+
 from google.appengine.api import users
+from error_response_module import give_error_response
 
 
 def get_current_person(class_name=None):
@@ -50,6 +53,14 @@ class BaseRequestHandler(webapp.RequestHandler):
     def get_header_offset(self):
         offset = self.request.get("offset", default_value=0)
         return offset
+
+    def handle_exception(self, exception, debug):
+        logging.debug(self.request)
+        if debug:
+            logging.exception(exception)
+
+        self.response.write(self.request.body)
+        self.response.set_status(exception.code)
 
 
 class DefaultHandler(BaseRequestHandler):
@@ -194,14 +205,15 @@ class UserSettingsHandler(BaseRequestHandler):
         if employee is not None:
             response_module.give_response(self,
                                           json.dumps(employee.details()))
-        #TODO what to do when employee is None?
+            #TODO what to do when employee is None?
 
     def put(self):
         employee = get_current_person()
         if employee is not None:
             employee.wants_email_notifications = bool(self.request.get("wants_email_notifications"))
             employee.wants_phone_notifications = bool(self.request.get("wants_phone_notifications"))
-        #TODO what to do when employee is None?
+            #TODO what to do when employee is None?
+
 
 
 class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
