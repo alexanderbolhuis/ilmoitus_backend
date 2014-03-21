@@ -210,18 +210,12 @@ class CurrentUserSupervisors(BaseRequestHandler):
         employee = get_current_person()
         if employee["user_is_logged_in"]:
             supervisor_query = model.User.query(model.User.class_name == "supervisor")
+            query_result = supervisor_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
-            return_json = "{"
-            results = supervisor_query.fetch()
-            for user in results:
-                return_json += json.dumps(user.details()) + ","
-            return_json += "}"
-
-            print json.dumps(return_json)
+            response_module.respond_with_existing__model_object_collection(self, query_result)
 
             #TODO check if there are supervisors
-            response_module.give_response(self, json.dumps(return_json))
-
+            
         else:
             print "#User needs to login"
             self.abort(500)
