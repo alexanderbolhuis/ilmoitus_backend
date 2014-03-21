@@ -208,20 +208,19 @@ class SpecificEmployeeDetailsHandler(BaseRequestHandler):
 
 
 class CurrentUserDetailsHandler(BaseRequestHandler):
-    #todo: new global function for getting the current user
     def get(self):
-        current_logged_in_user = users.get_current_user()
-        if current_logged_in_user is not None:
-            employee_query = ilmoitus_model.Person.query(ilmoitus_model.Person.email == current_logged_in_user.email())
-            query_result = employee_query.get()
-            if query_result is not None:
-                response_module.give_response(self, query_result.get_object_json_data())
+        current_user_data = get_current_person()
+        user_is_logged_in = current_user_data["user_is_logged_in"]
+        if user_is_logged_in is True:
+            current_user = current_user_data["person_value"]
+            if current_user is not None:
+                response_module.give_response(self, current_user.get_object_json_data())
             else:
-                print "Persoon bestaat niet"
-                self.abort(500)
+                print "Not Found"
+                self.abort(404)
         else:
-            print "NIET ingelogd"
-            self.abort(500)
+            print "Unauthorized"
+            self.abort(401)
 
 
 class UserSettingsHandler(BaseRequestHandler):
@@ -292,8 +291,8 @@ application = webapp.WSGIApplication(
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
         ('/declarations/employee', AllDeclarationsForEmployeeHandler),
-        ('/current_user_details/', CurrentUserDetailsHandler),
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
+        ('/current_user/details', CurrentUserDetailsHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
