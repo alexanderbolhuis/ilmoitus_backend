@@ -213,15 +213,14 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
         key = current_user.key
         declaration = model.Declaration
         query = model.Declaration.query(ndb.OR(declaration.created_by == key,
-                                 declaration.assigned_to == key,
-                                 declaration.approved_by == key,
-                                 declaration.submitted_to_hr_by == key,
-                                 declaration.declined_by == key))
-        query_result = query.fetch()
-        if query_result != []:
-            return_list = []
-            for declaration in query_result:
-                return_list.append(declaration.details())
+                                               declaration.assigned_to == key,
+                                               declaration.approved_by == key,
+                                               declaration.submitted_to_hr_by == key,
+                                               declaration.declined_by == key))
+
+        query_result = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+        if len(query_result) != 0:
+            return_list = map(lambda declaration_item: declaration_item.details(), query_result)
             response_module.give_response(self, json.dumps(return_list))
         else:
             self.abort(404)
