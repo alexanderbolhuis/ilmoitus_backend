@@ -25,7 +25,7 @@ def respond_with_object_collection_by_class(request_handler, class_reference, li
     query_result = query.fetch(limit=limit, offset=offset)
     if len(query_result) > 0:
         #important to dump the result of the map; this takes care of the wrapper list object that contains all items
-        give_response(request_handler, json.dumps(map(lambda item: item.get_object_json_data(), query_result)))
+        give_response(request_handler, json.dumps(map(lambda item: item.get_object_as_data_dict(), query_result)))
     else:
         give_response(request_handler, None)
 
@@ -33,7 +33,7 @@ def respond_with_object_collection_by_class(request_handler, class_reference, li
 def respond_with_existing_model_object_collection(request_handler, collection):
     if len(collection) > 0:
         #important to dump the result of the map; this takes care of the wrapper list object that contains all items
-        give_response(request_handler, json.dumps(map(lambda item: item.get_object_json_data(), collection)))
+        give_response(request_handler, json.dumps(map(lambda item: item.get_object_as_data_dict(), collection)))
     else:
         give_response(request_handler, None)
 

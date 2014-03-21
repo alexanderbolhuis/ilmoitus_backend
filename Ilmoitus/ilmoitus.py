@@ -266,18 +266,16 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
         current_user = person_data["person_value"]
 
         key = current_user.key
+
         declaration = ilmoitus_model.Declaration
         query = ilmoitus_model.Declaration.query(ndb.OR(declaration.created_by == key,
                                  declaration.assigned_to == key,
                                  declaration.approved_by == key,
                                  declaration.submitted_to_hr_by == key,
                                  declaration.declined_by == key))
-        query_result = query.fetch()
-        if query_result != []:
-            return_list = []
-            for declaration in query_result:
-                return_list.append(declaration.get_object_as_data_dict())
-            response_module.give_response(self, json.dumps(return_list))
+        query_result = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+        if len(query_result) != 0:
+            response_module.give_response(self, json.dumps(map(lambda declaration_item: declaration_item.get_object_as_data_dict(), query_result)))
         else:
             self.abort(404)
 

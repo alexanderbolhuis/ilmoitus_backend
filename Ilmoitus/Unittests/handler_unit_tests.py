@@ -238,7 +238,7 @@ class EmployeeDetailsHandlerTest(BaseAuthorizationHandler):
 
 
 class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
-    def test_get_current_employee_associated_declarations(self):
+    def test_positive_get_current_employee_associated_declarations(self):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/current_user/associated_declarations"
@@ -259,7 +259,7 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
 
         self.positive_test_stub_handler(path, "get")
 
-    def test_get_current_employee_none_associated_declarations(self):
+    def test_negative_get_current_employee_none_associated_declarations(self):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/current_user/associated_declarations"
@@ -277,7 +277,7 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
 
         self.negative_test_stub_handler(path, "get", 404)
 
-    def test_get_current_supervisor_associated_declarations_assigned_to(self):
+    def test_positive_get_current_supervisor_associated_declarations_assigned_to(self):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/current_user/associated_declarations"
