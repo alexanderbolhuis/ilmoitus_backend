@@ -17,11 +17,10 @@ class BaseTestClass(TestCase):
     fashion, but they also reduce code bloating by a significant margin.
     """
 
-    def set_up_custom_path(self, handler_routes=([(None, None)])):
+    def set_up_test_server_with_custom_routes(self, handler_routes=([(None, None)])):
         """
         This method sets up a testbed object using the given handlers and paths.
-        allows tests to specify specific paths to be used for handlers
-        the given handlers.
+        This allows tests to specify specific paths to be used for the given handler.
 
         This method overrides the function that is called by default by webtest
         whenever a unittest is called (so not calling THIS method will result
@@ -29,12 +28,9 @@ class BaseTestClass(TestCase):
         implementation is an empty function, so that should never be used!
 
         :param handler_routes:
-            A dictionary containing all (unique) urls as keys that should be mapped
-            to their handler value. If it's None, no urls and no handlers will be
-            mapped to the test application.
+            A list containing tuples of all (unique) urls that and their handler.
+            If it's None, no urls and no handlers will be set for the test application.
         """
-
-
         # Create a WSGI application.
         dummy_app = webapp2.WSGIApplication(handler_routes)
 
@@ -45,7 +41,15 @@ class BaseTestClass(TestCase):
         self.testbed.init_memcache_stub()
         self.testbed.init_datastore_v3_stub()
 
-    def setup_dummy_server_without_handlers(self):
+    def setup_test_server_without_handlers(self):
+        """
+         As the name implies, this method creates a server in exactly the same fashion
+         as the set_up_test_server_with_custom_routes function, but without any handlers
+         attached to the server.
+
+         This can be useful if there is a test that needs to put model objects, but doesn't
+         need any handlers.
+        """
         # Create a WSGI application.
         dummy_app = webapp2.WSGIApplication(
             [(None, None)])  # shouldn't matter since we won't be sending requests
@@ -69,12 +73,12 @@ class BaseTestClass(TestCase):
             #If there was no testbed to begin with, return without doing anything
             return
 
-    def positive_test_stub_data_validity_model(self, data_object, header_string=None):
+    def positive_test_stub_for_model_data_validity(self, data_object, header_string=None):
         """
         This method is used by all model tests that test on data validity for model objects.
         Here, the default check_data_validity method that every model class implements will
         be called and it's results saved. If there are any errors, the test fails after
-        printing all the error messages (through the error's msg field) that occured.
+        printing all the error messages (through the error's msg field) that occurred.
 
         If there are no errors, a short "success" message will be printed on the console.
 
@@ -107,7 +111,7 @@ class BaseTestClass(TestCase):
         else:
             print "Test completed successfully!"
 
-    def negative_test_stub_data_validity_model(self, data_object, number_of_expected_errors, header_string=None):
+    def negative_test_stub_for_model_data_validity(self, data_object, number_of_expected_errors, header_string=None):
         """
         This method is used by all model tests that test on data validity for model objects.
         Here, the default check_data_validity method that every model class implements will
@@ -155,7 +159,7 @@ class BaseTestClass(TestCase):
         the response from the testapp on the given URL path and the given request type, or fail
         if either the request type is invalid (no HTTP request) or the url path is not found
         in the testapp (which would probably mean that the path has not been set-up with
-        the set_up_custom_path method to begin with).
+        the set_up_test_server_with_custom_routes method to begin with).
 
         If the testapp gives a response, this method will check if the response exists, has a 200
         status code, if the content_type matched the type that is expected and (optionally)
@@ -211,7 +215,7 @@ class BaseTestClass(TestCase):
         if body_data_should_have_results:
             try:
                 body_data = json.loads(response.body)
-            except ValueError as E:
+            except ValueError:
                 self.fail("Test failed! The response body did not contain valid JSON data.")
             self.assertTrue(len(body_data) > 0,
                             "Test failed! There should be results in the response, but none were found.")
@@ -224,7 +228,7 @@ class BaseTestClass(TestCase):
         the response from the testapp on the given URL path and the given request type, or fail
         if either the request type is invalid (no HTTP request) or the url path is not found
         in the testapp (which would probably mean that the path has not been set-up with
-        the set_up_custom_path method to begin with).
+        the set_up_test_server_with_custom_routes method to begin with).
 
         If the testapp cannot execute the request, this method will go on to check if the occured error
         is actually initialized properly and has the specified error code. If the error code that is expected
@@ -271,13 +275,14 @@ class BaseTestClass(TestCase):
 
 def list_is_empty(collection_object):
     """
-    Helper method that will return true if a list object is either None or has no Objects.
+    Helper method that will return true if a list object is either None or has no contents.
 
     :param collection_object:
         The object that has to be tested to see if it is None or has no
         contents. Both lists and dictionaries are supported. These are
         considered to be empty if there are no objects within (list)
-        or if there are no key-value pairs present (dict).
+        or if there are no key-value pairs present (dict)
+        (meaning that a Key with a None value still counts!).
     """
     if collection_object is not None and len(filter(None, collection_object)) > 0:
         return True

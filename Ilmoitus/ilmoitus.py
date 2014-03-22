@@ -55,6 +55,26 @@ class BaseRequestHandler(webapp.RequestHandler):
         return offset
 
     def handle_exception(self, exception, debug):
+        """
+        Overrides function in webapp.RequestHandler.
+
+        This function will catch any HTTP exceptions that can be raised by a .abort() function call within
+        a handler that inherits from the BaseRequestHandler class. When this happens, this function will
+        log the request and if the application is in debug mode, also the exception (basically the complete
+        stack trace).
+
+        Lastly, this function will write the full body of the request and set the status of the response
+        to the code of the exception. It's important to note that the body of the request is used as a
+        response, since it's through this property that any data will be sent back to the user (such as
+        a message indicating what went wrong, status and error codes, etc.). This is also the only real
+        custom functionality that this function provides (the rest is default, but a call to the base method
+        could cause problems in some cases).
+
+        :param exception: The exception that was raised by this handler or any handler that inherits from this handler.
+
+        :param debug: Boolean indicating whether the application is in debug mode or not. Will be automatically
+            detected.
+        """
         logging.debug(self.request)
         if debug:
             logging.exception(exception)
@@ -240,7 +260,7 @@ application = webapp.WSGIApplication(
         ('/persons/(.*)', SpecificPersonHandler),
         ('/user/settings/', UserSettingsHandler),
         ('/employees', AllEmployeesHandler),
-        ('/employees/get_object_as_data_dict/(.*)', SpecificEmployeeDetailsHandler),
+        ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/open_declarations/employee', AllOpenDeclarationsForEmployeeHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
@@ -251,4 +271,4 @@ application = webapp.WSGIApplication(
         ('.*', DefaultHandler)
     ],
     debug=True)  # if debug is set to false,
-# any uncaught exceptions will only trigger a server error without any get_object_as_data_dict
+# any uncaught exceptions will only trigger a server error without any details

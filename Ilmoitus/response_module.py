@@ -24,14 +24,16 @@ def respond_with_object_collection_by_class(request_handler, class_reference, li
         query = class_reference.query().filter(class_reference.class_name == class_name)
     query_result = query.fetch(limit=limit, offset=offset)
     if len(query_result) > 0:
-        give_response(request_handler, map(lambda item: item.get_object_json_data(), query_result))
+        #important to dump the result of the map; this takes care of the wrapper list object that contains all items
+        give_response(request_handler, json.dumps(map(lambda item: item.get_object_json_data(), query_result)))
     else:
         give_response(request_handler, None)
 
 
 def respond_with_existing_model_object_collection(request_handler, collection):
     if len(collection) > 0:
-        give_response(request_handler, map(lambda item: item.get_object_json_data(), collection))
+        #important to dump the result of the map; this takes care of the wrapper list object that contains all items
+        give_response(request_handler, json.dumps(map(lambda item: item.get_object_json_data(), collection)))
     else:
         give_response(request_handler, None)
 

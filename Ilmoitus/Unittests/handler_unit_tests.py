@@ -11,7 +11,7 @@ from Base.base_test_methods import BaseTestClass
 class EmployeeHandlerTest(BaseTestClass):
     def test_get_all_employee_positive(self):
         path = "/employees"
-        self.set_up_custom_path([(path, main_application.AllEmployeesHandler)])
+        self.set_up_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
         number_of_employees = random.randint(1, 10)
         for i in range(0, number_of_employees):
             PersonDataCreator.create_valid_employee_data(i)
@@ -24,7 +24,7 @@ class EmployeeHandlerTest(BaseTestClass):
          of it's superclass Person, but none that match on the Employee class.
         """
         path = "/employees"
-        self.set_up_custom_path([(path, main_application.AllEmployeesHandler)])
+        self.set_up_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
         number_of_persons = random.randint(1, 10)
         for i in range(0, number_of_persons):
             PersonDataCreator.create_valid_person_data(i)
@@ -36,7 +36,7 @@ class EmployeeHandlerTest(BaseTestClass):
          This test will test if the right error is given when there are no persons whatsoever.
         """
         path = "/employees"
-        self.set_up_custom_path([(path, main_application.AllEmployeesHandler)])
+        self.set_up_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
 
         self.negative_test_stub_handler(path, "get", 404)
 
@@ -47,7 +47,6 @@ class BaseAuthorizationHandler(BaseTestClass):
             Helper method to set-up all data needed in these unit tests.
 
             :param handler_routes: List of tuples that contain all url and handlers that will be set-up for this test.
-            :rtype : object
             :param user_is_logged_in: Boolean that indicates whether a user mock-up should be made or not.
             :param user_is_admin: String that indicates whether or not the user is admin or not.
                 Only valid values are '0' (no admin) and '1' (is admin). Any other values will raise an Exception.
@@ -61,7 +60,7 @@ class BaseAuthorizationHandler(BaseTestClass):
                 -"random_person2" : Another person object that will always be different from the first.
         """
         path = "/auth"
-        self.set_up_custom_path(handler_routes)
+        self.set_up_test_server_with_custom_routes(handler_routes)
         self.testbed.init_user_stub()
 
         number_of_persons = random.randint(3, 10)
@@ -214,7 +213,7 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
 class EmployeeDetailsHandlerTest(BaseAuthorizationHandler):
     def test_get_employee_details_not_logged_in(self):
         path = "/current_user_details/"
-        self.set_up_custom_path([(path, main_application.CurrentUserDetailsHandler)])
+        self.set_up_test_server_with_custom_routes([(path, main_application.CurrentUserDetailsHandler)])
 
         self.negative_test_stub_handler(path, "get", 500)
 
@@ -251,5 +250,5 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
     def test_negative_get_all_not_logged_in(self):
         path = '/declarations/hr'
-        self.set_up_custom_path([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
+        self.set_up_test_server_with_custom_routes([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
         self.negative_test_stub_handler(path, "get", 401)
