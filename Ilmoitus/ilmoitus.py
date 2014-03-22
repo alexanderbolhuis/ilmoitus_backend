@@ -1,7 +1,7 @@
 __author__ = 'Sjors van Lemmen'
 import webapp2 as webapp
 import response_module
-import model
+import ilmoitus_model
 import json
 import logging
 
@@ -30,10 +30,10 @@ def get_current_person(class_name=None):
     if current_logged_in_user is not None:
         return_data["user_is_logged_in"] = True
         if class_name is None:
-            person_query = model.User.query(model.User.email == current_logged_in_user.email())
+            person_query = ilmoitus_model.Person.query(ilmoitus_model.Person.email == current_logged_in_user.email())
         else:
-            person_query = model.User.query(model.User.email == current_logged_in_user.email(), model.User.class_name ==
-                                                                                                class_name)
+            person_query = ilmoitus_model.Person.query(ilmoitus_model.Person.email == current_logged_in_user.email(),
+                                                       ilmoitus_model.Person.class_name == class_name)
         query_result = person_query.get()
         if query_result is not None:
             return_data["person_value"] = query_result
@@ -82,8 +82,8 @@ class DefaultHandler(BaseRequestHandler):
 
 class AllPersonsHandler(BaseRequestHandler):
     def get(self):
-        response_module.respond_with_object_collection_by_class(self,  # passing self is unusual, but needed to generate
-                                                                model.User,  # an HTTP response
+        response_module.respond_with_object_collection_by_class(self,
+                                                                ilmoitus_model.Person,
                                                                 self.get_header_limit(),
                                                                 self.get_header_offset())
 
@@ -91,14 +91,14 @@ class AllPersonsHandler(BaseRequestHandler):
 class SpecificPersonHandler(BaseRequestHandler):
     def get(self, person_id):
         response_module.respond_with_object_details_by_id(self,
-                                                          model.User,
+                                                          ilmoitus_model.Person,
                                                           person_id)  # Since NDB, keynames are also valid ID's!
 
 
 class AllEmployeesHandler(BaseRequestHandler):
     def get(self):
         response_module.respond_with_object_collection_by_class(self,
-                                                                model.User,  # Will only get Employees or subclasses
+                                                                ilmoitus_model.Person,
                                                                 self.get_header_limit(),
                                                                 self.get_header_offset(),
                                                                 "employee")
@@ -107,7 +107,7 @@ class AllEmployeesHandler(BaseRequestHandler):
 class SpecificEmployeeHandler(BaseRequestHandler):
     def get(self, employee_id):
         response_module.respond_with_object_details_by_id(self,
-                                                          model.User,
+                                                          ilmoitus_model.Person,
                                                           employee_id)
 
 
@@ -165,10 +165,10 @@ class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
         person_data = get_current_person("employee")
         person = person_data["person_value"]
         if person is not False:
-            declaration_query = model.Declaration.query(model.Declaration.created_by == person.key)
+            declaration_query = ilmoitus_model.Declaration.query(ilmoitus_model.Declaration.created_by == person.key)
             query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
-            response_module.respond_with_existing__model_object_collection(self, query_result)
+            response_module.respond_with_existing_model_object_collection(self, query_result)
         else:
             #TODO: error messages:
             #User is not logged in/registered; he/she needs to login first
@@ -178,7 +178,7 @@ class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
 class SpecificEmployeeDetailsHandler(BaseRequestHandler):
     def get(self, employee_id):
         response_module.respond_with_object_details_by_id(self,
-                                                          model.Employee,
+                                                          ilmoitus_model.Person,
                                                           employee_id)
 
 
@@ -187,10 +187,10 @@ class CurrentUserDetailsHandler(BaseRequestHandler):
     def get(self):
         current_logged_in_user = users.get_current_user()
         if current_logged_in_user is not None:
-            employee_query = model.User.query(model.User.email == current_logged_in_user.email())
+            employee_query = ilmoitus_model.Person.query(ilmoitus_model.Person.email == current_logged_in_user.email())
             query_result = employee_query.get()
             if query_result is not None:
-                response_module.give_response(self, json.dumps(query_result.details()))
+                response_module.give_response(self, query_result.get_object_json_data())
             else:
                 print "Persoon bestaat niet"
                 self.abort(500)
@@ -203,8 +203,7 @@ class UserSettingsHandler(BaseRequestHandler):
     def get(self):
         employee = get_current_person()
         if employee is not None:
-            response_module.give_response(self,
-                                          json.dumps(employee.details()))
+            response_module.give_response(self, employee.get_object_json_data())
             #TODO what to do when employee is None?
 
     def put(self):
@@ -215,17 +214,17 @@ class UserSettingsHandler(BaseRequestHandler):
             #TODO what to do when employee is None?
 
 
-
 class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
     def get(self):
         person_data = get_current_person("human_resources")
         person = person_data["person_value"]
         if person is not None:
             if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
-                declaration_query = model.Declaration.query(model.Declaration.class_name == "approved_declaration")
+                declaration_query = ilmoitus_model.Declaration.query(
+                    ilmoitus_model.Declaration.class_name == "approved_declaration")
                 query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
-                response_module.respond_with_existing__model_object_collection(self, query_result)
+                response_module.respond_with_existing_model_object_collection(self, query_result)
             else:
                 #User is not authorised
                 self.abort(401)
@@ -241,7 +240,7 @@ application = webapp.WSGIApplication(
         ('/persons/(.*)', SpecificPersonHandler),
         ('/user/settings/', UserSettingsHandler),
         ('/employees', AllEmployeesHandler),
-        ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
+        ('/employees/get_object_as_data_dict/(.*)', SpecificEmployeeDetailsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/open_declarations/employee', AllOpenDeclarationsForEmployeeHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
@@ -252,4 +251,4 @@ application = webapp.WSGIApplication(
         ('.*', DefaultHandler)
     ],
     debug=True)  # if debug is set to false,
-# any uncaught exceptions will only trigger a server error without any details
+# any uncaught exceptions will only trigger a server error without any get_object_as_data_dict

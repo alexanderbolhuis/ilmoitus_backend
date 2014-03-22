@@ -211,7 +211,7 @@ class BaseTestClass(TestCase):
         if body_data_should_have_results:
             try:
                 body_data = json.loads(response.body)
-            except ValueError:
+            except ValueError as E:
                 self.fail("Test failed! The response body did not contain valid JSON data.")
             self.assertTrue(len(body_data) > 0,
                             "Test failed! There should be results in the response, but none were found.")

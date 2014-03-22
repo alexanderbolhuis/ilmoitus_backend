@@ -1,7 +1,8 @@
 __author__ = 'alexanderbolhuis & sjorsboom'
 
+import json
+
 from google.appengine.ext import ndb
-from google.appengine.ext.ndb import polymodel
 from google.appengine.ext import blobstore
 
 
@@ -14,14 +15,14 @@ class Department(ndb.Model):
 
 
 # Person Model class
-class User(polymodel.PolyModel):
+class Person(ndb.Model):
     class_name = ndb.StringProperty()
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
     email = ndb.StringProperty()
     employee_number = ndb.IntegerProperty()
     department = ndb.KeyProperty(kind=Department)
-    supervisor = ndb.KeyProperty(kind="User")
+    supervisor = ndb.KeyProperty(kind="Person")
 
     all_custom_properties = ["first_name", "last_name", "email", "employee_number", "department",
                              "supervisor"]
@@ -33,7 +34,7 @@ class User(polymodel.PolyModel):
                    "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
                                        "supervisor"]}
 
-    def details(self): #  TODO make this method react to the permissions property
+    def get_object_as_data_dict(self):  #  TODO make this method react to the permissions property
         if self.class_name == "user":
             return {'id': self.key.integer_id(),
                     'class_name': self.class_name,
@@ -68,9 +69,8 @@ class User(polymodel.PolyModel):
                     'department': self.department.id(),
                     'supervisor': self.supervisor.id()}
 
-    @classmethod
-    def _get_kind(cls):
-        return "User"  # TODO
+    def get_object_json_data(self):
+        return json.dumps(self.get_object_as_data_dict())
 
     def __setattr__(self, key, value):
         if key in self.all_custom_properties:
@@ -97,22 +97,23 @@ class User(polymodel.PolyModel):
 class Declaration(ndb.Model):
     class_name = ndb.StringProperty()
     created_at = ndb.DateTimeProperty(auto_now_add=True)
-    created_by = ndb.KeyProperty(kind=User)
-    assigned_to = ndb.KeyProperty(kind=User)
+    created_by = ndb.KeyProperty(kind=Person)
+    assigned_to = ndb.KeyProperty(kind=Person)
     comment = ndb.StringProperty()
-    declined_by = ndb.KeyProperty(kind=User)
-    submitted_to_hr_by = ndb.KeyProperty(kind=User)
-    approved_by = ndb.KeyProperty(kind=User)
+    declined_by = ndb.KeyProperty(kind=Person)
+    submitted_to_hr_by = ndb.KeyProperty(kind=Person)
+    approved_by = ndb.KeyProperty(kind=Person)
 
     all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                 "submitted_to_hr_by"]
+                             "submitted_to_hr_by"]
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
-                           "closed_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                                  "submitted_to_hr_by"],
-                           "declined_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by"],
-                           "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                                    "submitted_to_hr_by", "approved_by"]}
-    def details(self): #  TODO make this method react to the permissions property
+                   "closed_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                          "submitted_to_hr_by"],
+                   "declined_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by"],
+                   "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                            "submitted_to_hr_by", "approved_by"]}
+
+    def get_object_as_data_dict(self):  #  TODO make this method react to the permissions property
         if self.class_name == "open_declaration":
             return {'id': self.key.integer_id(),
                     "class_name": self.class_name,
@@ -121,7 +122,7 @@ class Declaration(ndb.Model):
                     'assigned_to': self.assigned_to.integer_id(),
                     'comment': self.comment}
         if self.class_name == "declined_declaration":
-                        return {'id': self.key.integer_id(),
+            return {'id': self.key.integer_id(),
                     "class_name": self.class_name,
                     'created_at': str(self.created_at),
                     'created_by': self.created_by.integer_id(),
@@ -138,6 +139,9 @@ class Declaration(ndb.Model):
                     'declined_by': self.declined_by.integer_id(),
                     'submitted_to_hr_by': self.submitted_to_hr_by.integer_id(),
                     'approved_by': self.approved_by.integer_id()}
+
+    def get_object_json_data(self):
+        return json.dumps(self.get_object_as_data_dict())
 
     def __setattr__(self, key, value):
         """
@@ -190,8 +194,11 @@ class DeclarationSubType(ndb.Model):
 class DeclarationType(ndb.Model):
     declaration_sub_types = ndb.KeyProperty(kind=DeclarationSubType)
 
-    def details(self):
+    def get_object_as_data_dict(self):
         return {'declaration_sub_types': self.declaration_sub_types.integer_id()}
+
+    def get_object_json_data(self):
+        return json.dumps(self.get_object_as_data_dict())
 
 
 # DeclarationLine Model class
@@ -201,16 +208,22 @@ class DeclarationLine(ndb.Model):
     declaration_type = ndb.KeyProperty(kind=DeclarationType)
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
-    def details(self):
+    def get_object_as_data_dict(self):
         return {'receipt_date': self.receipt_date,
                 'cost': self.cost,
                 'declaration_type': self.declaration_type.integer_id(),
                 'declaration_sub_type': self.declaration_sub_type.integer_id()}
+
+    def get_object_json_data(self):
+        return json.dumps(self.get_object_as_data_dict())
 
 
 class Attachment(ndb.Model):
     ndb.KeyProperty(kind=Declaration)
     blobstore.BlobReferenceProperty(required=True)
 
-    def details(self):
-        return {'': ""}  # TODO details
+    def get_object_as_data_dict(self):
+        return {'': ""}  # TODO get_object_as_data_dict
+
+    def get_object_json_data(self):
+        return json.dumps(self.get_object_as_data_dict())

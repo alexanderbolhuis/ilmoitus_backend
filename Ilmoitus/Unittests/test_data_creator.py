@@ -1,5 +1,5 @@
 __author__ = 'Sjors van Lemmen'
-import model
+import ilmoitus_model
 import random
 
 
@@ -9,7 +9,7 @@ class PersonDataCreator():
 
     @staticmethod
     def create_valid_person_data(email_added_id):
-        person = model.User()
+        person = ilmoitus_model.Person()
         person.class_name = "user"
         person.first_name = "Rogier"
         person.last_name = "Boleij"
@@ -22,7 +22,7 @@ class PersonDataCreator():
 
     @staticmethod
     def create_valid_employee_data(employee_number=0):
-        employee = model.User()
+        employee = ilmoitus_model.Person()
         department = DepartmentDataCreator.create_valid_department()
         supervisor = PersonDataCreator.create_valid_supervisor(None, employee_number + 1)
 
@@ -35,7 +35,7 @@ class PersonDataCreator():
 
     @staticmethod
     def create_valid_supervisor(supervisors_supervisor=None, employee_number=0):
-        supervisor = model.User()
+        supervisor = ilmoitus_model.Person()
         supervisor.class_name = "supervisor"
         supervisor.department = DepartmentDataCreator.create_valid_department().key
         if supervisors_supervisor is not None:
@@ -46,7 +46,7 @@ class PersonDataCreator():
 
     @staticmethod
     def create_valid_human_resource(human_resources_human_resource=None, employee_number=0):
-        human_resource = model.User()
+        human_resource = ilmoitus_model.Person()
         human_resource.class_name = "human_resource"
         human_resource.department = DepartmentDataCreator.create_valid_department().key
         if human_resources_human_resource is not None:
@@ -62,7 +62,7 @@ class DepartmentDataCreator():
 
     @staticmethod
     def create_valid_department(department_name="Human Resources"):
-        department = model.Department()
+        department = ilmoitus_model.Department()
         department.name = department_name
         department.put()
         return department
@@ -79,7 +79,7 @@ class DeclarationsDataCreator():
 
         employee.supervisor = supervisor_key
 
-        open_declaration = model.Declaration()
+        open_declaration = ilmoitus_model.Declaration()
         open_declaration.class_name = "open_declaration"
         open_declaration.created_by = employee_key
         open_declaration.assigned_to = supervisor_key
@@ -95,7 +95,7 @@ class DeclarationsDataCreator():
 
         employee.human_resource = human_resource_key
 
-        open_declaration = model.Declaration()
+        open_declaration = ilmoitus_model.Declaration()
         open_declaration.class_name = "approved_declaration"
         open_declaration.created_by = employee_key
         open_declaration.assigned_to = human_resource_key

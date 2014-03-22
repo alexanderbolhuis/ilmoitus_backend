@@ -1,7 +1,7 @@
 __author__ = 'Sjors van Lemmen'
 import random
 import json
-import model
+import ilmoitus_model
 from google.appengine.ext import ndb
 import ilmoitus as main_application
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
@@ -200,8 +200,6 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "employee"
-        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
-                                        logged_in_person.key.integer_id())
         logged_in_person.put()
 
         supervisor = PersonDataCreator.create_valid_supervisor()
@@ -241,8 +239,6 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "human_resources"
-        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
-                                        logged_in_person.key.integer_id())
         logged_in_person.put()
 
         human_resource = PersonDataCreator.create_valid_human_resource()
