@@ -373,6 +373,7 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "human_resources"
+
         logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
                                         logged_in_person.key.integer_id())
         logged_in_person.put()
@@ -400,3 +401,44 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
         path = '/declarations/hr'
         self.set_up_custom_path([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
         self.negative_test_stub_handler(path, "get", 401)
+
+
+class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
+    def test_get_supervisor_declarations_no_permission(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/supervisor"
+        setup_data = self.setup_server_with_user([(path, main_application.AllDeclarationsForSupervisor)],
+                                    user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
+                                        logged_in_person.key.integer_id())
+        logged_in_person.put()
+
+        self.negative_test_stub_handler(path, "get", 401)
+
+    def test_get_supervisor_declarations(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/supervisor"
+        setup_data = self.setup_server_with_user([(path, main_application.AllDeclarationsForSupervisor)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+
+        person = PersonDataCreator.create_valid_employee_data()
+        other_supervisor = PersonDataCreator.create_valid_supervisor()
+
+        DeclarationsDataCreator.create_valid_open_declaration(person, logged_in_person)
+        DeclarationsDataCreator.create_valid_open_declaration(person, logged_in_person)
+        DeclarationsDataCreator.create_valid_open_declaration(person, other_supervisor)
+
+        response = self.positive_test_stub_handler(path, "get")
+        response_data = json.loads(response.body)
+
+        self.assertEqual(len(response_data), 2)
+        self.assertEqual(response_data[0]["assigned_to"], logged_in_person.key.integer_id())
+        self.assertEqual(response_data[1]["assigned_to"], logged_in_person.key.integer_id())
