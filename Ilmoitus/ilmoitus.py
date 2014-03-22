@@ -207,6 +207,22 @@ class SpecificEmployeeDetailsHandler(BaseRequestHandler):
                                                           employee_id)
 
 
+class AllDeclarationsForSupervisor(BaseRequestHandler):
+    def get(self):
+        person_data = get_current_person("supervisor")
+        person = person_data["person_value"]
+
+        if person is not None and person.class_name == 'supervisor':
+            declaration_query = ilmoitus_model.Declaration.query(ilmoitus_model.Declaration.class_name == 'open_declaration',
+                                                        ilmoitus_model.Declaration.assigned_to == person.key)
+            query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+
+            response_module.respond_with_existing_model_object_collection(self, query_result)
+        else:
+            #user does not have the appropriate permissions or isn't logged in at all.
+            self.abort(401)
+
+
 class CurrentUserDetailsHandler(BaseRequestHandler):
     def get(self):
         current_user_data = get_current_person()
@@ -289,10 +305,12 @@ application = webapp.WSGIApplication(
         ('/employees', AllEmployeesHandler),
         ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
+
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
         ('/declarations/employee', AllDeclarationsForEmployeeHandler),
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
         ('/current_user/details', CurrentUserDetailsHandler),
+        ('/declarations/supervisor', AllDeclarationsForSupervisor),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
