@@ -6,11 +6,8 @@ import json
 import logging
 
 from google.appengine.api import users
-<<<<<<< HEAD
 from google.appengine.ext import ndb
-=======
 from error_response_module import give_error_response
->>>>>>> e149eb9b53d08ccbbd85f1bf3d32d197cfdff449
 
 
 def get_current_person(class_name=None):
