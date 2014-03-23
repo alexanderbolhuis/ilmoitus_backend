@@ -298,3 +298,33 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
         DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
 
         self.positive_test_stub_handler(path, "get")
+
+
+class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
+    def test_positive_get_all(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = '/declarations/hr'
+
+        setup_data = self.setup_server_with_user(
+            [('/declarations/hr', main_application.AllDeclarationsForHumanResourcesHandler)],
+            user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "human_resources"
+        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
+                                        logged_in_person.key.integer_id())
+        logged_in_person.put()
+
+        human_resource = PersonDataCreator.create_valid_human_resource()
+
+        logged_in_person.human_resource = human_resource.key
+        logged_in_person.put()
+        valid_declaration = DeclarationsDataCreator.create_valid_approved_declaration(logged_in_person, human_resource)
+
+        self.positive_test_stub_handler(path, "get")
+
+    def test_negative_get_all_not_logged_in(self):
+        path = '/declarations/hr'
+        self.set_up_custom_path([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
+        self.negative_test_stub_handler(path, "get", 401)
