@@ -209,7 +209,7 @@ class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
         person_data = get_current_person("human_resources")
         person = person_data["person_value"]
         if person is not None:
-            if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
+            if person.class_name == "human_resources":
                 declaration_query = model.Declaration.query(model.Declaration.class_name == "approved_declaration")
                 query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 

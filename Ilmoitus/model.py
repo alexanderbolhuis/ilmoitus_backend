@@ -135,7 +135,6 @@ class Declaration(ndb.Model):
                     'created_by': self.created_by.integer_id(),
                     'assigned_to': self.assigned_to.integer_id(),
                     'comment': self.comment,
-                    'declined_by': self.declined_by.integer_id(),
                     'submitted_to_hr_by': self.submitted_to_hr_by.integer_id(),
                     'approved_by': self.approved_by.integer_id()}
 
