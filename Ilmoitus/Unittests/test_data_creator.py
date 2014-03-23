@@ -89,17 +89,15 @@ class DeclarationsDataCreator():
         return open_declaration
 
     @staticmethod
-    def create_valid_approved_declaration(employee, human_resource):
+    def create_valid_approved_declaration(employee, supervisor):
         employee_key = employee.key
-        human_resource_key = human_resource.key
-
-        employee.human_resource = human_resource_key
 
         open_declaration = ilmoitus_model.Declaration()
         open_declaration.class_name = "approved_declaration"
-        open_declaration.created_by = employee_key
-        open_declaration.assigned_to = human_resource_key
+        open_declaration.created_by = employee.key
+        open_declaration.assigned_to = supervisor.key
         open_declaration.comment = "Thanks for taking care of this for me!"
-
+        open_declaration.approved_by = supervisor.key
+        open_declaration.submitted_to_hr_by = supervisor.key
         open_declaration.put()
         return open_declaration

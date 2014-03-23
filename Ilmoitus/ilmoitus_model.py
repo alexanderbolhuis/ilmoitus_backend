@@ -115,8 +115,6 @@ class Declaration(ndb.Model):
     def readable_state(self):
         return self.readable_states[self.class_name];
 
-    def readable_state(self):
-        return self.readable_states[self.class_name];
 
     def __setattr__(self, key, value):
         """

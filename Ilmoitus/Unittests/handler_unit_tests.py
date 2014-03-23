@@ -4,6 +4,7 @@ import json
 import ilmoitus_model
 import data_bootstrapper
 import webtest
+import datetime
 from google.appengine.ext import ndb
 import ilmoitus as main_application
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
@@ -308,26 +309,38 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
 
 
 class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
+
     def test_positive_get_all(self):
         user_is_logged_in = True
         user_is_admin = '0'
-        path = '/declarations/hr'
+        path = "/declarations/hr"
 
         setup_data = self.setup_server_with_user(
-            [('/declarations/hr', main_application.AllDeclarationsForHumanResourcesHandler)],
+            [(path, main_application.AllDeclarationsForHumanResourcesHandler)],
             user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "human_resources"
         logged_in_person.put()
 
-        human_resource = PersonDataCreator.create_valid_human_resource()
+        employee = PersonDataCreator.create_valid_employee_data()
+        supervisor = PersonDataCreator.create_valid_supervisor()
 
-        logged_in_person.human_resource = human_resource.key
-        logged_in_person.put()
-        valid_declaration = DeclarationsDataCreator.create_valid_approved_declaration(logged_in_person, human_resource)
+        DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
+        DeclarationsDataCreator.create_valid_approved_declaration(employee, supervisor)
 
-        self.positive_test_stub_handler(path, "get")
+        response = self.positive_test_stub_handler(path, "get")
+        response_data = json.loads(response.body)
+        print response_data
+
+        self.assertEqual(response_data[0]["comment"], "Thanks for taking care of this for me!")
+        self.assertEqual(response_data[0]["class_name"], "approved_declaration")
+        #self.assertEqual(response_data[0]["created_at"], str(datetime.datetime.utcnow()))
+        self.assertEqual(response_data[0]["created_by"], employee.key.integer_id())
+        self.assertEqual(response_data[0]["approved_by"], supervisor.key.integer_id())
+        self.assertEqual(response_data[0]["assigned_to"], supervisor.key.integer_id())
+        self.assertEqual(response_data[0]["submitted_to_hr_by"], supervisor.key.integer_id())
+        #self.assertEqual(response_data[0]["submitted_to_hr_by"], supervisor.key.integer_id())
 
     def test_negative_get_all_not_logged_in(self):
         path = '/declarations/hr'
