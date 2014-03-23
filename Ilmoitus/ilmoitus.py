@@ -6,7 +6,6 @@ import json
 import logging
 import data_bootstrapper
 from google.appengine.api import users
-from error_response_module import give_error_response
 from google.appengine.ext import ndb
 
 
