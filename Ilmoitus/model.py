@@ -180,4 +180,4 @@ def property_not_none_key_value_pair_with_permissions(class_reference):
                         value = value.integer_id()
                     key_value_pair = dict(key_value_pair.items() + {prop: value}.items())
 
-    return dict
+    return key_value_pair
