@@ -222,4 +222,3 @@ def property_not_none_key_value_pair_with_permissions(class_reference):
                     return_data = dict(return_data.items() + {prop: value}.items())
 
     return return_data
-
