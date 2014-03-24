@@ -115,7 +115,6 @@ class Declaration(ndb.Model):
     def readable_state(self):
         return self.readable_states[self.class_name];
 
-
     def __setattr__(self, key, value):
         """
          Function that overrides the default setting of properties within python. Take the following code:
@@ -207,18 +206,20 @@ class Attachment(ndb.Model):
         return json.dumps(self.get_object_as_data_dict())
 
 def property_not_none_key_value_pair_with_permissions(class_reference):
-    key_value_pair = {}
+    return_data = {}
     if class_reference is not None and class_reference.permissions is not None:
         permissions = class_reference.permissions[class_reference.class_name]
         if permissions is not None:
             for prop in permissions:
+
                 value = getattr(class_reference, prop)
                 if value is not None:
                     value_type = type(value)
-                    if type(value) is Key:
+                    try:
                         value = value.integer_id()
-                    elif type(value) is datetime:
+                    except AttributeError:
                         value = str(value)
-                    key_value_pair = dict(key_value_pair.items() + {prop: value}.items())
+                    return_data = dict(return_data.items() + {prop: value}.items())
 
-    return key_value_pair
+    return return_data
+
