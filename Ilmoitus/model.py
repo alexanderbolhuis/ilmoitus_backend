@@ -3,6 +3,7 @@ __author__ = 'alexanderbolhuis & sjorsboom'
 from google.appengine.ext import ndb
 from google.appengine.ext.ndb import polymodel
 from google.appengine.ext import blobstore
+from google.appengine.ext.ndb.key import Key
 
 
 # Department Model class
@@ -33,40 +34,9 @@ class User(polymodel.PolyModel):
                    "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
                                        "supervisor"]}
 
-    def details(self): #  TODO make this method react to the permissions property
-        if self.class_name == "user":
-            return {'id': self.key.integer_id(),
-                    'class_name': self.class_name,
-                    'first_name': self.first_name,
-                    'last_name': self.last_name,
-                    'email': self.email}
-        if self.class_name == "employee":
-            return {'id': self.key.integer_id(),
-                    'class_name': self.class_name,
-                    'first_name': self.first_name,
-                    'last_name': self.last_name,
-                    'email': self.email,
-                    'employee_number': self.employee_number,
-                    'department': self.department.id(),
-                    'supervisor': self.supervisor.id()}
-        if self.class_name == "supervisor":
-            return {'id': self.key.integer_id(),
-                    'class_name': self.class_name,
-                    'first_name': self.first_name,
-                    'last_name': self.last_name,
-                    'email': self.email,
-                    'employee_number': self.employee_number,
-                    'department': self.department.id(),
-                    'supervisor': self.supervisor.id()}
-        if self.class_name == "human_resources":
-            return {'id': self.key.integer_id(),
-                    'class_name': self.class_name,
-                    'first_name': self.first_name,
-                    'last_name': self.last_name,
-                    'email': self.email,
-                    'employee_number': self.employee_number,
-                    'department': self.department.id(),
-                    'supervisor': self.supervisor.id()}
+    def details(self):
+        return dict({'id': self.key.integer_id(),
+                     'class_name': self.class_name}.items() + property_not_none_key_value_pair_with_permissions(self).items())
 
     @classmethod
     def _get_kind(cls):
@@ -105,39 +75,17 @@ class Declaration(ndb.Model):
     approved_by = ndb.KeyProperty(kind=User)
 
     all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                 "submitted_to_hr_by"]
+                             "submitted_to_hr_by"]
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
-                           "closed_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                                  "submitted_to_hr_by"],
-                           "declined_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by"],
-                           "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                                    "submitted_to_hr_by", "approved_by"]}
-    def details(self): #  TODO make this method react to the permissions property
-        if self.class_name == "open_declaration":
-            return {'id': self.key.integer_id(),
-                    "class_name": self.class_name,
-                    'created_at': str(self.created_at),
-                    'created_by': self.created_by.integer_id(),
-                    'assigned_to': self.assigned_to.integer_id(),
-                    'comment': self.comment}
-        if self.class_name == "declined_declaration":
-                        return {'id': self.key.integer_id(),
-                    "class_name": self.class_name,
-                    'created_at': str(self.created_at),
-                    'created_by': self.created_by.integer_id(),
-                    'assigned_to': self.assigned_to.integer_id(),
-                    'comment': self.comment,
-                    'declined_by': self.declined_by.integer_id()}
-        if self.class_name == "approved_declaration":
-            return {'id': self.key.integer_id(),
-                    "class_name": self.class_name,
-                    'created_at': str(self.created_at),
-                    'created_by': self.created_by.integer_id(),
-                    'assigned_to': self.assigned_to.integer_id(),
-                    'comment': self.comment,
-                    'declined_by': self.declined_by.integer_id(),
-                    'submitted_to_hr_by': self.submitted_to_hr_by.integer_id(),
-                    'approved_by': self.approved_by.integer_id()}
+                   "closed_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                          "submitted_to_hr_by"],
+                   "declined_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by"],
+                   "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
+                                            "submitted_to_hr_by", "approved_by"]}
+
+    def details(self):
+        return dict({'id': self.key.integer_id(),
+                     'class_name': self.class_name}.items() + property_not_none_key_value_pair_with_permissions(self).items())
 
     def __setattr__(self, key, value):
         """
@@ -196,13 +144,15 @@ class DeclarationType(ndb.Model):
 
 # DeclarationLine Model class
 class DeclarationLine(ndb.Model):
+    declaration = ndb.KeyProperty(kind=Declaration)
     receipt_date = ndb.StringProperty()  # DateProperty?
     cost = ndb.IntegerProperty()
     declaration_type = ndb.KeyProperty(kind=DeclarationType)
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
     def details(self):
-        return {'receipt_date': self.receipt_date,
+        return {'declaration': self.declaration.key.integer_id(),
+                'receipt_date': self.receipt_date,
                 'cost': self.cost,
                 'declaration_type': self.declaration_type.integer_id(),
                 'declaration_sub_type': self.declaration_sub_type.integer_id()}
@@ -214,3 +164,20 @@ class Attachment(ndb.Model):
 
     def details(self):
         return {'': ""}  # TODO details
+
+
+def property_not_none_key_value_pair_with_permissions(class_reference):
+    key_value_pair = {}
+    if class_reference is not None and class_reference.permissions is not None:
+        permissions = class_reference.permissions[class_reference.class_name]
+        if permissions is not None:
+            for prop in permissions:
+                value = getattr(class_reference,prop)
+                if value is not None:
+                    value_type  = type(value)
+                    key_type = ndb.Key
+                    if type(value) is Key:
+                        value = value.integer_id()
+                    key_value_pair = dict(key_value_pair.items() + {prop: value}.items())
+
+    return dict
