@@ -261,7 +261,7 @@ class CurrentUserSupervisorsHandlerTest(BaseAuthorizationHandler):
         #('/supervisors/', CurrentUserSupervisors),
         self.set_up_custom_path([(path, main_application.CurrentUserSupervisors)])
 
-        self.negative_test_stub_handler(path, "get", 500)
+        self.negative_test_stub_handler(path, "get", 401)
 
     def test_positive_get_all(self):
         user_is_logged_in = True
@@ -272,15 +272,26 @@ class CurrentUserSupervisorsHandlerTest(BaseAuthorizationHandler):
             [(path, main_application.CurrentUserSupervisors)],
             user_is_logged_in, user_is_admin)
 
-        logged_in_person = setup_data["random_person"]
-        logged_in_person.class_name = "employee"
-        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
-                                        logged_in_person.key.integer_id())
-        logged_in_person.put()
         supervisor = PersonDataCreator.create_valid_supervisor()
         supervisor2 = PersonDataCreator.create_valid_supervisor()
 
-        logged_in_person.supervisor = supervisor.key
-        logged_in_person.put()
+        response = self.positive_test_stub_handler(path, "get")
+        response_data = json.loads(response.body)
+        print response_data
 
-        self.positive_test_stub_handler(path, "get")
+        for i in response_data:
+            try:
+                self.assertIsNotNone(i["class_name"])
+            except KeyError as error:
+                self.fail("Test Failed! Expected the key: " + str(
+                    error) + " to be present in the response, but it was not found. Found only: " + str(response_data))
+            except ValueError as error:
+                self.fail("Test Failed! There is an invalid value in the response data. "
+                          "This usually happens with parsing wrong input values.\n"
+                          "The values expected for each key are:\n"
+                          "{\"id\" : integer,\n"
+                          "\"is_logged_in\" : boolean,\n"
+                          "\"is_application_admin\" : boolean}\n"
+                          "______________________\n"
+                          "Full error message:\n"
+                          + str(error))

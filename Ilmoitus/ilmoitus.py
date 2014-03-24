@@ -213,12 +213,8 @@ class CurrentUserSupervisors(BaseRequestHandler):
             query_result = supervisor_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
             response_module.respond_with_existing__model_object_collection(self, query_result)
-
-            #TODO check if there are supervisors
-            
         else:
-            print "#User needs to login"
-            self.abort(500)
+            self.abort(401)
 
 
 
