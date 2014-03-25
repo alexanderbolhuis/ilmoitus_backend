@@ -284,6 +284,7 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
         employee.put()
         DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
 
+
 class CurrentUserDetailHandlerTest(BaseAuthorizationHandler):
     def test_get_employee_details_logged_in(self):
         user_is_logged_in = True
@@ -326,8 +327,6 @@ class CurrentUserDetailHandlerTest(BaseAuthorizationHandler):
                       "______________________\n"
                       "Full error message:\n"
                       + str(error))
-
-
 
     def test_get_employee_details_not_logged_in(self):
         path = "/current_user/details"
