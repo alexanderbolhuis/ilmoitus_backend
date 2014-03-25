@@ -336,7 +336,6 @@ class CurrentUserDetailHandlerTest(BaseAuthorizationHandler):
         self.negative_test_stub_handler(path, "get", 401)
 
 
-
 class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
     def test_positive_get_all(self):

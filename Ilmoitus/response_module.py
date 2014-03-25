@@ -29,7 +29,6 @@ def respond_with_object_collection_by_class(request_handler, class_reference, li
     else:
         give_response(request_handler, None)
 
-
 def respond_with_existing_model_object_collection(request_handler, collection):
     if len(collection) > 0:
         #important to dump the result of the map; this takes care of the wrapper list object that contains all items
