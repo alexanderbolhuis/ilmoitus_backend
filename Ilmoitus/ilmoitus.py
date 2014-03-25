@@ -3,6 +3,7 @@ import webapp2 as webapp
 import response_module
 import ilmoitus_model
 import json
+import data_bootstrapper
 import logging
 import data_bootstrapper
 from google.appengine.api import users
@@ -215,6 +216,7 @@ class AllDeclarationsForSupervisor(BaseRequestHandler):
         person = person_data["person_value"]
 
         if person is not None and person.class_name == 'supervisor':
+
             declaration_query = ilmoitus_model.Declaration.query(ilmoitus_model.Declaration.class_name == 'open_declaration',
                                                         ilmoitus_model.Declaration.assigned_to == person.key)
             query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())

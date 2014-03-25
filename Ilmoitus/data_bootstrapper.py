@@ -8,6 +8,7 @@ import urllib
 class DataBootsTrapper(webapp2.RequestHandler):
     def create_data(self):
         #DEPARTMENTS
+
         department_it = ilmoitus_model.Department()
         department_it.name = "IT"
         department_it.put()
@@ -17,6 +18,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         department_investment.put()
 
         #SUPERVISORS
+
         supervisor_one = ilmoitus_model.User()
         supervisor_one.class_name = "supervisor"
         supervisor_one.first_name = "Wim"
@@ -26,6 +28,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         supervisor_one.department = department_it.key
         supervisor_one.supervisor = None
         supervisor_one.put()
+
 
         supervisor_two = ilmoitus_model.User()
         supervisor_two.class_name = "supervisor"
