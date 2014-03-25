@@ -178,6 +178,9 @@ class Declaration(ndb.Model):
         else:
             return default_value
 
+    def all(self):
+        return Declaration.key
+
 
 # DeclarationSubType Model class
 class DeclarationSubType(ndb.Model):

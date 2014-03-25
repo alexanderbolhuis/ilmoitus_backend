@@ -4,6 +4,7 @@ import response_module
 import model
 import json
 import logging
+import data_bootstrapper
 
 from google.appengine.api import users
 from google.appengine.ext import ndb
@@ -273,6 +274,9 @@ application = webapp.WSGIApplication(
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
+        ('/clear', data_bootstrapper.ClearHandler),
+        ('/fill', data_bootstrapper.FillHandler),
+        ('/create', data_bootstrapper.CreateDataHandler),
         ('.*', DefaultHandler)
     ],
     debug=True)  # if debug is set to false,
