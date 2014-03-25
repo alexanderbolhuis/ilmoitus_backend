@@ -57,7 +57,6 @@ def give_response(request_handler, json_data):
     request_handler.response.headers['Content-Type'] = "application/json"
     if json_data is not None:
         request_handler.response.write(json_data)
-        request_handler.abort(500)
     else:
         #TODO: give proper error response here
         request_handler.abort(404)

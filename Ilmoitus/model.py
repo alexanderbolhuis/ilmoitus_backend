@@ -4,6 +4,7 @@ from google.appengine.ext import ndb
 from google.appengine.ext.ndb import polymodel
 from google.appengine.ext import blobstore
 from google.appengine.ext.ndb.key import Key
+from datetime import datetime
 
 
 # Department Model class
@@ -36,7 +37,8 @@ class User(polymodel.PolyModel):
 
     def details(self):
         return dict({'id': self.key.integer_id(),
-                     'class_name': self.class_name}.items() + property_not_none_key_value_pair_with_permissions(self).items())
+                     'class_name': self.class_name}.items() +
+                    property_not_none_key_value_pair_with_permissions(self).items())
 
     @classmethod
     def _get_kind(cls):
@@ -85,7 +87,8 @@ class Declaration(ndb.Model):
 
     def details(self):
         return dict({'id': self.key.integer_id(),
-                     'class_name': self.class_name}.items() + property_not_none_key_value_pair_with_permissions(self).items())
+                     'class_name': self.class_name}.items() +
+                    property_not_none_key_value_pair_with_permissions(self).items())
 
     def __setattr__(self, key, value):
         """
@@ -174,10 +177,11 @@ def property_not_none_key_value_pair_with_permissions(class_reference):
             for prop in permissions:
                 value = getattr(class_reference,prop)
                 if value is not None:
-                    value_type  = type(value)
-                    key_type = ndb.Key
+                    value_type = type(value)
                     if type(value) is Key:
                         value = value.integer_id()
+                    elif type(value) is datetime:
+                        value = str(value)
                     key_value_pair = dict(key_value_pair.items() + {prop: value}.items())
 
     return key_value_pair

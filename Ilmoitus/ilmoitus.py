@@ -6,6 +6,7 @@ import json
 import logging
 
 from google.appengine.api import users
+from google.appengine.ext import ndb
 from error_response_module import give_error_response
 
 
@@ -183,20 +184,19 @@ class SpecificEmployeeDetailsHandler(BaseRequestHandler):
 
 
 class CurrentUserDetailsHandler(BaseRequestHandler):
-    #todo: new global function for getting the current user
     def get(self):
-        current_logged_in_user = users.get_current_user()
-        if current_logged_in_user is not None:
-            employee_query = model.User.query(model.User.email == current_logged_in_user.email())
-            query_result = employee_query.get()
-            if query_result is not None:
-                response_module.give_response(self, json.dumps(query_result.details()))
+        current_user_data = get_current_person()
+        user_is_logged_in = current_user_data["user_is_logged_in"]
+        if user_is_logged_in is True:
+            current_user = current_user_data["person_value"]
+            if current_user is not None:
+                response_module.give_response(self, json.dumps(current_user.details()))
             else:
-                print "Persoon bestaat niet"
-                self.abort(500)
+                print "Not Found"
+                self.abort(404)
         else:
-            print "NIET ingelogd"
-            self.abort(500)
+            print "Unauthorized"
+            self.abort(401)
 
 
 class UserSettingsHandler(BaseRequestHandler):
@@ -221,7 +221,7 @@ class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
         person_data = get_current_person("human_resources")
         person = person_data["person_value"]
         if person is not None:
-            if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
+            if person.class_name == "human_resources":
                 declaration_query = model.Declaration.query(model.Declaration.class_name == "approved_declaration")
                 query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
@@ -235,6 +235,29 @@ class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
             self.abort(401)
 
 
+
+class CurrentUserAssociatedDeclarations(BaseRequestHandler):
+    def get(self):
+        person_data = get_current_person()
+        current_user = person_data["person_value"]
+
+        key = current_user.key
+        declaration = model.Declaration
+        query = model.Declaration.query(ndb.OR(declaration.created_by == key,
+                                               declaration.assigned_to == key,
+                                               declaration.approved_by == key,
+                                               declaration.submitted_to_hr_by == key,
+                                               declaration.declined_by == key))
+
+        query_result = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+        if len(query_result) != 0:
+            return_list = map(lambda declaration_item: declaration_item.details(), query_result)
+            response_module.give_response(self, json.dumps(return_list))
+        else:
+            self.abort(404)
+
+
+
 application = webapp.WSGIApplication(
     [
         ('/persons', AllPersonsHandler),
@@ -245,7 +268,8 @@ application = webapp.WSGIApplication(
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/open_declarations/employee', AllOpenDeclarationsForEmployeeHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
-        ('/current_user_details/', CurrentUserDetailsHandler),
+        ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
+        ('/current_user/details', CurrentUserDetailsHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
