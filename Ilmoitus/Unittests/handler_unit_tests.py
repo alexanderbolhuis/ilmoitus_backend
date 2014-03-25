@@ -348,6 +348,7 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "human_resources"
+
         logged_in_person.put()
 
         employee = PersonDataCreator.create_valid_employee_data()
@@ -381,7 +382,7 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/declarations/supervisor"
         setup_data = self.setup_server_with_user([(path, main_application.AllDeclarationsForSupervisor)],
-                                    user_is_logged_in, user_is_admin)
+                                                 user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "employee"
