@@ -213,24 +213,6 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
         self.positive_test_stub_handler(path, "get")
 
 
-class EmployeeDetailsHandlerTest(BaseAuthorizationHandler):
-    def test_get_employee_details_not_logged_in(self):
-        path = "/current_user_details/"
-        self.set_up_custom_path([(path, main_application.CurrentUserDetailsHandler)])
-
-        self.negative_test_stub_handler(path, "get", 500)
-
-    def test_get_employee_details_logged_in(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/current_user_details/"
-        self.setup_server_with_user([(path, main_application.CurrentUserDetailsHandler)],
-                                    user_is_logged_in,
-                                    user_is_admin)
-
-        self.positive_test_stub_handler(path, "get")
-
-
 class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
     def test_positive_get_current_employee_associated_declarations(self):
         user_is_logged_in = True
@@ -297,7 +279,56 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
         employee.put()
         DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
 
-        self.positive_test_stub_handler(path, "get")
+class CurrentUserDetailHandlerTest(BaseAuthorizationHandler):
+    def test_get_employee_details_logged_in(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/current_user/details"
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.CurrentUserDetailsHandler)],
+            user_is_logged_in, user_is_admin)
+
+        random_person = setup_data["random_person"]
+
+        response = self.positive_test_stub_handler(path, "get")
+        response_data = json.loads(response.body)
+
+        try:
+            self.assertIsNotNone(response_data["id"])
+            self.assertIsNotNone(response_data["class_name"])
+            self.assertIsNotNone(response_data["first_name"])
+            self.assertIsNotNone(response_data["last_name"])
+            self.assertIsNotNone(response_data["email"])
+
+            self.assertEqual(response_data["id"], (random_person.key.integer_id()))
+            self.assertEqual(response_data["class_name"], random_person.class_name)
+            self.assertEqual(response_data["first_name"], random_person.first_name)
+            self.assertEqual(response_data["last_name"], random_person.last_name)
+            self.assertEqual(response_data["email"], random_person.email)
+        except KeyError as error:
+            self.fail("Test Failed! Expected the key: " + str(
+                error) + " to be present in the response, but it was not found. Found only: " + str(response_data))
+        except ValueError as error:
+            self.fail("Test Failed! There is an invalid value in the response data. "
+                      "This usually happens with parsing wrong input values.\n"
+                      "The values expected for each key are:\n"
+                      "{\"id\" : integer,\n"
+                      "\"class_name\" : string,\n"
+                      "\"first_name\" : string,\n"
+                      "\"last_name\" : string,\n"
+                      "\"email\" : string}\n"
+                      "______________________\n"
+                      "Full error message:\n"
+                      + str(error))
+
+
+
+    def test_get_employee_details_not_logged_in(self):
+        path = "/current_user/details"
+        self.set_up_custom_path([(path, main_application.CurrentUserDetailsHandler)])
+
+        self.negative_test_stub_handler(path, "get", 401)
 
 
 class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
