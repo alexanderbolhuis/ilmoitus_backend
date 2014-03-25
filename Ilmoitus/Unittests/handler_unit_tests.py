@@ -1,6 +1,4 @@
 __author__ = 'Sjors van Lemmen'
-import sys
-sys.path.append("../")
 import random
 import json
 import ilmoitus_model
