@@ -203,8 +203,6 @@ class DeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "employee"
-        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
-                                        logged_in_person.key.integer_id())
         logged_in_person.put()
         supervisor = PersonDataCreator.create_valid_supervisor()
         logged_in_person.supervisor = supervisor.key
@@ -374,8 +372,6 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "human_resources"
 
-        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
-                                        logged_in_person.key.integer_id())
         logged_in_person.put()
 
         employee = PersonDataCreator.create_valid_employee_data()
@@ -409,12 +405,10 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/declarations/supervisor"
         setup_data = self.setup_server_with_user([(path, main_application.AllDeclarationsForSupervisor)],
-                                    user_is_logged_in, user_is_admin)
+                                                 user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "employee"
-        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
-                                        logged_in_person.key.integer_id())
         logged_in_person.put()
 
         self.negative_test_stub_handler(path, "get", 401)
@@ -428,6 +422,7 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "supervisor"
+        logged_in_person.put()
 
         person = PersonDataCreator.create_valid_employee_data()
         other_supervisor = PersonDataCreator.create_valid_supervisor()
