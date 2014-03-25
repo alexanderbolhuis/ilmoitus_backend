@@ -189,14 +189,14 @@ class AuthorizationHandlerTest(BaseAuthorizationHandler):
                       + str(error))
 
 
-class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
+class DeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
     def test_positive_get_all(self):
         user_is_logged_in = True
         user_is_admin = '0'
-        path = '/open_declarations/employee'
+        path = '/declarations/employee'
 
         setup_data = self.setup_server_with_user(
-            [('/open_declarations/employee', main_application.AllOpenDeclarationsForEmployeeHandler)],
+            [('/declarations/employee', main_application.AllDeclarationsForEmployeeHandler)],
             user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
@@ -204,14 +204,40 @@ class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
         logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
                                         logged_in_person.key.integer_id())
         logged_in_person.put()
-
         supervisor = PersonDataCreator.create_valid_supervisor()
-
         logged_in_person.supervisor = supervisor.key
         logged_in_person.put()
-        open_declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
 
-        self.positive_test_stub_handler(path, "get")
+        response = self.positive_test_stub_handler(path, "get")
+        response_data = json.loads(response.body)
+
+        self.assertEqual(len(response_data), 1)
+
+        try:
+            self.assertIsNotNone(response_data[0]["id"])
+            self.assertIsNotNone(response_data[0]["class_name"])
+            self.assertIsNotNone(response_data[0]["state"])
+
+            self.assertEqual(response_data[0]["created_by"], (logged_in_person.key.integer_id()))
+            self.assertEqual(response_data[0]["assigned_to"], supervisor.key.integer_id())
+        except KeyError as error:
+            self.fail("Test Failed! Expected the key: " + str(
+                error) + " to be present in the response, but it was not found. Found only: " + str(response_data))
+        except ValueError as error:
+            self.fail("Test Failed! There is an invalid value in the response data. "
+                      "This usually happens with parsing wrong input values.\n"
+                      "______________________\n"
+                      "Full error message:\n"
+                      + str(error))
+
+
+    def test_negative_get_all_not_logged_in(self):
+        path = '/declarations/employee'
+        self.set_up_custom_path([(path, main_application.AllDeclarationsForEmployeeHandler)])
+        self.negative_test_stub_handler(path, "get", 401)
+
+
 
 
 class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):

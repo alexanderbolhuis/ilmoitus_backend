@@ -104,6 +104,16 @@ class Declaration(ndb.Model):
     submitted_to_hr_by = ndb.KeyProperty(kind=User)
     approved_by = ndb.KeyProperty(kind=User)
 
+    #'Static' dictionary with readable states
+    readable_states = {
+                    "open_declaration": "Open",
+                    "locked_declaration": "In behandeling",                 #User story (leidinggevende kan declaratie locken)
+                    "declined_declaration": "Afgekeurd leidinggevende",
+                    "approved_declaration": "Goedgekeurd leidinggevende",
+                    "closed_declaration": "Afgekeurd",                      #Declined bij hr i suppose?
+                    "approved_declaration_hr": "Goedgekeurd",
+    }
+
     all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "declined_by",
                                  "submitted_to_hr_by"]
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
@@ -116,13 +126,15 @@ class Declaration(ndb.Model):
         if self.class_name == "open_declaration":
             return {'id': self.key.integer_id(),
                     "class_name": self.class_name,
+                    "state": self.readable_state(),
                     'created_at': str(self.created_at),
                     'created_by': self.created_by.integer_id(),
                     'assigned_to': self.assigned_to.integer_id(),
                     'comment': self.comment}
         if self.class_name == "declined_declaration":
-                        return {'id': self.key.integer_id(),
+            return {'id': self.key.integer_id(),
                     "class_name": self.class_name,
+                    "state": self.readable_state(),
                     'created_at': str(self.created_at),
                     'created_by': self.created_by.integer_id(),
                     'assigned_to': self.assigned_to.integer_id(),
@@ -131,12 +143,17 @@ class Declaration(ndb.Model):
         if self.class_name == "approved_declaration":
             return {'id': self.key.integer_id(),
                     "class_name": self.class_name,
+                    "state": self.readable_state(),
                     'created_at': str(self.created_at),
                     'created_by': self.created_by.integer_id(),
                     'assigned_to': self.assigned_to.integer_id(),
                     'comment': self.comment,
                     'submitted_to_hr_by': self.submitted_to_hr_by.integer_id(),
                     'approved_by': self.approved_by.integer_id()}
+
+
+    def readable_state(self):
+        return self.readable_states[self.class_name];
 
     def __setattr__(self, key, value):
         """
