@@ -76,19 +76,33 @@ class Declaration(ndb.Model):
     submitted_to_hr_by = ndb.KeyProperty(kind=User)
     approved_by = ndb.KeyProperty(kind=User)
 
+    #'Static' dictionary with readable states
+    readable_states = {
+                    "open_declaration": "Open",
+                    "locked_declaration": "In behandeling",                 #User story (leidinggevende kan declaratie locken)
+                    "declined_declaration": "Afgekeurd leidinggevende",
+                    "approved_declaration": "Goedgekeurd leidinggevende",
+                    "closed_declaration": "Afgekeurd",                      #Declined by hr I suppose?
+                    "approved_declaration_hr": "Goedgekeurd",
+    }
+
     all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "declined_by",
                              "submitted_to_hr_by"]
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
                    "closed_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
                                           "submitted_to_hr_by"],
                    "declined_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by"],
-                   "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                            "submitted_to_hr_by", "approved_by"]}
+                   "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "submitted_to_hr_by",
+                                            "approved_by"]}
 
     def details(self):
         return dict({'id': self.key.integer_id(),
-                     'class_name': self.class_name}.items() +
+                     'class_name': self.class_name,
+                     "state": self.readable_state()}.items() +
                     property_not_none_key_value_pair_with_permissions(self).items())
+
+    def readable_state(self):
+        return self.readable_states[self.class_name];
 
     def __setattr__(self, key, value):
         """

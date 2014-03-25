@@ -160,12 +160,12 @@ class LogoutHandler(BaseRequestHandler):
             self.redirect("/login_page")
 
 
-class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
+class AllDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
         #model.Employee as param since this handler handles calls from their POV.
         person_data = get_current_person("employee")
         person = person_data["person_value"]
-        if person is not False:
+        if person is not None:
             declaration_query = model.Declaration.query(model.Declaration.created_by == person.key)
             query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
@@ -266,8 +266,8 @@ application = webapp.WSGIApplication(
         ('/employees', AllEmployeesHandler),
         ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
-        ('/open_declarations/employee', AllOpenDeclarationsForEmployeeHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
+        ('/declarations/employee', AllDeclarationsForEmployeeHandler),
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/auth/login', LoginHandler),
