@@ -4,15 +4,18 @@ import response_module
 import model
 import json
 import data_bootstrapper
+import logging
 from google.appengine.api import users
+from google.appengine.ext import ndb
+from error_response_module import give_error_response
 
 
-def get_current_person(person_class_reference=model.User):
+def get_current_person(class_name=None):
     """
      Global function that will retrieve the user that is currently logged in (through Google's users API)
      and fetch the person model object of this application that belongs to it through the email field.
 
-     :param person_class_reference: (Optional) A reference to a person model class that should be used to find
+     :param class_name: (Optional) A reference to a person model class that should be used to find
      the model class object that belongs to the logged in user. If not provided, model.Person will be used.
 
      :returns: A dictionary containing two key-value pairs:
@@ -27,8 +30,11 @@ def get_current_person(person_class_reference=model.User):
     return_data = {"user_is_logged_in": False, "person_value": None}
     if current_logged_in_user is not None:
         return_data["user_is_logged_in"] = True
-        person_query = person_class_reference.query().filter(person_class_reference.email ==
-                                                             current_logged_in_user.email())
+        if class_name is None:
+            person_query = model.User.query(model.User.email == current_logged_in_user.email())
+        else:
+            person_query = model.User.query(model.User.email == current_logged_in_user.email(), model.User.class_name ==
+                                                                                                class_name)
         query_result = person_query.get()
         if query_result is not None:
             return_data["person_value"] = query_result
@@ -48,6 +54,14 @@ class BaseRequestHandler(webapp.RequestHandler):
     def get_header_offset(self):
         offset = self.request.get("offset", default_value=0)
         return offset
+
+    def handle_exception(self, exception, debug):
+        logging.debug(self.request)
+        if debug:
+            logging.exception(exception)
+
+        self.response.write(self.request.body)
+        self.response.set_status(exception.code)
 
 
 class DefaultHandler(BaseRequestHandler):
@@ -87,7 +101,8 @@ class AllEmployeesHandler(BaseRequestHandler):
         response_module.respond_with_object_collection_by_class(self,
                                                                 model.User,  # Will only get Employees or subclasses
                                                                 self.get_header_limit(),
-                                                                self.get_header_offset())
+                                                                self.get_header_offset(),
+                                                                "employee")
 
 
 class SpecificEmployeeHandler(BaseRequestHandler):
@@ -145,13 +160,12 @@ class LogoutHandler(BaseRequestHandler):
             self.redirect("/login_page")
 
 
-
-class AllOpenDeclarationsForEmployeeHandler(BaseRequestHandler):
+class AllDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
         #model.Employee as param since this handler handles calls from their POV.
-        person_data = get_current_person(model.User)
+        person_data = get_current_person("employee")
         person = person_data["person_value"]
-        if person is not False:
+        if person is not None:
             declaration_query = model.Declaration.query(model.Declaration.created_by == person.key)
             query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
@@ -170,48 +184,92 @@ class SpecificEmployeeDetailsHandler(BaseRequestHandler):
 
 
 class CurrentUserDetailsHandler(BaseRequestHandler):
-    #todo: new global function for getting the current user
     def get(self):
-        current_logged_in_user = users.get_current_user()
-        if current_logged_in_user is not None:
-            employee_query = model.Employee.query().filter(model.Employee.email == current_logged_in_user.email())
-            query_result = employee_query.get()
-            if query_result is not None:
-                response_module.give_response(self, query_result.details())
+        current_user_data = get_current_person()
+        user_is_logged_in = current_user_data["user_is_logged_in"]
+        if user_is_logged_in is True:
+            current_user = current_user_data["person_value"]
+            if current_user is not None:
+                response_module.give_response(self, json.dumps(current_user.details()))
             else:
-                print "Persoon bestaat niet"
-                self.abort(500)
+                print "Not Found"
+                self.abort(404)
         else:
-            print "NIET ingelogd"
-            self.abort(500)
+            print "Unauthorized"
+            self.abort(401)
 
 
 class UserSettingsHandler(BaseRequestHandler):
     def get(self):
-        employee = get_current_person(self)
+        employee = get_current_person()
         if employee is not None:
             response_module.give_response(self,
                                           json.dumps(employee.details()))
-        #TODO what to do when employee is None?
+            #TODO what to do when employee is None?
 
     def put(self):
-        employee = get_current_person(self)
+        employee = get_current_person()
         if employee is not None:
             employee.wants_email_notifications = bool(self.request.get("wants_email_notifications"))
             employee.wants_phone_notifications = bool(self.request.get("wants_phone_notifications"))
-        #TODO what to do when employee is None?
+            #TODO what to do when employee is None?
+
+
+
+class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
+    def get(self):
+        person_data = get_current_person("human_resources")
+        person = person_data["person_value"]
+        if person is not None:
+            if person.class_name == "human_resources":
+                declaration_query = model.Declaration.query(model.Declaration.class_name == "approved_declaration")
+                query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+
+                response_module.respond_with_existing__model_object_collection(self, query_result)
+            else:
+                #User is not authorised
+                self.abort(401)
+        else:
+            #TODO: error messages:
+            #User is not logged in/registered; he/she needs to login first
+            self.abort(401)
+
+
+
+class CurrentUserAssociatedDeclarations(BaseRequestHandler):
+    def get(self):
+        person_data = get_current_person()
+        current_user = person_data["person_value"]
+
+        key = current_user.key
+        declaration = model.Declaration
+        query = model.Declaration.query(ndb.OR(declaration.created_by == key,
+                                               declaration.assigned_to == key,
+                                               declaration.approved_by == key,
+                                               declaration.submitted_to_hr_by == key,
+                                               declaration.declined_by == key))
+
+        query_result = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+        if len(query_result) != 0:
+            return_list = map(lambda declaration_item: declaration_item.details(), query_result)
+            response_module.give_response(self, json.dumps(return_list))
+        else:
+            self.abort(404)
+
+
 
 application = webapp.WSGIApplication(
     [
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
         ('/user/settings/', UserSettingsHandler),
-        ('/details/', CurrentUserDetailsHandler),
         ('/employees', AllEmployeesHandler),
         ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
-        ('/open_declarations/employee', AllOpenDeclarationsForEmployeeHandler),
-        ('/current_user_details/', CurrentUserDetailsHandler),
+        ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
+        ('/declarations/employee', AllDeclarationsForEmployeeHandler),
+        ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
+        ('/current_user/details', CurrentUserDetailsHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!

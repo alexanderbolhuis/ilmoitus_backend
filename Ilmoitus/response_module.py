@@ -34,8 +34,11 @@ def respond_with_object_details_by_id(request_handler, class_reference, object_i
     give_response(request_handler, json.dumps(item.details()))
 
 
-def respond_with_object_collection_by_class(request_handler, class_reference, limit, offset):
-    query = class_reference.query()
+def respond_with_object_collection_by_class(request_handler, class_reference, limit, offset, class_name=None):
+    if class_name is None:
+        query = class_reference.query()
+    else:
+        query = class_reference.query().filter(class_reference.class_name == class_name)
     query_result = query.fetch(limit=limit, offset=offset)
     if len(query_result) > 0:
         give_response(request_handler, json.dumps(map(lambda item: item.details(), query_result)))
