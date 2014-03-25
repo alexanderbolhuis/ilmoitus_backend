@@ -236,7 +236,6 @@ class EmployeeDetailsHandlerTest(BaseAuthorizationHandler):
         self.positive_test_stub_handler(path, "get")
 
 
-
 class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
     def test_positive_get_all(self):
         user_is_logged_in = True

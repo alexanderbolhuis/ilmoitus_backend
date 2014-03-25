@@ -44,7 +44,6 @@ class ModelTest(BaseTestClass):
         self.assertEqual(open_declaration.readable_state(), "Open")
 
 
-
     def test_person_can_set_own_properties(self):
         self.setup_dummy_server_without_handlers()
 
