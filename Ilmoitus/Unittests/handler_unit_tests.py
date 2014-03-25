@@ -251,7 +251,7 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
         supervisor = PersonDataCreator.create_valid_supervisor()
 
         DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
-        DeclarationsDataCreator.create_valid_approved_declaration(employee, supervisor)
+        declaration = DeclarationsDataCreator.create_valid_approved_declaration(employee, supervisor)
 
         response = self.positive_test_stub_handler(path, "get")
         response_data = json.loads(response.body)
@@ -259,12 +259,12 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
         self.assertEqual(response_data[0]["comment"], "Thanks for taking care of this for me!")
         self.assertEqual(response_data[0]["class_name"], "approved_declaration")
-        #self.assertEqual(response_data[0]["created_at"], str(datetime.datetime.utcnow()))
+        self.assertEqual(response_data[0]["created_at"], str(declaration.created_at))
         self.assertEqual(response_data[0]["created_by"], employee.key.integer_id())
         self.assertEqual(response_data[0]["approved_by"], supervisor.key.integer_id())
         self.assertEqual(response_data[0]["assigned_to"], supervisor.key.integer_id())
         self.assertEqual(response_data[0]["submitted_to_hr_by"], supervisor.key.integer_id())
-        #self.assertEqual(response_data[0]["submitted_to_hr_by"], supervisor.key.integer_id())
+        self.assertEqual(response_data[0]["id"], declaration.key.integer_id())
 
     def test_negative_get_all_not_logged_in(self):
         path = '/declarations/hr'
