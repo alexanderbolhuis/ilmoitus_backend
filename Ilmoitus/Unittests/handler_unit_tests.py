@@ -1,9 +1,10 @@
 __author__ = 'Sjors van Lemmen'
 import random
 import json
-import datetime
+import ilmoitus_model
 import data_bootstrapper
 import webtest
+import datetime
 from google.appengine.ext import ndb
 import ilmoitus as main_application
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
@@ -13,7 +14,7 @@ from Base.base_test_methods import BaseTestClass
 class EmployeeHandlerTest(BaseTestClass):
     def test_get_all_employee_positive(self):
         path = "/employees"
-        self.set_up_custom_path([(path, main_application.AllEmployeesHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
         number_of_employees = random.randint(1, 10)
         for i in range(0, number_of_employees):
             PersonDataCreator.create_valid_employee_data(i)
@@ -26,7 +27,7 @@ class EmployeeHandlerTest(BaseTestClass):
          of it's superclass Person, but none that match on the Employee class.
         """
         path = "/employees"
-        self.set_up_custom_path([(path, main_application.AllEmployeesHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
         number_of_persons = random.randint(1, 10)
         for i in range(0, number_of_persons):
             PersonDataCreator.create_valid_person_data(i)
@@ -38,7 +39,7 @@ class EmployeeHandlerTest(BaseTestClass):
          This test will test if the right error is given when there are no persons whatsoever.
         """
         path = "/employees"
-        self.set_up_custom_path([(path, main_application.AllEmployeesHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
 
         self.negative_test_stub_handler(path, "get", 404)
 
@@ -49,7 +50,6 @@ class BaseAuthorizationHandler(BaseTestClass):
             Helper method to set-up all data needed in these unit tests.
 
             :param handler_routes: List of tuples that contain all url and handlers that will be set-up for this test.
-            :rtype : object
             :param user_is_logged_in: Boolean that indicates whether a user mock-up should be made or not.
             :param user_is_admin: String that indicates whether or not the user is admin or not.
                 Only valid values are '0' (no admin) and '1' (is admin). Any other values will raise an Exception.
@@ -63,7 +63,7 @@ class BaseAuthorizationHandler(BaseTestClass):
                 -"random_person2" : Another person object that will always be different from the first.
         """
         path = "/auth"
-        self.set_up_custom_path(handler_routes)
+        self.setup_test_server_with_custom_routes(handler_routes)
         self.testbed.init_user_stub()
 
         number_of_persons = random.randint(3, 10)
@@ -190,29 +190,32 @@ class AuthorizationHandlerTest(BaseAuthorizationHandler):
                       + str(error))
 
 
-class OpenDeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
+class DeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
     def test_positive_get_all(self):
         user_is_logged_in = True
         user_is_admin = '0'
-        path = '/open_declarations/employee'
+        path = '/declarations/employee'
 
         setup_data = self.setup_server_with_user(
-            [('/open_declarations/employee', main_application.AllOpenDeclarationsForEmployeeHandler)],
+            [('/declarations/employee', main_application.AllDeclarationsForEmployeeHandler)],
             user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "employee"
-        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
-                                        logged_in_person.key.integer_id())
         logged_in_person.put()
 
         supervisor = PersonDataCreator.create_valid_supervisor()
 
         logged_in_person.supervisor = supervisor.key
         logged_in_person.put()
-        open_declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
 
         self.positive_test_stub_handler(path, "get")
+
+    def test_negative_get_all_not_logged_in(self):
+        path = '/declarations/employee'
+        self.setup_test_server_with_custom_routes([(path, main_application.AllDeclarationsForEmployeeHandler)])
+        self.negative_test_stub_handler(path, "get", 401)
 
 
 class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
@@ -281,6 +284,7 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
         employee.put()
         DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
 
+
 class CurrentUserDetailHandlerTest(BaseAuthorizationHandler):
     def test_get_employee_details_logged_in(self):
         user_is_logged_in = True
@@ -324,11 +328,9 @@ class CurrentUserDetailHandlerTest(BaseAuthorizationHandler):
                       "Full error message:\n"
                       + str(error))
 
-
-
     def test_get_employee_details_not_logged_in(self):
         path = "/current_user/details"
-        self.set_up_custom_path([(path, main_application.CurrentUserDetailsHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.CurrentUserDetailsHandler)])
 
         self.negative_test_stub_handler(path, "get", 401)
 
@@ -346,8 +348,7 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "human_resources"
-        logged_in_person._key = ndb.Key(model.User, logged_in_person.key.integer_id(), model.User,
-                                        logged_in_person.key.integer_id())
+
         logged_in_person.put()
 
         employee = PersonDataCreator.create_valid_employee_data()
@@ -371,5 +372,46 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
     def test_negative_get_all_not_logged_in(self):
         path = '/declarations/hr'
-        self.set_up_custom_path([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
+
+        self.setup_test_server_with_custom_routes([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
         self.negative_test_stub_handler(path, "get", 401)
+
+class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
+    def test_get_supervisor_declarations_no_permission(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/supervisor"
+        setup_data = self.setup_server_with_user([(path, main_application.AllDeclarationsForSupervisor)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+
+        logged_in_person.put()
+
+        self.negative_test_stub_handler(path, "get", 401)
+
+    def test_get_supervisor_declarations(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/supervisor"
+        setup_data = self.setup_server_with_user([(path, main_application.AllDeclarationsForSupervisor)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+        logged_in_person.put()
+
+        person = PersonDataCreator.create_valid_employee_data()
+        other_supervisor = PersonDataCreator.create_valid_supervisor()
+
+        DeclarationsDataCreator.create_valid_open_declaration(person, logged_in_person)
+        DeclarationsDataCreator.create_valid_open_declaration(person, logged_in_person)
+        DeclarationsDataCreator.create_valid_open_declaration(person, other_supervisor)
+
+        response = self.positive_test_stub_handler(path, "get")
+        response_data = json.loads(response.body)
+
+        self.assertEqual(len(response_data), 2)
+        self.assertEqual(response_data[0]["assigned_to"], logged_in_person.key.integer_id())
+        self.assertEqual(response_data[1]["assigned_to"], logged_in_person.key.integer_id())
