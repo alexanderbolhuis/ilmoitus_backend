@@ -47,7 +47,7 @@ class PersonDataCreator():
     @staticmethod
     def create_valid_human_resource(human_resources_human_resource=None, employee_number=0):
         human_resource = model.User()
-        human_resource.class_name = "human_resource"
+        human_resource.class_name = "human_resources"
         human_resource.department = DepartmentDataCreator.create_valid_department().key
         if human_resources_human_resource is not None:
             human_resource.human_resource = human_resources_human_resource.key
@@ -89,17 +89,13 @@ class DeclarationsDataCreator():
         return open_declaration
 
     @staticmethod
-    def create_valid_approved_declaration(employee, human_resource):
-        employee_key = employee.key
-        human_resource_key = human_resource.key
-
-        employee.human_resource = human_resource_key
-
+    def create_valid_approved_declaration(employee, supervisor):
         open_declaration = model.Declaration()
         open_declaration.class_name = "approved_declaration"
-        open_declaration.created_by = employee_key
-        open_declaration.assigned_to = human_resource_key
+        open_declaration.created_by = employee.key
+        open_declaration.assigned_to = supervisor.key
         open_declaration.comment = "Thanks for taking care of this for me!"
-
+        open_declaration.approved_by = supervisor.key
+        open_declaration.submitted_to_hr_by = supervisor.key
         open_declaration.put()
         return open_declaration
