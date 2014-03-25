@@ -1,8 +1,8 @@
 __author__ = 'Sjors van Lemmen'
 from unittest import TestCase
-import webtest
 import webapp2
 import json
+import webtest
 from google.appengine.ext import testbed
 
 import ilmoitus as main_application

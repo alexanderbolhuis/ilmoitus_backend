@@ -5,6 +5,8 @@ import random
 import json
 import datetime
 import model
+import data_bootstrapper
+import webtest
 from google.appengine.ext import ndb
 import ilmoitus as main_application
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
