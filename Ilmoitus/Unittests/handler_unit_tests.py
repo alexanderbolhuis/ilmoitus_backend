@@ -3,8 +3,10 @@ import sys
 sys.path.append("../")
 import random
 import json
+import ilmoitus_model
+import data_bootstrapper
+import webtest
 import datetime
-import model
 import data_bootstrapper
 import webtest
 from google.appengine.ext import ndb
@@ -16,7 +18,7 @@ from Base.base_test_methods import BaseTestClass
 class EmployeeHandlerTest(BaseTestClass):
     def test_get_all_employee_positive(self):
         path = "/employees"
-        self.set_up_custom_path([(path, main_application.AllEmployeesHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
         number_of_employees = random.randint(1, 10)
         for i in range(0, number_of_employees):
             PersonDataCreator.create_valid_employee_data(i)
@@ -29,7 +31,7 @@ class EmployeeHandlerTest(BaseTestClass):
          of it's superclass Person, but none that match on the Employee class.
         """
         path = "/employees"
-        self.set_up_custom_path([(path, main_application.AllEmployeesHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
         number_of_persons = random.randint(1, 10)
         for i in range(0, number_of_persons):
             PersonDataCreator.create_valid_person_data(i)
@@ -41,7 +43,7 @@ class EmployeeHandlerTest(BaseTestClass):
          This test will test if the right error is given when there are no persons whatsoever.
         """
         path = "/employees"
-        self.set_up_custom_path([(path, main_application.AllEmployeesHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
 
         self.negative_test_stub_handler(path, "get", 404)
 
@@ -52,7 +54,6 @@ class BaseAuthorizationHandler(BaseTestClass):
             Helper method to set-up all data needed in these unit tests.
 
             :param handler_routes: List of tuples that contain all url and handlers that will be set-up for this test.
-            :rtype : object
             :param user_is_logged_in: Boolean that indicates whether a user mock-up should be made or not.
             :param user_is_admin: String that indicates whether or not the user is admin or not.
                 Only valid values are '0' (no admin) and '1' (is admin). Any other values will raise an Exception.
@@ -66,7 +67,7 @@ class BaseAuthorizationHandler(BaseTestClass):
                 -"random_person2" : Another person object that will always be different from the first.
         """
         path = "/auth"
-        self.set_up_custom_path(handler_routes)
+        self.setup_test_server_with_custom_routes(handler_routes)
         self.testbed.init_user_stub()
 
         number_of_persons = random.randint(3, 10)
@@ -239,7 +240,10 @@ class DeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
         self.set_up_custom_path([(path, main_application.AllDeclarationsForEmployeeHandler)])
         self.negative_test_stub_handler(path, "get", 401)
 
-
+    def test_negative_get_all_not_logged_in(self):
+        path = '/declarations/employee'
+        self.setup_test_server_with_custom_routes([(path, main_application.AllDeclarationsForEmployeeHandler)])
+        self.negative_test_stub_handler(path, "get", 401)
 
 
 class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
@@ -308,6 +312,7 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):
         employee.put()
         DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
 
+
 class CurrentUserDetailHandlerTest(BaseAuthorizationHandler):
     def test_get_employee_details_logged_in(self):
         user_is_logged_in = True
@@ -351,11 +356,9 @@ class CurrentUserDetailHandlerTest(BaseAuthorizationHandler):
                       "Full error message:\n"
                       + str(error))
 
-
-
     def test_get_employee_details_not_logged_in(self):
         path = "/current_user/details"
-        self.set_up_custom_path([(path, main_application.CurrentUserDetailsHandler)])
+        self.setup_test_server_with_custom_routes([(path, main_application.CurrentUserDetailsHandler)])
 
         self.negative_test_stub_handler(path, "get", 401)
 
@@ -397,7 +400,8 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
     def test_negative_get_all_not_logged_in(self):
         path = '/declarations/hr'
-        self.set_up_custom_path([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
+
+        self.setup_test_server_with_custom_routes([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
         self.negative_test_stub_handler(path, "get", 401)
 
 
@@ -411,6 +415,7 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "employee"
+
         logged_in_person.put()
 
         self.negative_test_stub_handler(path, "get", 401)

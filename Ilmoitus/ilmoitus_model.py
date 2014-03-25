@@ -1,10 +1,10 @@
 __author__ = 'alexanderbolhuis & sjorsboom'
 
 from google.appengine.ext import ndb
-from google.appengine.ext.ndb import polymodel
 from google.appengine.ext import blobstore
 from google.appengine.ext.ndb.key import Key
 from datetime import datetime
+import json
 
 
 # Department Model class
@@ -16,14 +16,14 @@ class Department(ndb.Model):
 
 
 # Person Model class
-class User(polymodel.PolyModel):
+class Person(ndb.Model):
     class_name = ndb.StringProperty()
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
     email = ndb.StringProperty()
     employee_number = ndb.IntegerProperty()
     department = ndb.KeyProperty(kind=Department)
-    supervisor = ndb.KeyProperty(kind="User")
+    supervisor = ndb.KeyProperty(kind="Person")
 
     all_custom_properties = ["first_name", "last_name", "email", "employee_number", "department",
                              "supervisor"]
@@ -35,14 +35,13 @@ class User(polymodel.PolyModel):
                    "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
                                        "supervisor"]}
 
-    def details(self):
-        return dict({'id': self.key.integer_id(),
-                     'class_name': self.class_name}.items() +
+
+    def get_object_as_data_dict(self):
+        return dict({'id': self.key.integer_id(), 'class_name': self.class_name}.items() +
                     property_not_none_key_value_pair_with_permissions(self).items())
 
-    @classmethod
-    def _get_kind(cls):
-        return "User"  # TODO
+    def get_object_json_data(self):
+        return json.dumps(self.get_object_as_data_dict())
 
     def __setattr__(self, key, value):
         if key in self.all_custom_properties:
@@ -69,12 +68,32 @@ class User(polymodel.PolyModel):
 class Declaration(ndb.Model):
     class_name = ndb.StringProperty()
     created_at = ndb.DateTimeProperty(auto_now_add=True)
-    created_by = ndb.KeyProperty(kind=User)
-    assigned_to = ndb.KeyProperty(kind=User)
+    created_by = ndb.KeyProperty(kind=Person)
+    assigned_to = ndb.KeyProperty(kind=Person)
     comment = ndb.StringProperty()
-    declined_by = ndb.KeyProperty(kind=User)
-    submitted_to_hr_by = ndb.KeyProperty(kind=User)
-    approved_by = ndb.KeyProperty(kind=User)
+    declined_by = ndb.KeyProperty(kind=Person)
+    submitted_to_hr_by = ndb.KeyProperty(kind=Person)
+    approved_by = ndb.KeyProperty(kind=Person)
+
+    #'Static' dictionary with readable states
+    readable_states = {
+        "open_declaration": "Open",
+        "locked_declaration": "In behandeling",  #User story (leidinggevende kan declaratie locken)
+        "declined_declaration": "Afgekeurd leidinggevende",
+        "approved_declaration": "Goedgekeurd leidinggevende",
+        "closed_declaration": "Afgekeurd",  #Declined by hr I suppose?
+        "approved_declaration_hr": "Goedgekeurd",
+    }
+
+    #'Static' dictionary with readable states
+    readable_states = {
+                    "open_declaration": "Open",
+                    "locked_declaration": "In behandeling",                 #User story (leidinggevende kan declaratie locken)
+                    "declined_declaration": "Afgekeurd leidinggevende",
+                    "approved_declaration": "Goedgekeurd leidinggevende",
+                    "closed_declaration": "Afgekeurd",                      #Declined bij hr i suppose?
+                    "approved_declaration_hr": "Goedgekeurd",
+    }
 
     #'Static' dictionary with readable states
     readable_states = {
@@ -95,11 +114,16 @@ class Declaration(ndb.Model):
                    "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "submitted_to_hr_by",
                                             "approved_by"]}
 
-    def details(self):
+
+    def get_object_as_data_dict(self):
         return dict({'id': self.key.integer_id(),
                      'class_name': self.class_name,
                      "state": self.readable_state()}.items() +
                     property_not_none_key_value_pair_with_permissions(self).items())
+
+
+    def get_object_json_data(self):
+        return json.dumps(self.get_object_as_data_dict())
 
     def readable_state(self):
         return self.readable_states[self.class_name];
@@ -158,8 +182,11 @@ class DeclarationSubType(ndb.Model):
 class DeclarationType(ndb.Model):
     declaration_sub_types = ndb.KeyProperty(kind=DeclarationSubType)
 
-    def details(self):
+    def get_object_as_data_dict(self):
         return {'declaration_sub_types': self.declaration_sub_types.integer_id()}
+
+    def get_object_json_data(self):
+        return json.dumps(self.get_object_as_data_dict())
 
 
 # DeclarationLine Model class
@@ -170,35 +197,41 @@ class DeclarationLine(ndb.Model):
     declaration_type = ndb.KeyProperty(kind=DeclarationType)
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
-    def details(self):
+
+    def get_object_as_data_dict(self):
         return {'declaration': self.declaration.key.integer_id(),
                 'receipt_date': self.receipt_date,
                 'cost': self.cost,
                 'declaration_type': self.declaration_type.integer_id(),
                 'declaration_sub_type': self.declaration_sub_type.integer_id()}
 
+    def get_object_json_data(self):
+        return json.dumps(self.get_object_as_data_dict())
+
 
 class Attachment(ndb.Model):
     ndb.KeyProperty(kind=Declaration)
     blobstore.BlobReferenceProperty(required=True)
 
-    def details(self):
-        return {'': ""}  # TODO details
+    def get_object_as_data_dict(self):
+        return {'': ""}  # TODO get_object_as_data_dict
 
+    def get_object_json_data(self):
+        return json.dumps(self.get_object_as_data_dict())
 
 def property_not_none_key_value_pair_with_permissions(class_reference):
-    key_value_pair = {}
+    return_data = {}
     if class_reference is not None and class_reference.permissions is not None:
         permissions = class_reference.permissions[class_reference.class_name]
         if permissions is not None:
             for prop in permissions:
-                value = getattr(class_reference,prop)
+                value = getattr(class_reference, prop)
                 if value is not None:
                     value_type = type(value)
-                    if type(value) is Key:
+                    try:
                         value = value.integer_id()
-                    elif type(value) is datetime:
+                    except AttributeError:
                         value = str(value)
-                    key_value_pair = dict(key_value_pair.items() + {prop: value}.items())
+                    return_data = dict(return_data.items() + {prop: value}.items())
 
-    return key_value_pair
+    return return_data

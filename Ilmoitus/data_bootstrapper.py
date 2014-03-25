@@ -1,23 +1,25 @@
 __author__ = 'niek'
 
 import webapp2
-import model
+import ilmoitus_model
 from google.appengine.ext import ndb
 import urllib
 
 class DataBootsTrapper(webapp2.RequestHandler):
     def create_data(self):
         #DEPARTMENTS
-        department_it = model.Department()
+
+        department_it = ilmoitus_model.Department()
         department_it.name = "IT"
         department_it.put()
 
-        department_investment = model.Department()
+        department_investment = ilmoitus_model.Department()
         department_investment.name = "Investment"
         department_investment.put()
 
         #SUPERVISORS
-        supervisor_one = model.User()
+
+        supervisor_one = ilmoitus_model.User()
         supervisor_one.class_name = "supervisor"
         supervisor_one.first_name = "Wim"
         supervisor_one.last_name = "Meredonk"
@@ -27,7 +29,8 @@ class DataBootsTrapper(webapp2.RequestHandler):
         supervisor_one.supervisor = None
         supervisor_one.put()
 
-        supervisor_two = model.User()
+
+        supervisor_two = ilmoitus_model.User()
         supervisor_two.class_name = "supervisor"
         supervisor_two.first_name = "Muhammad"
         supervisor_two.last_name = "Hasdim"
@@ -37,7 +40,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         supervisor_two.supervisor = supervisor_one.key
         supervisor_two.put()
 
-        supervisor_three = model.User()
+        supervisor_three = ilmoitus_model.User()
         supervisor_three.class_name = "supervisor"
         supervisor_three.first_name = "Wout"
         supervisor_three.last_name = "van Diesen"
@@ -48,7 +51,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         supervisor_three.put()
 
         #EMPLOYEES
-        employee_one = model.User()
+        employee_one = ilmoitus_model.User()
         employee_one.class_name = "employee"
         employee_one.first_name = "Piet"
         employee_one.last_name = "Hein"
@@ -58,7 +61,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         employee_one.supervisor = supervisor_one.key
         employee_one.put()
 
-        employee_two = model.User()
+        employee_two = ilmoitus_model.User()
         employee_two.class_name = "employee"
         employee_two.first_name = "Axel"
         employee_two.last_name = "Klein"
@@ -68,7 +71,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         employee_two.supervisor = supervisor_one.key
         employee_two.put()
 
-        employee_three = model.User()
+        employee_three = ilmoitus_model.User()
         employee_three.class_name = "employee"
         employee_three.first_name = "Rik"
         employee_three.last_name = "van de Griendt"
@@ -78,7 +81,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         employee_three.supervisor = supervisor_two.key
         employee_three.put()
 
-        employee_five = model.User()
+        employee_five = ilmoitus_model.User()
         employee_five.class_name = "human_resources"
         employee_five.first_name = "Laura"
         employee_five.last_name = "Vermeulen"
@@ -89,35 +92,35 @@ class DataBootsTrapper(webapp2.RequestHandler):
         employee_five.put()
 
         #DECLARATIE
-        declaratie_een = model.Declaration()
+        declaratie_een = ilmoitus_model.Declaration()
         declaratie_een.class_name = "open_declaration"
         declaratie_een.created_by = employee_one.key
         declaratie_een.assigned_to = employee_one.supervisor
         declaratie_een.comment = "Gegeten op zakenreis"
         declaratie_een.put()
 
-        declaratie_two = model.Declaration()
+        declaratie_two = ilmoitus_model.Declaration()
         declaratie_two.class_name = "open_declaration"
         declaratie_two.created_by = employee_one.key
         declaratie_two.assigned_to = employee_one.supervisor
         declaratie_two.comment = "Tanken op zakenreis"
         declaratie_two.put()
 
-        declaratie_three = model.Declaration()
+        declaratie_three = ilmoitus_model.Declaration()
         declaratie_three.class_name = "open_declaration"
         declaratie_three.created_by = employee_one.key
         declaratie_three.assigned_to = employee_one.supervisor
         declaratie_three.comment = "Parkeren voor de vergadering met de rabobank"
         declaratie_three.put()
 
-        declaratie_four = model.Declaration()
+        declaratie_four = ilmoitus_model.Declaration()
         declaratie_four.class_name = "open_declaration"
         declaratie_four.created_by = employee_two.key
         declaratie_four.assigned_to = employee_two.supervisor
         declaratie_four.comment = "Vlucht kosten zakenreis naar engeland"
         declaratie_four.put()
 
-        declaratie_five = model.Declaration()
+        declaratie_five = ilmoitus_model.Declaration()
         declaratie_five.class_name = "declined_declaration"
         declaratie_five.created_by = employee_two.key
         declaratie_five.assigned_to = employee_two.supervisor
@@ -129,11 +132,11 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
 class ClearHandler(webapp2.RequestHandler):
     def clear_data(self):
-        for department in model.Department.query():
+        for department in ilmoitus_model.Department.query():
             department.key.delete()
-        for user in model.User.query():
+        for user in ilmoitus_model.User.query():
             user.key.delete()
-        for declaration in model.Declaration.query():
+        for declaration in ilmoitus_model.Declaration.query():
             declaration.key.delete()
 
     def get(self):
@@ -154,14 +157,4 @@ class FillHandler(webapp2.RequestHandler):
 
         data = DataBootsTrapper()
         data.create_data()
-
-
-
-
-
-
-
-
-
-
 
