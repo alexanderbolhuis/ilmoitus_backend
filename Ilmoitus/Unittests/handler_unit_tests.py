@@ -3,13 +3,6 @@ import sys
 sys.path.append("../")
 import random
 import json
-import ilmoitus_model
-import data_bootstrapper
-import webtest
-import datetime
-import data_bootstrapper
-import webtest
-from google.appengine.ext import ndb
 import ilmoitus as main_application
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
 from Base.base_test_methods import BaseTestClass
@@ -234,12 +227,6 @@ class DeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
                       "Full error message:\n"
                       + str(error))
 
-
-    def test_negative_get_all_not_logged_in(self):
-        path = '/declarations/employee'
-        self.set_up_custom_path([(path, main_application.AllDeclarationsForEmployeeHandler)])
-        self.negative_test_stub_handler(path, "get", 401)
-
     def test_negative_get_all_not_logged_in(self):
         path = '/declarations/employee'
         self.setup_test_server_with_custom_routes([(path, main_application.AllDeclarationsForEmployeeHandler)])
@@ -383,14 +370,14 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
         supervisor = PersonDataCreator.create_valid_supervisor()
 
         DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
-        declaration = DeclarationsDataCreator.create_valid_approved_declaration(employee, supervisor)
+        declaration = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(employee, supervisor)
 
         response = self.positive_test_stub_handler(path, "get")
         response_data = json.loads(response.body)
         print response_data
 
         self.assertEqual(response_data[0]["comment"], "Thanks for taking care of this for me!")
-        self.assertEqual(response_data[0]["class_name"], "approved_declaration")
+        self.assertEqual(response_data[0]["class_name"], "supervisor_approved_declaration")
         self.assertEqual(response_data[0]["created_at"], str(declaration.created_at))
         self.assertEqual(response_data[0]["created_by"], employee.key.integer_id())
         self.assertEqual(response_data[0]["approved_by"], supervisor.key.integer_id())
