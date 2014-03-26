@@ -265,7 +265,7 @@ class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
         if person is not None:
             if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
                 declaration_query = ilmoitus_model.Declaration.query(
-                    ilmoitus_model.Declaration.class_name == "approved_declaration")
+                    ilmoitus_model.Declaration.class_name == "supervisor_approved_declaration")
 
                 query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
