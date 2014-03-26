@@ -2,8 +2,6 @@ __author__ = 'alexanderbolhuis & sjorsboom'
 
 from google.appengine.ext import ndb
 from google.appengine.ext import blobstore
-from google.appengine.ext.ndb.key import Key
-from datetime import datetime
 import json
 
 
@@ -34,7 +32,6 @@ class Person(ndb.Model):
                                   "supervisor"],
                    "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
                                        "supervisor"]}
-
 
     def get_object_as_data_dict(self):
         return dict({'id': self.key.integer_id(), 'class_name': self.class_name}.items() +
@@ -71,56 +68,65 @@ class Declaration(ndb.Model):
     created_by = ndb.KeyProperty(kind=Person)
     assigned_to = ndb.KeyProperty(kind=Person)
     comment = ndb.StringProperty()
+    supervisor_comment = ndb.StringProperty()
+    human_resources_comment = ndb.StringProperty()
     declined_by = ndb.KeyProperty(kind=Person)
     submitted_to_hr_by = ndb.KeyProperty(kind=Person)
+    locked_at = ndb.DateTimeProperty()
+    sent_to_hr_at = ndb.DateTimeProperty()
+    supervisor_declined_at = ndb.DateTimeProperty()
+    supervisor_approved_at = ndb.DateTimeProperty()
+    human_resources_approved_at = ndb.DateTimeProperty()
+    human_resources_declined_at = ndb.DateTimeProperty()
     approved_by = ndb.KeyProperty(kind=Person)
+    will_be_payed_out_on = ndb.DateProperty()
+
 
     #'Static' dictionary with readable states
     readable_states = {
         "open_declaration": "Open",
-        "locked_declaration": "In behandeling",  #User story (leidinggevende kan declaratie locken)
-        "declined_declaration": "Afgekeurd leidinggevende",
-        "approved_declaration": "Goedgekeurd leidinggevende",
-        "closed_declaration": "Afgekeurd",  #Declined by hr I suppose?
-        "approved_declaration_hr": "Goedgekeurd",
+        "locked_declaration": "In behandeling",  # User story (leidinggevende kan declaratie locken)
+        "supervisor_declined_declaration": "Afgekeurd leidinggevende",
+        "supervisor_approved_declaration": "Goedgekeurd leidinggevende",
+        "human_resources_declined_declaration": "Afgekeurd",  # Declined by hr I suppose?
+        "human_resources_approved_declaration": "Goedgekeurd",
     }
 
-    #'Static' dictionary with readable states
-    readable_states = {
-                    "open_declaration": "Open",
-                    "locked_declaration": "In behandeling",                 #User story (leidinggevende kan declaratie locken)
-                    "declined_declaration": "Afgekeurd leidinggevende",
-                    "approved_declaration": "Goedgekeurd leidinggevende",
-                    "closed_declaration": "Afgekeurd",                      #Declined bij hr i suppose?
-                    "approved_declaration_hr": "Goedgekeurd",
-    }
+    all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "supervisor_comment",
+                             "human_resources_comment", "declined_by", "submitted_to_hr_by", "locked_at",
+                             "sent_to_hr_at", "supervisor_declined_at","supervisor_approved_at",
+                             "human_resources_approved_at", "human_resources_declined_at", "will_be_payed_out_on"]
 
-    #'Static' dictionary with readable states
-    readable_states = {
-                    "open_declaration": "Open",
-                    "locked_declaration": "In behandeling",                 #User story (leidinggevende kan declaratie locken)
-                    "declined_declaration": "Afgekeurd leidinggevende",
-                    "approved_declaration": "Goedgekeurd leidinggevende",
-                    "closed_declaration": "Afgekeurd",                      #Declined by hr I suppose?
-                    "approved_declaration_hr": "Goedgekeurd",
-    }
-
-    all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                             "submitted_to_hr_by"]
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
-                   "closed_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                          "submitted_to_hr_by"],
-                   "declined_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by"],
-                   "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "submitted_to_hr_by",
-                                            "approved_by"]}
 
+                   "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "locked_at",
+                                          "supervisor_comment"],
+
+                   "supervisor_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
+                                                       "locked_at", "declined_by", "supervisor_declined_at",
+                                                       "supervisor_comment"],
+
+                   "supervisor_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
+                                                       "locked_at", "submitted_to_hr_by", "supervisor_approved_at",
+                                                       "approved_by", "sent_to_hr_at", "supervisor_comment"],
+
+                   "human_resources_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
+                                                            "locked_at", "submitted_to_hr_by", "supervisor_approved_at",
+                                                            "approved_by", "sent_to_hr_at", "declined_by",
+                                                            "supervisor_comment", "human_resources_comment",
+                                                            "human_resources_declined_at"],
+
+                   "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
+                                                            "locked_at", "submitted_to_hr_by", "supervisor_approved_at",
+                                                            "approved_by", "sent_to_hr_at", "supervisor_comment",
+                                                            "will_be_payed_out_on", "human_resources_comment",
+                                                            "human_resources_approved_at"]}
 
     def get_object_as_data_dict(self):
         return dict({'id': self.key.integer_id(),
                      'class_name': self.class_name,
                      "state": self.readable_state()}.items() +
                     property_not_none_key_value_pair_with_permissions(self).items())
-
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -168,7 +174,7 @@ class Declaration(ndb.Model):
         else:
             return default_value
 
-    def all(self):
+    def all(self):  # is this being used?
         return Declaration.key
 
 
@@ -197,7 +203,6 @@ class DeclarationLine(ndb.Model):
     declaration_type = ndb.KeyProperty(kind=DeclarationType)
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
-
     def get_object_as_data_dict(self):
         return {'declaration': self.declaration.key.integer_id(),
                 'receipt_date': self.receipt_date,
@@ -214,10 +219,11 @@ class Attachment(ndb.Model):
     blobstore.BlobReferenceProperty(required=True)
 
     def get_object_as_data_dict(self):
-        return {'': ""}  # TODO get_object_as_data_dict
+        return {'id': self.key.integer_id()}  # TODO get_object_as_data_dict
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
+
 
 def property_not_none_key_value_pair_with_permissions(class_reference):
     return_data = {}
