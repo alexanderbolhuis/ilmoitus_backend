@@ -405,6 +405,49 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
         self.negative_test_stub_handler(path, "get", 401)
 
 
+class CurrentUserSupervisorsHandlerTest(BaseAuthorizationHandler):
+    def test_get_employee_supervisor_not_logged_in(self):
+        path = "/supervisors/"
+
+        self.setup_test_server_with_custom_routes([(path, main_application.CurrentUserSupervisors)])
+        self.negative_test_stub_handler(path, "get", 401)
+
+    def test_positive_get_all(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = '/supervisors/'
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.CurrentUserSupervisors)],
+            user_is_logged_in, user_is_admin)
+
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        supervisor2 = PersonDataCreator.create_valid_supervisor()
+
+        response = self.positive_test_stub_handler(path, "get")
+        response_data = json.loads(response.body)
+        print response_data
+
+        for i in response_data:
+            try:
+                self.assertIsNotNone(i["class_name"])
+
+                self.assertMultiLineEqual(i["class_name"], supervisor.class_name)
+            except KeyError as error:
+                self.fail("Test Failed! Expected the key: " + str(
+                    error) + " to be present in the response, but it was not found. Found only: " + str(response_data))
+            except ValueError as error:
+                self.fail("Test Failed! There is an invalid value in the response data. "
+                          "This usually happens with parsing wrong input values.\n"
+                          "The values expected for each key are:\n"
+                          "{\"id\" : integer,\n"
+                          "\"is_logged_in\" : boolean,\n"
+                          "\"is_application_admin\" : boolean}\n"
+                          "______________________\n"
+                          "Full error message:\n"
+                          + str(error))
+
+
 class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
     def test_get_supervisor_declarations_no_permission(self):
         user_is_logged_in = True
@@ -444,3 +487,4 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
         self.assertEqual(len(response_data), 2)
         self.assertEqual(response_data[0]["assigned_to"], logged_in_person.key.integer_id())
         self.assertEqual(response_data[1]["assigned_to"], logged_in_person.key.integer_id())
+
