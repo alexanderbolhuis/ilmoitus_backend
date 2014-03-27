@@ -280,8 +280,11 @@ class CurrentUserSupervisorsHandlerTest(BaseAuthorizationHandler):
         print response_data
 
         for i in response_data:
+            print i
             try:
                 self.assertIsNotNone(i["class_name"])
+
+                self.assertMultiLineEqual(i["class_name"], supervisor.class_name)
             except KeyError as error:
                 self.fail("Test Failed! Expected the key: " + str(
                     error) + " to be present in the response, but it was not found. Found only: " + str(response_data))
