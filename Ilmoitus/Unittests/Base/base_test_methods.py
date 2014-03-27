@@ -153,7 +153,8 @@ class BaseTestClass(TestCase):
                 print e.msg
 
     def positive_test_stub_handler(self, path, request_type, response_body_should_be_defined=True,
-                                   expected_content_type='application/json', body_data_should_have_results=True):
+                                   expected_content_type='application/json', body_data_should_have_results=True,
+                                   data_dict=None):
         """
         This method serves as a base stub for all positive request handler unit tests. It will get
         the response from the testapp on the given URL path and the given request type, or fail
@@ -170,6 +171,11 @@ class BaseTestClass(TestCase):
         :param request_type:
             A string that specifies what type of request should be sent to the testapp
             (i.e. a GET-, POST-, PUT- or DELETE request). Will be transformed to lowercase.
+            Read the documentation at the following link to see which requests are valid:
+            http://webtest.readthedocs.org/en/latest/testapp.html
+
+            Note on the post_json method: this expects the data in a dictionary/list format, not a dumped
+            json string!
         :param response_body_should_be_defined:
             (Optional) Used to indicate whether this method should also check if the given response's
             body field is set (is not None). Default value is True.
@@ -181,6 +187,13 @@ class BaseTestClass(TestCase):
             (Optional) Used to indicate whether this method should also check if the given response's
             body field actually contains results (used for checking non empty lists and dictionaries).
             Default value is True.
+        :param data_dict:
+            Dictionary or List object that is to be given along with the response to the test server.
+            This will be None by default, and as long as it's None, no data will be set (so not setting
+            this parameter won't result in a Null value being set as the requests' body).
+            This parameter will _NOT_ be checked to see if it's valid JSON data (list or dict), since this is
+            the responsibility of the handler and this would give problems when writing negative tests. If anything
+            but a dict or list is passed, this will raise an error in the testapp, so check your input!
         """
         #Retrieve the correct request reference
         try:
@@ -191,9 +204,13 @@ class BaseTestClass(TestCase):
                       "'.\nrequest_type must be a string that indicates what type of request should be " +
                       "sent to the testapp (i.e. 'get', 'post' etc.).")
 
-        #Send the request that is now stored in request_reference with the path parameter
+        #Send the request that is stored in request_reference with the path parameter and optionally,
+        # the json_data parameter
         try:
-            response = request_reference(path)
+            if data_dict is None:
+                response = request_reference(path)
+            else:
+                response = request_reference(path, data_dict)
         except webtest.AppError as appError:
             self.fail("Failed to send a request to the testapp. Expected a valid response, but got an exception:"
                       "\n\tError Type:" + str(type(appError).__name__) +
@@ -222,7 +239,7 @@ class BaseTestClass(TestCase):
 
         return response
 
-    def negative_test_stub_handler(self, path, request_type, expected_error_code):
+    def negative_test_stub_handler(self, path, request_type, expected_error_code, data_dict=None):
         """
         This method serves as a base stub for all negative request handler unit tests. It will get
         the response from the testapp on the given URL path and the given request type, or fail
@@ -241,23 +258,41 @@ class BaseTestClass(TestCase):
             The path parameter specifies to which url the testapp should post the request.
         :param request_type:
             A string that specifies what type of request should be sent to the testapp
-            (i.e. a GET-, POST-, PUT- or DELETE request).
+            (i.e. a GET-, POST-, PUT- or DELETE request). Will be transformed to lowercase.
+            Read the documentation at the following link to see which requests are valid:
+            http://webtest.readthedocs.org/en/latest/testapp.html
+
+            Note on the post_json method: this expects the data in a dictionary/list format, not a dumped
+            json string!
         :param expected_error_code:
             The integer status code that should be returned by the testapp when the specified request is sent to the
             specified url path (i.e. 400, 500, 404 etc.). Will be checked for using a string comparison, since
             direct comparison is not (yet) supported in the webtest framework.
+        :param data_dict:
+            Dictionary or List object that is to be given along with the response to the test server.
+            This will be None by default, and as long as it's None, no data will be set (so not setting
+            this parameter won't result in a Null value being set as the requests' body).
+            This parameter will _NOT_ be checked to see if it's valid JSON data (list or dict), since this is
+            the responsibility of the handler and this would give problems when writing negative tests. If anything
+            but a dict or list is passed, this will raise an error in the testapp, so check your input!
         """
         #Retrieve the correct request reference
         try:
-            request_reference = getattr(self.testapp, request_type)
+            lowercase_request_type = request_type.lower()
+            request_reference = getattr(self.testapp, lowercase_request_type)
         except AttributeError:
             self.fail("No valid method found for the request_type of '" + str(request_type) +
                       "'.\nrequest_type must be a string that indicates what type of request should be " +
                       "sent to the testapp (i.e. 'get', 'post' etc.).")
         response = None
-        #Send the request that is now stored in request_reference with the path parameter
+
+        #Send the request that is stored in request_reference with the path parameter and optionally,
+        # the json_data parameter
         try:
-            response = request_reference(path)
+            if data_dict is None:
+                response = request_reference(path)
+            else:
+                response = request_reference(path, data_dict)
         except webtest.AppError as appError:
             #We want this to happen! See if the appError variable is properly initialized.
             self.assertIsNotNone(appError)
