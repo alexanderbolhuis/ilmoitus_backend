@@ -7,7 +7,7 @@ from test_data_creator import DeclarationsDataCreator, PersonDataCreator, Depart
 
 class ModelTest(BaseTestClass):
     def test_open_declaration_can_set_own_properties(self):
-        self.setup_dummy_server_without_handlers()
+        self.setup_test_server_without_handlers()
 
         employee = PersonDataCreator.create_valid_employee_data(0)
         supervisor = PersonDataCreator.create_valid_supervisor(None, employee.key.integer_id() + 1)
@@ -17,7 +17,7 @@ class ModelTest(BaseTestClass):
         self.assertEqual(open_declaration.assigned_to, supervisor.key)
 
     def test_open_declaration_cant_set_other_properties_than_permitted(self):
-        self.setup_dummy_server_without_handlers()
+        self.setup_test_server_without_handlers()
 
         employee = PersonDataCreator.create_valid_employee_data(0)
         supervisor = PersonDataCreator.create_valid_supervisor(None, employee.key.integer_id() + 1)
@@ -32,8 +32,20 @@ class ModelTest(BaseTestClass):
 
         self.assertIsNone(open_declaration.submitted_to_hr_by)
 
+    def test_declaration_class_name_to_readable_string(self):
+        self.setup_test_server_without_handlers()
+
+        employee = PersonDataCreator.create_valid_employee_data(0)
+        supervisor = PersonDataCreator.create_valid_supervisor(None, employee.key.integer_id() + 1)
+        hr_employee = PersonDataCreator.create_valid_person_data(random.randint(3, 100))
+
+        open_declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
+
+        self.assertEqual(open_declaration.readable_state(), "Open")
+
+
     def test_person_can_set_own_properties(self):
-        self.setup_dummy_server_without_handlers()
+        self.setup_test_server_without_handlers()
 
         person = PersonDataCreator.create_valid_person_data(1)
 
@@ -49,7 +61,7 @@ class ModelTest(BaseTestClass):
         self.assertEqual(person.email, email)
 
     def test_person_cant_set_other_properties_than_permitted(self):
-        self.setup_dummy_server_without_handlers()
+        self.setup_test_server_without_handlers()
 
         department = DepartmentDataCreator.create_valid_department()
         person = PersonDataCreator.create_valid_person_data(1)
@@ -62,7 +74,7 @@ class ModelTest(BaseTestClass):
         self.assertIsNone(person.employee_number)
 
     def test_employee_can_set_own_properties(self):
-        self.setup_dummy_server_without_handlers()
+        self.setup_test_server_without_handlers()
 
         employee = PersonDataCreator.create_valid_employee_data(1)
 
