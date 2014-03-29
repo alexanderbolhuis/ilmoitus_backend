@@ -444,3 +444,62 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
         self.assertEqual(len(response_data), 2)
         self.assertEqual(response_data[0]["assigned_to"], logged_in_person.key.integer_id())
         self.assertEqual(response_data[1]["assigned_to"], logged_in_person.key.integer_id())
+
+
+class ApproveDeclarationByHumanResourcesTest(BaseAuthorizationHandler):
+    def test_negative_approve_not_logged_in(self):
+        user_is_logged_in = False
+        user_is_admin = '0'
+        path = "/declaration/approve_by_hr"
+        self.setup_server_with_user([(path, main_application.AllDeclarationsForSupervisor)],
+                                    user_is_logged_in, user_is_admin)
+
+        self.negative_test_stub_handler(path, "post", 401)
+
+    def test_negative_approve_no_permission(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/approve_by_hr"
+        setup_data = self.setup_server_with_user([(path, main_application.AllDeclarationsForSupervisor)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        self.negative_test_stub_handler(path, "post", 401)
+
+    def test_positive_approve(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/approve_by_hr"
+        setup_data = self.setup_server_with_user([(path, main_application.AllDeclarationsForSupervisor)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "human_resources"
+        logged_in_person.put()
+
+        person = PersonDataCreator.create_valid_employee_data()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        declaration1 = DeclarationsDataCreator.create_valid_approved_declaration(person, supervisor)
+        declaration2 = DeclarationsDataCreator.create_valid_approved_declaration(person, supervisor)
+        declaration3 = DeclarationsDataCreator.create_valid_open_declaration(person, supervisor)
+
+        #TODO: add_to_salary_date aanpassen naar daadwerkelijke naam.
+        #TODO: Declaraties nieuw uit de database halen? Neem aan dat bovenstaanden niet mee aanpassen als db veranderd.
+        #test approving a supervisor approved declaration
+        post_data = dict(id=declaration1.key.integer_id(), date="3-8-2014")
+        self.positive_test_stub_handler(path, "post_json", data_dict=post_data)
+        self.assertEqual(declaration1.class_name, "approved_declaration_hr")
+        self.assertEqual(declaration1.add_to_salary_date, "3-8-2014")
+        self.assertEqual(declaration2.class_name, "approved_declaration")
+        self.assertEqual(declaration3.class_name, "open_declaration")
+
+        #test approving an open declaration. (should not be possible)
+        post_data = dict(id=declaration3.key.integer_id(), date="3-8-2014")
+        self.positive_test_stub_handler(path, "post_json", data_dict=post_data)
+        self.assertEqual(declaration1.class_name, "approved_declaration")
+        self.assertEqual(declaration2.class_name, "approved_declaration")
+        self.assertEqual(declaration3.class_name, "open_declaration")

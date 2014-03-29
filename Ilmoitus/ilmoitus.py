@@ -299,9 +299,34 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
             self.abort(404)
 
 
+class ApproveByHumanResources(BaseRequestHandler):
+    def post(self):
+        person_data = get_current_person()
+        current_user = person_data["person_value"]
+
+        if current_user is not None and current_user.class_name == 'supervisor':
+            if self.request.body is not None:
+                data = None
+                try:
+                    data = json.loads(self.request.body)
+                except ValueError:
+                    give_error_response(self, 500, "Er is ongeldige data verstuurd; kan het verzoek niet afhandelen",
+                                        "Invalid JSON data; invalid format.", more_info=str(self.request.body))
+
+                declaration_id = data["id"]
+                approved_date = data["date"]
+                #TODO: Change declaration into "approved_declaration_hr" ONLY if currently an "approved_declaration"
+            else:
+                give_error_response(self, 500, "Er is geen data opgegeven.",
+                                "Request body is None.")
+        else:
+            #user does not have the appropriate permissions or isn't logged in at all.
+            self.abort(401)
 
 application = webapp.WSGIApplication(
     [
+        ('/declaration/approve_by_hr', ApproveByHumanResources),
+
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
         ('/user/settings/', UserSettingsHandler),
