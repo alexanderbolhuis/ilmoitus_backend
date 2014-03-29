@@ -1,15 +1,17 @@
-application: ilmoitus
+application: sns-ilmoitus
 version: 1
 runtime: python27
 api_version: 1
 threadsafe: true
 
 handlers:
-- url: .*
-  script: ilmoitus.application
-
 - url: /stats.*
   script: google.appengine.ext.appstats.ui.app
+  login: admin
+
+- url: .*
+  script: ilmoitus.application
+  login: required
 
 libraries:
 - name: webapp2
