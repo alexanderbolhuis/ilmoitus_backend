@@ -382,7 +382,7 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
         self.assertEqual(response_data[0]["created_by"], employee.key.integer_id())
         self.assertEqual(response_data[0]["approved_by"], supervisor.key.integer_id())
         self.assertEqual(response_data[0]["assigned_to"], supervisor.key.integer_id())
-        self.assertEqual(response_data[0]["submitted_to_hr_by"], supervisor.key.integer_id())
+        self.assertEqual(response_data[0]["submitted_to_human_resources_by"], supervisor.key.integer_id())
         self.assertEqual(response_data[0]["id"], declaration.key.integer_id())
 
     def test_negative_get_all_not_logged_in(self):

@@ -25,12 +25,12 @@ class ModelTest(BaseTestClass):
 
         open_declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
 
-        open_declaration.submitted_to_hr_by = hr_employee
+        open_declaration.submitted_to_human_resources_by = hr_employee
 
         self.assertEqual(open_declaration.created_by, employee.key)
         self.assertEqual(open_declaration.assigned_to, supervisor.key)
 
-        self.assertIsNone(open_declaration.submitted_to_hr_by)
+        self.assertIsNone(open_declaration.submitted_to_human_resources_by)
 
     def test_declaration_class_name_to_readable_string(self):
         self.setup_test_server_without_handlers()
