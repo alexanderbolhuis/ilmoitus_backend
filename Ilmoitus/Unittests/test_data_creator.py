@@ -102,11 +102,11 @@ class DeclarationsDataCreator():
         open_declaration.comment = "Thanks for taking care of this for me!"
         open_declaration.approved_by = supervisor.key
         open_declaration.supervisor_approved_at = datetime.now()
-        open_declaration.send_to_hr_at = datetime.now()
+        open_declaration.sent_to_human_resources_at = datetime.now()
         open_declaration.supervisor_comment = "No problem!"
         open_declaration.human_resources_comment = "No comment on this!"
         open_declaration.will_be_payed_out_on = date.today()
-        open_declaration.submitted_to_hr_by = supervisor.key
+        open_declaration.submitted_to_human_resources_by = supervisor.key
         open_declaration.put()
         return open_declaration
 
@@ -123,9 +123,9 @@ class DeclarationsDataCreator():
         open_declaration.comment = "Thanks for taking care of this for me!"
         open_declaration.approved_by = supervisor.key
         open_declaration.supervisor_approved_at = datetime.now()
-        open_declaration.send_to_hr_at = datetime.now()
+        open_declaration.sent_to_human_resources_at = datetime.now()
         open_declaration.supervisor_comment = "No problem!"
-        open_declaration.submitted_to_hr_by = supervisor.key
+        open_declaration.submitted_to_human_resources_by = supervisor.key
         open_declaration.put()
         return open_declaration
 

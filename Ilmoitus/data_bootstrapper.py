@@ -126,7 +126,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaratie_five.assigned_to = employee_two.supervisor
         declaratie_five.comment = "Bedrijfsuitje"
         declaratie_five.declined_by = employee_two.supervisor
-        declaratie_five.submitted_to_hr_by = employee_two.supervisor
+        declaratie_five.submitted_to_human_resources_by = employee_two.supervisor
         declaratie_five.put()
 
 
