@@ -886,7 +886,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         employee = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
         declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
-        declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 1)
+        declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 2)
 
         # Delete in forloop declarationline.key.delete()
         declaration.key.delete()
