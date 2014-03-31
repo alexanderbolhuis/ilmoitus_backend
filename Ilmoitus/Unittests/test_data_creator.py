@@ -74,6 +74,55 @@ class DeclarationsDataCreator():
         pass
 
     @staticmethod
+    def create_valid_declaration_lines(declaration, amount_of_lines):
+        declaration_type = DeclarationsDataCreator.create_valid_declaration_type()
+        subtype = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(declaration_type)
+
+        lines = []
+
+        for i in range(0, amount_of_lines):
+            line = ilmoitus_model.DeclarationLine()
+            line.declaration = declaration
+            line.declaration_sub_type = subtype
+            line.cost = random.randint(0,100)
+            line.put()
+
+            lines.append(line)
+
+        return lines
+
+    @staticmethod
+    def create_valid_declaration_type():
+        type = ilmoitus_model.DeclarationType()
+        type.name = "reiskosten"
+
+        type.put()
+
+        return type
+
+    @staticmethod
+    def create_valid_declaration_sub_type_without_max_cost(declaration_type):
+        sub_type = ilmoitus_model.DeclarationSubType()
+        sub_type.declaration_super_type = declaration_type
+        sub_type.name = "tanken"
+
+        sub_type.put()
+
+        return sub_type
+
+    @staticmethod
+    def create_valid_declaration_sub_type_with_max_cost(declaration_type):
+        sub_type = ilmoitus_model.DeclarationSubType()
+        sub_type.declaration_super_type = declaration_type
+        sub_type.name = "openbaar vervoer"
+        sub_type.max_cost = 101
+
+        sub_type.put()
+
+        return sub_type
+
+
+    @staticmethod
     def create_valid_open_declaration(employee, supervisor):
         employee_key = employee.key
         supervisor_key = supervisor.key

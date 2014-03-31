@@ -94,8 +94,9 @@ class Declaration(ndb.Model):
 
     all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "supervisor_comment",
                              "human_resources_comment", "declined_by", "submitted_to_human_resources_by", "locked_at",
-                             "sent_to_human_resources_at", "approved_by", "supervisor_declined_at","supervisor_approved_at",
-                             "human_resources_approved_at", "human_resources_declined_at", "will_be_payed_out_on", "human_resources_approved_by"]
+                             "sent_to_human_resources_at", "approved_by", "supervisor_declined_at",
+                             "supervisor_approved_at", "human_resources_approved_at", "human_resources_declined_at",
+                             "will_be_payed_out_on", "human_resources_approved_by"]
 
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
 
@@ -182,18 +183,26 @@ class Declaration(ndb.Model):
         return Declaration.key
 
 
+# DeclarationType Model class
+class DeclarationType(ndb.Model):
+    name = ndb.StringProperty()
+
+    def get_object_as_data_dict(self):
+        return {'name': self.name}
+
+    def get_object_json_data(self):
+        return json.dumps(self.get_object_as_data_dict())
+
+
 # DeclarationSubType Model class
 class DeclarationSubType(ndb.Model):
     name = ndb.StringProperty()
+    declaration_super_type = ndb.KeyProperty(kind=DeclarationType)
     max_cost = ndb.IntegerProperty()  # Optional
 
-
-# DeclarationType Model class
-class DeclarationType(ndb.Model):
-    declaration_sub_types = ndb.KeyProperty(kind=DeclarationSubType)
-
     def get_object_as_data_dict(self):
-        return {'declaration_sub_types': self.declaration_sub_types.integer_id()}
+        return {'id': self.key.integer_id(), 'name': self.name, 'declaration_super_type': self.declaration_super_type,
+                'max_cost': self.max_cost}
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -204,14 +213,12 @@ class DeclarationLine(ndb.Model):
     declaration = ndb.KeyProperty(kind=Declaration)
     receipt_date = ndb.StringProperty()  # DateProperty?
     cost = ndb.IntegerProperty()
-    declaration_type = ndb.KeyProperty(kind=DeclarationType)
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
     def get_object_as_data_dict(self):
         return {'declaration': self.declaration.key.integer_id(),
                 'receipt_date': self.receipt_date,
                 'cost': self.cost,
-                'declaration_type': self.declaration_type.integer_id(),
                 'declaration_sub_type': self.declaration_sub_type.integer_id()}
 
     def get_object_json_data(self):
@@ -219,11 +226,13 @@ class DeclarationLine(ndb.Model):
 
 
 class Attachment(ndb.Model):
-    ndb.KeyProperty(kind=Declaration)
-    blobstore.BlobReferenceProperty(required=True)
+    declaration = ndb.KeyProperty(kind=Declaration)
+    blob = blobstore.BlobReferenceProperty(required=True)
 
     def get_object_as_data_dict(self):
-        return {'id': self.key.integer_id()}  # TODO get_object_as_data_dict
+        return {'id': self.key.integer_id(), 'declaration': self.declaration.key.integer_id(),
+                'blob': blobstore.BlobKey.integer_id()}
+            #TODO make it work, this can't be tested yet because we can't simulate adding something to the blobstore
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
