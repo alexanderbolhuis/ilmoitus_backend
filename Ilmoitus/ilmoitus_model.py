@@ -216,7 +216,7 @@ class DeclarationLine(ndb.Model):
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
     def get_object_as_data_dict(self):
-        return {'declaration': self.declaration.Key.integer_id(),
+        return {'declaration': self.declaration.integer_id(),
                 'receipt_date': self.receipt_date,
                 'cost': self.cost,
                 'declaration_sub_type': self.declaration_sub_type.integer_id()}
@@ -230,7 +230,7 @@ class Attachment(ndb.Model):
     blob = blobstore.BlobReferenceProperty(required=True)
 
     def get_object_as_data_dict(self):
-        return {'id': self.key.integer_id(), 'declaration': self.declaration.Key.integer_id(),
+        return {'id': self.key.integer_id(), 'declaration': self.declaration.integer_id(),
                 'blob': blobstore.BlobKey.integer_id()}
             #TODO make it work, this can't be tested yet because we can't simulate adding something to the blobstore
 
