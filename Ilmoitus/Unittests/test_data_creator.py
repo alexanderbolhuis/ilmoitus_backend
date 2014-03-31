@@ -103,7 +103,7 @@ class DeclarationsDataCreator():
     @staticmethod
     def create_valid_declaration_sub_type_without_max_cost(declaration_type):
         sub_type = ilmoitus_model.DeclarationSubType()
-        sub_type.declaration_super_type = declaration_type
+        sub_type.declaration_super_type = declaration_type.key
         sub_type.name = "tanken"
 
         sub_type.put()
@@ -113,7 +113,7 @@ class DeclarationsDataCreator():
     @staticmethod
     def create_valid_declaration_sub_type_with_max_cost(declaration_type):
         sub_type = ilmoitus_model.DeclarationSubType()
-        sub_type.declaration_super_type = declaration_type
+        sub_type.declaration_super_type = declaration_type.key
         sub_type.name = "openbaar vervoer"
         sub_type.max_cost = 101
 
