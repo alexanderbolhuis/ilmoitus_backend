@@ -82,7 +82,7 @@ class DeclarationsDataCreator():
 
         for i in range(0, amount_of_lines):
             line = ilmoitus_model.DeclarationLine()
-            line.declaration = declaration
+            line.declaration = declaration.key
             line.declaration_sub_type = subtype
             line.cost = random.randint(0,100)
             line.put()
