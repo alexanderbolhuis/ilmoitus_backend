@@ -756,8 +756,6 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
         self.assertEqual(response_data[0]["assigned_to"][0], logged_in_person.key.integer_id())
         self.assertEqual(response_data[1]["assigned_to"][0], logged_in_person.key.integer_id())
 
-        self.positive_test_stub_handler(path, "get")
-
 class ApproveDeclarationByHumanResourcesTest(BaseAuthorizationHandler):
     def test_negative_approve_not_logged_in(self):
         user_is_logged_in = False
@@ -876,3 +874,30 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
         self.setup_server_with_user(
             [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
             user_is_logged_in, user_is_admin)
+
+class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
+    def test_add_new_declartion_one_item_postive(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations"
+
+        setup_data = self.setup_server_with_user([(path, main_application.DeclrationHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        declaration = DeclarationsDataCreator.create_valid_open_declaration()
+        declarationline = DeclarationLinesDataCreator.create_declaration_line(declaration.key)
+
+        declarationline.key.delete()
+        declaration.key.delete()
+
+        combined_dict = {'declaration': declaration.get_object_as_data_dict(),
+                         'lines': declarationline.get_object_as_data_dict(),
+                         'attachment': ""}
+
+        response = self.positive_test_stub_handler(path,
+                                                   "post",
+                                                   True,
+                                                    'application/json',
+                                                    True,
+                                                    combined_dict)
+
