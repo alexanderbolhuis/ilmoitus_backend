@@ -881,17 +881,20 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/declarations"
 
-        setup_data = self.setup_server_with_user([(path, main_application.DeclrationHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_test_server_without_handlers()
 
-        declaration = DeclarationsDataCreator.create_valid_open_declaration()
-        declarationline = DeclarationLinesDataCreator.create_declaration_line(declaration.key)
+        employee = PersonDataCreator.create_valid_employee_data()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
+        declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 1)
 
-        declarationline.key.delete()
+        # Delete in forloop declarationline.key.delete()
         declaration.key.delete()
 
+        lines = json.dumps(map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines))
+
         combined_dict = {'declaration': declaration.get_object_as_data_dict(),
-                         'lines': declarationline.get_object_as_data_dict(),
+                         'lines': lines,
                          'attachment': ""}
 
         response = self.positive_test_stub_handler(path,
