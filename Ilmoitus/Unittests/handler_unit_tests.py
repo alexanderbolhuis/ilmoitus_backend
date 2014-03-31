@@ -1,5 +1,6 @@
 __author__ = 'Sjors van Lemmen'
 import sys
+
 sys.path.append("../")
 import random
 import json
@@ -363,8 +364,44 @@ class CurrentUserDetailHandlerTest(BaseAuthorizationHandler):
         self.negative_test_stub_handler(path, "get", 401)
 
 
-class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
+class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandler):
+    def test_positive_put_one(self):
+        user_is_logged_in = True
+        user_is_admin = '1'
+        path = "/approve_declaration/supervisor"
+        self.setup_server_with_user([(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
+                                    user_is_logged_in,
+                                    user_is_admin)
+        employee = PersonDataCreator.create_valid_employee_data()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        locked_declaration_data = DeclarationsDataCreator.create_valid_closed_declaration(
+            employee,
+            supervisor).get_object_json_data()
 
+        response = self.positive_test_stub_handler(path, "put", data_dict=locked_declaration_data)
+        self.assertTrue("id" in response.keys())
+        self.assertEqual(locked_declaration_data["id"], response["id"])
+
+    def test_positive_put_multiple(self):
+        return
+
+    def test_negative_put_null(self):
+        return
+
+    def test_negative_put_empty_dict(self):
+        return
+
+    def test_negative_put_invalid_id(self):
+        return
+
+    def test_negative_put_no_id(self):
+        return
+
+    def test_negative_put_invalid_class_name(self):
+        return
+
+
+class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
     def test_positive_get_all(self):
         user_is_logged_in = True
         user_is_admin = '0'

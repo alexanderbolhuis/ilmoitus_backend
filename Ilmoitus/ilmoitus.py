@@ -258,6 +258,26 @@ class UserSettingsHandler(BaseRequestHandler):
             #TODO what to do when employee is None?
 
 
+class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
+    def put(self):
+        declaration_data = json.loads(self.request.body)
+        if not "id" in declaration_data.keys():
+            #error
+            return
+        try:
+            declaration_id = long(declaration_data["id"])
+        except ValueError:
+            #error; no valid id
+            return
+        declaration_object = ilmoitus_model.Declaration.get_by_id(declaration_id)
+        if declaration_object is None:
+            #error
+            return
+        declaration_object.class_name = "supervisor_approved_declaration"
+        declaration_object.put()
+        response_module.give_response(self, declaration_object.get_object_as_data_dict())
+
+
 class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
     def get(self):
         person_data = get_current_person("human_resources")
