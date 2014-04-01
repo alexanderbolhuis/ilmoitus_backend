@@ -268,10 +268,9 @@ class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
             if self.request.body is None or len(self.request.body) <= 0:
                 give_error_response(self, 400, "Er is geen declratie opgegeven om aan te passen.",
                                     "Request body was None.")
-                # return
-            if declaration_data is None or not isinstance(declaration_data, dict):
-                give_error_response(self, 400, "Er is geen declratie opgegeven om aan te passen.",
-                                    "Request.body did not contain valid json data")
+        if declaration_data is None or not isinstance(declaration_data, dict):
+            give_error_response(self, 400, "Er is geen declratie opgegeven om aan te passen.",
+                                "Request.body did not contain valid json data")
 
         declaration_id = None
         try:
@@ -284,12 +283,13 @@ class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
                                 "De opgegeven data bevat een ongeldige identificatie voor een declaratie.",
                                 "Failed to parse the value of the ID key in the body to a long.")
 
+        #TODO: check if last entry in declaration assigned_to is equals to current logged in user
         declaration_object = ilmoitus_model.Declaration.get_by_id(declaration_id)
         try:
-            if declaration_object.class_name != "closed_declaration":
+            if declaration_object.class_name != "locked_declaration":
                 give_error_response(self, 422,
                                     "De opgegeven declaratie is niet gesloten en kan dus niet goedgekeurd worden.",
-                                    "Class name of fetched object was not equal closed_declaration")
+                                    "Class name of fetched object was not equal locked_declaration")
             declaration_object.class_name = "supervisor_approved_declaration"
         except AttributeError:
             give_error_response(self, 404,

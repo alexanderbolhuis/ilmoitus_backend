@@ -387,7 +387,7 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
         self.assertEqual(locked_declaration_data["id"], response["id"])
 
         self.assertTrue("class_name" in response.keys())
-        self.assertTrue(response["class_name"], "approved_declaration")
+        self.assertTrue(response["class_name"], "supervisor_approved_declaration")
 
     def test_negative_put_none(self):
         user_is_logged_in = True
@@ -439,7 +439,7 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
             employee,
             supervisor).get_object_as_data_dict()
 
-        #Change the id to a string which is not a long (i.e. a valid ID)
+        #Change the id to a string which is not a long (i.e. an invalid ID)
         locked_declaration_data["id"] = "some string that wont be a valid id"
 
         self.negative_test_stub_handler(path, "put", 400, data_dict=json.dumps(locked_declaration_data))
