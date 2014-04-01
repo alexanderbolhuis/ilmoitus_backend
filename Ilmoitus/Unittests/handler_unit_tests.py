@@ -488,3 +488,33 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
         self.assertEqual(response_data[0]["assigned_to"], logged_in_person.key.integer_id())
         self.assertEqual(response_data[1]["assigned_to"], logged_in_person.key.integer_id())
 
+class SetLockedToSupervisorDeclinedDeclarationHandlerTest(BaseAuthorizationHandler):
+    def test_positive_put_one(self):
+        user_is_logged_in = True
+        user_is_admin = '1'
+        path = "/decline_declaration/supervisor"
+        self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
+                                    user_is_logged_in,
+                                    user_is_admin)
+        employee = PersonDataCreator.create_valid_employee_data()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        locked_declaration = DeclarationsDataCreator.create_valid_locked_declaration(employee, supervisor).get_object_json_data()
+
+        #FIXME: fails because we need the new model; class name is absent from all_custom_properties
+        response = self.positive_test_stub_handler(path, "put", data_dict=locked_declaration)
+        self.assertTrue(isinstance(response, dict))
+        self.assertTrue("id" in response.keys())
+        self.assertEqual(locked_declaration["id"], response["id"])
+        self.assertTrue("class_name" in response.keys())
+        self.assertTrue(response["class_name"], "declined_declaration")
+
+    def test_negative_put_none(self):
+        user_is_logged_in = True
+        user_is_admin = '1'
+        path = "/decline_declaration/supervisor"
+        self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
+                                    user_is_logged_in,
+                                    user_is_admin)
+        locked_declaration_data = None
+        self.negative_test_stub_handler(path, "put", 400, data_dict=locked_declaration_data)
+

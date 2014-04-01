@@ -313,6 +313,18 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
         else:
             self.abort(404)
 
+class SetLockedToSupervisorDeclinedDeclarationHandler(BaseRequestHandler):
+    def put(self):
+        current_supervisor = get_current_person("supervisor")
+        if current_supervisor is not None:
+            declaration_data = json.loads(self.request.body)
+            declaration_id = long(declaration_data["id"])
+            declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
+            if declaration.class_name == "locked_declaration":
+                declaration.class_name = "declined_declaration"
+                declaration.declined_by = current_supervisor.key
+                declaration.put()
+        response_module.give_response(self, declaration.get_object_as_data_dict())
 
 
 application = webapp.WSGIApplication(
@@ -329,6 +341,7 @@ application = webapp.WSGIApplication(
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
+        ('/decline_declaration/supervisor', SetLockedToSupervisorDeclinedDeclarationHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
