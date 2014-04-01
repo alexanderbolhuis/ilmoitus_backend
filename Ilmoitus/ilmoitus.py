@@ -11,7 +11,6 @@ from google.appengine.ext import ndb
 from error_response_module import give_error_response
 
 
-
 def get_current_person(class_name=None):
     """
      Global function that will retrieve the user that is currently logged in (through Google's users API)
@@ -217,8 +216,9 @@ class AllDeclarationsForSupervisor(BaseRequestHandler):
 
         if person is not None and person.class_name == 'supervisor':
 
-            declaration_query = ilmoitus_model.Declaration.query(ilmoitus_model.Declaration.class_name == 'open_declaration',
-                                                        ilmoitus_model.Declaration.assigned_to == person.key)
+            declaration_query = ilmoitus_model.Declaration.query(
+                ilmoitus_model.Declaration.class_name == 'open_declaration',
+                ilmoitus_model.Declaration.assigned_to == person.key)
             query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
             response_module.respond_with_existing_model_object_collection(self, query_result)
@@ -260,20 +260,41 @@ class UserSettingsHandler(BaseRequestHandler):
 
 class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
     def put(self):
-        declaration_data = json.loads(self.request.body)
-        if not "id" in declaration_data.keys():
-            #error
-            return
+        #TODO: Check user rights!!
+        declaration_data = None
+        try:
+            declaration_data = json.loads(self.request.body)
+        except ValueError:
+            if self.request.body is None or len(self.request.body) <= 0:
+                give_error_response(self, 400, "Er is geen declratie opgegeven om aan te passen.",
+                                    "Request body was None.")
+                # return
+            if declaration_data is None or not isinstance(declaration_data, dict):
+                give_error_response(self, 400, "Er is geen declratie opgegeven om aan te passen.",
+                                    "Request.body did not contain valid json data")
+
+        declaration_id = None
         try:
             declaration_id = long(declaration_data["id"])
-        except ValueError:
-            #error; no valid id
-            return
+        except KeyError:
+            give_error_response(self, 400, "De opgegeven data bevat geen identificatie voor een declaratie.",
+                                "The body doesn't contain an ID key.")
+        except (TypeError, ValueError):
+            give_error_response(self, 400,
+                                "De opgegeven data bevat een ongeldige identificatie voor een declaratie.",
+                                "Failed to parse the value of the ID key in the body to a long.")
+
         declaration_object = ilmoitus_model.Declaration.get_by_id(declaration_id)
-        if declaration_object is None:
-            #error
-            return
-        declaration_object.class_name = "supervisor_approved_declaration"
+        try:
+            if declaration_object.class_name != "closed_declaration":
+                give_error_response(self, 422,
+                                    "De opgegeven declaratie is niet gesloten en kan dus niet goedgekeurd worden.",
+                                    "Class name of fetched object was not equal closed_declaration")
+            declaration_object.class_name = "supervisor_approved_declaration"
+        except AttributeError:
+            give_error_response(self, 404,
+                                "De opgegeven identificatie is onbekend en behoort tot geen enkele declaratie.",
+                                "Query result from the value of the ID key of the body returned None.")
         declaration_object.put()
         response_module.give_response(self, declaration_object.get_object_as_data_dict())
 
@@ -308,16 +329,16 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
 
         declaration = ilmoitus_model.Declaration
         query = ilmoitus_model.Declaration.query(ndb.OR(declaration.created_by == key,
-                                 declaration.assigned_to == key,
-                                 declaration.approved_by == key,
-                                 declaration.submitted_to_hr_by == key,
-                                 declaration.declined_by == key))
+                                                        declaration.assigned_to == key,
+                                                        declaration.approved_by == key,
+                                                        declaration.submitted_to_hr_by == key,
+                                                        declaration.declined_by == key))
         query_result = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
         if len(query_result) != 0:
-            response_module.give_response(self, json.dumps(map(lambda declaration_item: declaration_item.get_object_as_data_dict(), query_result)))
+            response_module.give_response(self, json.dumps(
+                map(lambda declaration_item: declaration_item.get_object_as_data_dict(), query_result)))
         else:
             self.abort(404)
-
 
 
 application = webapp.WSGIApplication(
