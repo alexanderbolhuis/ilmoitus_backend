@@ -121,12 +121,12 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaratie_four.put()
 
         declaratie_five = ilmoitus_model.Declaration()
-        declaratie_five.class_name = "declined_declaration"
+        declaratie_five.class_name = "supervisor_declined_declaration"
         declaratie_five.created_by = employee_two.key
         declaratie_five.assigned_to = employee_two.supervisor
         declaratie_five.comment = "Bedrijfsuitje"
         declaratie_five.declined_by = employee_two.supervisor
-        declaratie_five.submitted_to_hr_by = employee_two.supervisor
+        declaratie_five.submitted_to_human_resources_by = employee_two.supervisor
         declaratie_five.put()
 
 
@@ -149,7 +149,6 @@ class CreateDataHandler(webapp2.RequestHandler):
         data.create_data()
 
 
-
 class FillHandler(webapp2.RequestHandler):
     def get(self):
         clearer = ClearHandler()
@@ -157,4 +156,3 @@ class FillHandler(webapp2.RequestHandler):
 
         data = DataBootsTrapper()
         data.create_data()
-

@@ -247,6 +247,7 @@ class UserSettingsHandler(BaseRequestHandler):
     def get(self):
         employee = get_current_person()
         if employee is not None:
+            response_module.give_response(self, json.dumps(employee.details()))
             response_module.give_response(self, employee.get_object_json_data())
             #TODO what to do when employee is None?
 
@@ -299,6 +300,20 @@ class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
         response_module.give_response(self, declaration_object.get_object_as_data_dict())
 
 
+class CurrentUserSupervisors(BaseRequestHandler):
+    def get(self):
+        #TODO now this function gets all supervisors, we need to know if it only need supervisors of current person
+        current_user_data = get_current_person()
+        user_is_logged_in = current_user_data["user_is_logged_in"]
+        if user_is_logged_in is True:
+            supervisor_query = ilmoitus_model.Person.query(ilmoitus_model.Person.class_name == "supervisor")
+            query_result = supervisor_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+
+            response_module.respond_with_existing_model_object_collection(self, query_result)
+        else:
+            self.abort(401)
+
+
 class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
     def get(self):
         person_data = get_current_person("human_resources")
@@ -306,7 +321,7 @@ class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
         if person is not None:
             if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
                 declaration_query = ilmoitus_model.Declaration.query(
-                    ilmoitus_model.Declaration.class_name == "approved_declaration")
+                    ilmoitus_model.Declaration.class_name == "supervisor_approved_declaration")
 
                 query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
@@ -331,7 +346,7 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
         query = ilmoitus_model.Declaration.query(ndb.OR(declaration.created_by == key,
                                                         declaration.assigned_to == key,
                                                         declaration.approved_by == key,
-                                                        declaration.submitted_to_hr_by == key,
+                                                        declaration.submitted_to_human_resources_by == key,
                                                         declaration.declined_by == key))
         query_result = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
         if len(query_result) != 0:
@@ -350,6 +365,7 @@ application = webapp.WSGIApplication(
         ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
+        ('/supervisors/', CurrentUserSupervisors),
         ('/declarations/employee', AllDeclarationsForEmployeeHandler),
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
         ('/current_user/details', CurrentUserDetailsHandler),
