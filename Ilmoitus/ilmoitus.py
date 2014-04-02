@@ -297,7 +297,7 @@ class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
                                 "De opgegeven identificatie is onbekend en behoort tot geen enkele declaratie.",
                                 "Query result from the value of the ID key of the body returned None.")
         declaration_object.put()
-        response_module.give_response(self, declaration_object.get_object_as_data_dict())
+        response_module.give_response(self, json.dumps(declaration_object.get_object_as_data_dict()))
 
 
 class CurrentUserSupervisors(BaseRequestHandler):

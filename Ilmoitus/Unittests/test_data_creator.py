@@ -140,17 +140,20 @@ class DeclarationsDataCreator():
         return open_declaration
 
     @staticmethod
-    def create_valid_closed_declaration(employee, supervisor):
+    def create_valid_locked_declaration(employee, supervisor):
         employee_key = employee.key
         supervisor_key = supervisor.key
 
         employee.supervisor = supervisor_key
 
-        open_declaration = ilmoitus_model.Declaration()
-        open_declaration.class_name = "closed_declaration"
-        open_declaration.created_by = employee_key
-        open_declaration.assigned_to = supervisor_key
-        open_declaration.comment = "Thanks for taking care of this for me!"
+        locked_declaration = ilmoitus_model.Declaration()
+        locked_declaration.class_name = "locked_declaration"
+        locked_declaration.created_by = employee_key
+        locked_declaration.assigned_to.append(supervisor_key)
+        locked_declaration.comment = "Thanks for taking care of this for me!"
+
+        locked_declaration.put()
+        return locked_declaration
 
     def create_valid_human_resources_approved_declaration(employee, supervisor):
         employee_key = employee.key

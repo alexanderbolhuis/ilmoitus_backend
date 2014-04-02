@@ -362,19 +362,21 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
                                     user_is_admin)
         employee = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
-        locked_declaration_data = DeclarationsDataCreator.create_valid_closed_declaration(
+        locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
             employee,
-            supervisor).get_object_json_data()
+            supervisor).get_object_as_data_dict()
+        locked_declaration_data_json_string = json.dumps(locked_declaration_data)
 
         #FIXME: fails because we need the new model; class name is absent from all_custom_properties
-        response = self.positive_test_stub_handler(path, "put", data_dict=locked_declaration_data)
-        self.assertTrue(isinstance(response, dict))
+        response = self.positive_test_stub_handler(path, "put", data_dict=locked_declaration_data_json_string)
 
-        self.assertTrue("id" in response.keys())
-        self.assertEqual(locked_declaration_data["id"], response["id"])
+        response_data = json.loads(response.body)
 
-        self.assertTrue("class_name" in response.keys())
-        self.assertTrue(response["class_name"], "supervisor_approved_declaration")
+        self.assertTrue("id" in response_data.keys())
+        self.assertEqual(locked_declaration_data["id"], response_data["id"])
+
+        self.assertTrue("class_name" in response_data.keys())
+        self.assertEqual(response_data["class_name"], "supervisor_approved_declaration")
 
     def test_negative_put_none(self):
         user_is_logged_in = True
@@ -422,7 +424,7 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
                                     user_is_admin)
         employee = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
-        locked_declaration_data = DeclarationsDataCreator.create_valid_closed_declaration(
+        locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
             employee,
             supervisor).get_object_as_data_dict()
 
@@ -440,7 +442,7 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
                                     user_is_admin)
         employee = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
-        locked_declaration_data = DeclarationsDataCreator.create_valid_closed_declaration(
+        locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
             employee,
             supervisor).get_object_as_data_dict()
 
@@ -458,7 +460,7 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
                                     user_is_admin)
         employee = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
-        locked_declaration_data = DeclarationsDataCreator.create_valid_closed_declaration(
+        locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
             employee,
             supervisor).get_object_as_data_dict()
 
@@ -477,7 +479,7 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
         employee = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
 
-        #Change the regular call to create_valid_closed_declaration to an open one:
+        #Change the regular call to create_valid_locked_declaration to an open one:
         open_declaration_data = DeclarationsDataCreator.create_valid_open_declaration(
             employee,
             supervisor).get_object_as_data_dict()
