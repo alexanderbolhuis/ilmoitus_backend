@@ -3,6 +3,7 @@ import webapp2 as webapp
 import response_module
 import ilmoitus_model
 import json
+import datetime
 import data_bootstrapper
 import logging
 import data_bootstrapper
@@ -314,18 +315,34 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
             self.abort(404)
 
 
-
-
-class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
-    def get(self):
+class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
+    def post(self):
         person_data = get_current_person("human_resources")
         person = person_data["person_value"]
         if person is not None:
             if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
-                declaration_query = model.Declaration.query(model.Declaration.class_name == "approved_declaration")
-                query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
-
-                response_module.respond_with_existing__model_object_collection(self, query_result)
+                if self.request.body is not None:
+                    data = None
+                    try:
+                        data = json.loads(self.request.body)
+                    except ValueError:
+                        give_error_response(self, 500, "Er is ongeldige data verstuurd; Kan het verzoek niet afhandelen", "Invalid json data; Invalid format", more_info=str(self.request.body))
+                    declaration_id = data['declaration_id']
+                    person_key = person.key
+                    current_date = datetime.date
+                    declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
+                    if declaration.class_name == 'approved_declaration':
+                        declaration.class_name = 'declined_declaration'
+                        declaration.declined_by = person_key
+                        #declaration.human_resources_declined_at = current_date
+                        declaration.put()
+                        response_module.give_response(self, declaration.get_object_json_data())
+                    else:
+                        #
+                        give_error_response(self, 500, "Kan geen declaratie afkeuren die niet eerst door een leidinggevende is goedgekeurd.", "Can only approve a supervisor_approved_declaration.")
+                else:
+                    #
+                    give_error_response(self, 500, "Er is geen data opgegeven!.", "Request body is None!.")
             else:
                 #User is not authorised
                 self.abort(401)
@@ -344,6 +361,7 @@ application = webapp.WSGIApplication(
         ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
+        ('/declaration/declined_by_hr', SupervisorDeclarationToHrDeclinedDeclarationHandler),
         ('/supervisors/', CurrentUserSupervisors),
         ('/declarations/employee', AllDeclarationsForEmployeeHandler),
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
