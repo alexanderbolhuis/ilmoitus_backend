@@ -2,6 +2,7 @@ __author__ = 'Sjors van Lemmen'
 import ilmoitus_model
 import random
 from datetime import datetime, date
+import  decimal
 
 
 class PersonDataCreator():
@@ -84,7 +85,7 @@ class DeclarationsDataCreator():
             line = ilmoitus_model.DeclarationLine()
             line.declaration = declaration.key
             line.declaration_sub_type = subtype.key
-            line.cost = random.randint(0,100)
+            line.cost = decimal.Decimal(random.randrange(10000))/100
             line.put()
 
             lines.append(line)
@@ -93,17 +94,19 @@ class DeclarationsDataCreator():
 
     @staticmethod
     def create_valid_declaration_type():
-        type = ilmoitus_model.DeclarationType()
-        type.name = "reiskosten"
+        declaration_type = ilmoitus_model.DeclarationType()
+        declaration_type.name = "reiskosten"
+        sub_type1 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost()
+        sub_type2 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost()
+        declaration_type.sub_types = [sub_type1.key, sub_type2.key]
 
-        type.put()
+        declaration_type.put()
 
-        return type
+        return declaration_type
 
     @staticmethod
-    def create_valid_declaration_sub_type_without_max_cost(declaration_type):
+    def create_valid_declaration_sub_type_without_max_cost():
         sub_type = ilmoitus_model.DeclarationSubType()
-        sub_type.declaration_super_type = declaration_type.key
         sub_type.name = "tanken"
 
         sub_type.put()
@@ -111,9 +114,8 @@ class DeclarationsDataCreator():
         return sub_type
 
     @staticmethod
-    def create_valid_declaration_sub_type_with_max_cost(declaration_type):
+    def create_valid_declaration_sub_type_with_max_cost():
         sub_type = ilmoitus_model.DeclarationSubType()
-        sub_type.declaration_super_type = declaration_type.key
         sub_type.name = "openbaar vervoer"
         sub_type.max_cost = 101
 
@@ -132,21 +134,21 @@ class DeclarationsDataCreator():
         open_declaration = ilmoitus_model.Declaration()
         open_declaration.class_name = "open_declaration"
         open_declaration.created_by = employee_key
-        open_declaration.assigned_to = supervisor_key
+        open_declaration.assigned_to = [supervisor_key]
         open_declaration.comment = "Thanks for taking care of this for me!"
 
         open_declaration.put()
         return open_declaration
 
     @staticmethod
-    def create_valid_approved_declaration(employee, supervisor):
+    def create_valid_human_resources_approved_declaration(employee, supervisor):
         employee_key = employee.key
 
         open_declaration = ilmoitus_model.Declaration()
         open_declaration.class_name = "human_resources_approved_declaration"
         open_declaration.created_at = datetime.now()
         open_declaration.created_by = employee.key
-        open_declaration.assigned_to = supervisor.key
+        open_declaration.assigned_to = [supervisor.key]
         open_declaration.locked_at = datetime.now()
         open_declaration.comment = "Thanks for taking care of this for me!"
         open_declaration.approved_by = supervisor.key
@@ -167,7 +169,7 @@ class DeclarationsDataCreator():
         open_declaration.class_name = "supervisor_approved_declaration"
         open_declaration.created_at = datetime.now()
         open_declaration.created_by = employee.key
-        open_declaration.assigned_to = supervisor.key
+        open_declaration.assigned_to = [supervisor.key]
         open_declaration.locked_at = datetime.now()
         open_declaration.comment = "Thanks for taking care of this for me!"
         open_declaration.approved_by = supervisor.key

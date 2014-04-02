@@ -3,7 +3,7 @@ __author__ = 'alexanderbolhuis & sjorsboom'
 from google.appengine.ext import ndb
 from google.appengine.ext import blobstore
 import json
-
+import collections
 
 # Department Model class
 class Department(ndb.Model):
@@ -66,7 +66,7 @@ class Declaration(ndb.Model):
     class_name = ndb.StringProperty()
     created_at = ndb.DateTimeProperty(auto_now_add=True)
     created_by = ndb.KeyProperty(kind=Person)
-    assigned_to = ndb.KeyProperty(kind=Person)
+    assigned_to = ndb.KeyProperty(kind=Person, repeated=True)
     comment = ndb.StringProperty()
     supervisor_comment = ndb.StringProperty()
     human_resources_comment = ndb.StringProperty()
@@ -92,6 +92,7 @@ class Declaration(ndb.Model):
         "human_resources_approved_declaration": "Goedgekeurd",
     }
 
+    # this property is used to check the permissions against
     all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "supervisor_comment",
                              "human_resources_comment", "declined_by", "submitted_to_human_resources_by", "locked_at",
                              "sent_to_human_resources_at", "approved_by", "supervisor_declined_at",
@@ -179,30 +180,26 @@ class Declaration(ndb.Model):
         else:
             return default_value
 
-    def all(self):  # is this being used?
-        return Declaration.key
 
-
-# DeclarationType Model class
-class DeclarationType(ndb.Model):
+# DeclarationSubType Model class
+class DeclarationSubType(ndb.Model):
     name = ndb.StringProperty()
+    max_cost = ndb.IntegerProperty()  # Optional
 
     def get_object_as_data_dict(self):
-        return {'name': self.name}
+        return {'id': self.key.integer_id(), 'name': self.name, 'max_cost': self.max_cost}
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
 
 
-# DeclarationSubType Model class
-class DeclarationSubType(ndb.Model):
+# DeclarationType Model class
+class DeclarationType(ndb.Model):
     name = ndb.StringProperty()
-    declaration_super_type = ndb.KeyProperty(kind=DeclarationType)
-    max_cost = ndb.IntegerProperty()  # Optional
+    sub_types = ndb.KeyProperty(kind=DeclarationSubType, repeated=True)
 
     def get_object_as_data_dict(self):
-        return {'id': self.key.integer_id(), 'name': self.name, 'declaration_super_type': self.declaration_super_type,
-                'max_cost': self.max_cost}
+        return {'name': self.name, 'sub_types': json.dumps(map(lambda key: key.integer_id(), sub_types))}
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -227,11 +224,11 @@ class DeclarationLine(ndb.Model):
 
 class Attachment(ndb.Model):
     declaration = ndb.KeyProperty(kind=Declaration)
-    blob = blobstore.BlobReferenceProperty(required=True)
+    blob = ndb.BlobKeyProperty(required=True)
 
     def get_object_as_data_dict(self):
         return {'id': self.key.integer_id(), 'declaration': self.declaration.integer_id(),
-                'blob': blobstore.BlobKey.integer_id()}
+                'blob': blob}
             #TODO make it work, this can't be tested yet because we can't simulate adding something to the blobstore
 
     def get_object_json_data(self):
@@ -246,9 +243,14 @@ def property_not_none_key_value_pair_with_permissions(class_reference):
             for prop in permissions:
                 value = getattr(class_reference, prop)
                 if value is not None:
-                    value_type = type(value)
                     try:
-                        value = value.integer_id()
+                        if(isinstance(value, collections.MutableSequence)):
+                            temp = list()
+                            for key in value:
+                                temp.append(key.integer_id())
+                            value = temp
+                        else:
+                            value = value.integer_id()
                     except AttributeError:
                         value = str(value)
                     return_data = dict(return_data.items() + {prop: value}.items())
