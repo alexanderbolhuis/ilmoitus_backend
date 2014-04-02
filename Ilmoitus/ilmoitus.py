@@ -332,14 +332,14 @@ class ApproveByHumanResources(BaseRequestHandler):
 
                 declaration_id = data["id"]
                 pay_date = dateutil.parser.parse(data["pay_date"])
-                today_date = datetime.date
+                today_date = datetime.datetime.now()
 
                 declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
 
-                if declaration.class_name == "approved_declaration":
-                    declaration.class_name = "approved_declaration_hr"
-                    #declaration.human_resources_approved_at = today_date
-                    #declaration.will_be_payed_out_on = pay_date
+                if declaration.class_name == "supervisor_approved_declaration":
+                    declaration.class_name = "human_resources_approved_declaration"
+                    declaration.human_resources_approved_at = today_date
+                    declaration.will_be_payed_out_on = pay_date
                     declaration.put()
                     response_module.give_response(self, declaration.get_object_json_data())
                 else:
