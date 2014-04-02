@@ -83,13 +83,12 @@ class DeclarationsDataCreator():
 
         for i in range(0, amount_of_lines):
             line = ilmoitus_model.DeclarationLine()
-            line.declaration = declaration.key
             line.declaration_sub_type = subtype.key
             line.cost = decimal.Decimal(random.randrange(10000))/100
             line.put()
 
             lines.append(line)
-
+            
         return lines
 
     @staticmethod
