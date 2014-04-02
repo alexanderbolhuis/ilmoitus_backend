@@ -81,6 +81,7 @@ class Declaration(ndb.Model):
     will_be_payed_out_on = ndb.DateProperty()
     human_resources_declined_by = ndb.KeyProperty(kind=Person)
     supervisor_approved_by = ndb.KeyProperty(kind=Person)
+    human_resources_approved_by = ndb.KeyProperty(kind=Person)
 
 
     #'Static' dictionary with readable states
@@ -111,19 +112,19 @@ class Declaration(ndb.Model):
 
                    "supervisor_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                        "locked_at", "submitted_to_human_resources_by",
-                                                       "supervisor_approved_at", "approved_by",
+                                                       "supervisor_approved_at", "supervisor_approved_by",
                                                        "sent_to_human_resources_at", "supervisor_comment"],
 
                    "human_resources_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                             "locked_at", "submitted_to_human_resources_by",
-                                                            "supervisor_approved_at", "approved_by",
+                                                            "supervisor_approved_at", "supervisor_approved_by",
                                                             "sent_to_human_resources_at", "declined_by",
                                                             "supervisor_comment", "human_resources_comment",
                                                             "human_resources_declined_at"],
 
                    "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                             "locked_at", "submitted_to_human_resources_by",
-                                                            "supervisor_approved_at", "approved_by",
+                                                            "supervisor_approved_at", "supervisor_approved_by",
                                                             "sent_to_human_resources_at","supervisor_comment",
                                                             "will_be_payed_out_on", "human_resources_comment",
                                                             "human_resources_approved_by",

@@ -382,7 +382,7 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
         self.assertEqual(response_data[0]["class_name"], "supervisor_approved_declaration")
         self.assertEqual(response_data[0]["created_at"], str(declaration.created_at))
         self.assertEqual(response_data[0]["created_by"], employee.key.integer_id())
-        self.assertEqual(response_data[0]["approved_by"], supervisor.key.integer_id())
+        self.assertEqual(response_data[0]["supervisor_approved_by"], supervisor.key.integer_id())
         self.assertEqual(response_data[0]["assigned_to"][0], supervisor.key.integer_id())
         self.assertEqual(response_data[0]["submitted_to_human_resources_by"], supervisor.key.integer_id())
         self.assertEqual(response_data[0]["id"], declaration.key.integer_id())
