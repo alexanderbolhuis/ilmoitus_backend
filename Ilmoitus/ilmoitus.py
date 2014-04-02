@@ -3,6 +3,8 @@ import webapp2 as webapp
 import response_module
 import ilmoitus_model
 import json
+import datetime
+import dateutil.parser
 import data_bootstrapper
 import logging
 import data_bootstrapper
@@ -315,11 +317,11 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
 
 
 class ApproveByHumanResources(BaseRequestHandler):
-    def post(self):
-        person_data = get_current_person()
+    def put(self):
+        person_data = get_current_person("human_resources")
         current_user = person_data["person_value"]
 
-        if current_user is not None and current_user.class_name == 'supervisor':
+        if current_user is not None and current_user.class_name == 'human_resources':
             if self.request.body is not None:
                 data = None
                 try:
@@ -329,11 +331,23 @@ class ApproveByHumanResources(BaseRequestHandler):
                                         "Invalid JSON data; invalid format.", more_info=str(self.request.body))
 
                 declaration_id = data["id"]
-                approved_date = data["date"]
-                #TODO: Change declaration into "approved_declaration_hr" ONLY if currently an "approved_declaration"
+                pay_date = dateutil.parser.parse(data["pay_date"])
+                today_date = datetime.date
+
+                declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
+
+                if declaration.class_name == "approved_declaration":
+                    declaration.class_name = "approved_declaration_hr"
+                    #declaration.human_resources_approved_at = today_date
+                    #declaration.will_be_payed_out_on = pay_date
+                    declaration.put()
+                    response_module.give_response(self, declaration.get_object_json_data())
+                else:
+                    give_error_response(self, 500, "Kan geen declaratie goedkeuren die niet eerst door een leidinggevende is goedgekeurd.",
+                                        "Can only approve a supervisor_approved_declaration.")
             else:
                 give_error_response(self, 500, "Er is geen data opgegeven.",
-                                "Request body is None.")
+                                    "Request body is None.")
         else:
             #user does not have the appropriate permissions or isn't logged in at all.
             self.abort(401)
