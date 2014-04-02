@@ -340,6 +340,7 @@ class ApproveByHumanResources(BaseRequestHandler):
                     declaration.class_name = "human_resources_approved_declaration"
                     declaration.human_resources_approved_at = today_date
                     declaration.will_be_payed_out_on = pay_date
+                    declaration.human_resources_approved_by = current_user.key
                     declaration.put()
                     response_module.give_response(self, declaration.get_object_json_data())
                 else:

@@ -80,6 +80,7 @@ class Declaration(ndb.Model):
     human_resources_declined_at = ndb.DateTimeProperty()
     approved_by = ndb.KeyProperty(kind=Person)  # TODO make a list property
     will_be_payed_out_on = ndb.DateProperty()
+    human_resources_approved_by = ndb.KeyProperty(kind=Person)
 
 
     #'Static' dictionary with readable states

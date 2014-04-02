@@ -3,6 +3,7 @@ import sys
 sys.path.append("../")
 import random
 import json
+import datetime
 import ilmoitus as main_application
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
 from Base.base_test_methods import BaseTestClass
@@ -515,22 +516,24 @@ class ApproveDeclarationByHumanResourcesTest(BaseAuthorizationHandler):
 
         declaration1 = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person, supervisor)
         declaration2 = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person, supervisor)
-        declaration3 = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person, supervisor)
+        declaration3 = DeclarationsDataCreator.create_valid_open_declaration(person, supervisor)
 
         #test approving a supervisor approved declaration
         post_data = dict(id=declaration1.key.integer_id(), pay_date="2014-04-02T00:00:00.000Z")
         self.positive_test_stub_handler(path, "put_json", data_dict=post_data)
-        self.assertEqual(declaration1.class_name, "approved_declaration_hr")
-        print declaration1.will_be_payed_out_on
-        print declaration1.human_resources_approved_at
-        #self.assertEqual(declaration1.will_be_payed_out_on.strftime('%Y-%m-%d'), "2014-03-31")
-        #self.assertNotEqual(declaration1.human_resources_approved_at, None)
-        self.assertEqual(declaration2.class_name, "approved_declaration")
+        self.assertEqual(declaration1.class_name, "human_resources_approved_declaration")
+        self.assertEqual(declaration1.human_resources_approved_by, logged_in_person.key)
+        self.assertEqual(declaration1.will_be_payed_out_on.isoformat(), "2014-04-02")
+        #seconds & minutes could easily change between insertion of the data and execution of this test.
+        # Because of this, only check date and hour.
+        self.assertEqual(declaration1.human_resources_approved_at.strftime('%Y-%m-%d %H'),
+                         datetime.datetime.now().strftime('%Y-%m-%d %H'))
+        self.assertEqual(declaration2.class_name, "supervisor_approved_declaration")
         self.assertEqual(declaration3.class_name, "open_declaration")
 
         #test approving an open declaration. (should not be possible)
         post_data = dict(id=declaration3.key.integer_id(), pay_date="2014-04-02T00:00:00.000Z")
-        self.negative_test_stub_handler(path, "post_json", 500, data_dict=post_data)
-        self.assertEqual(declaration1.class_name, "approved_declaration")
-        self.assertEqual(declaration2.class_name, "approved_declaration")
+        self.negative_test_stub_handler(path, "put_json", 500, data_dict=post_data)
+        self.assertEqual(declaration1.class_name, "human_resources_approved_declaration")
+        self.assertEqual(declaration2.class_name, "supervisor_approved_declaration")
         self.assertEqual(declaration3.class_name, "open_declaration")
