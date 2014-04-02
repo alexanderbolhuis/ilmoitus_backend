@@ -216,7 +216,7 @@ class DeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
             self.assertIsNotNone(response_data[0]["state"])
 
             self.assertEqual(response_data[0]["created_by"], (logged_in_person.key.integer_id()))
-            self.assertEqual(response_data[0]["assigned_to"], supervisor.key.integer_id())
+            self.assertEqual(response_data[0]["assigned_to"][0], supervisor.key.integer_id())
         except KeyError as error:
             self.fail("Test Failed! Expected the key: " + str(
                 error) + " to be present in the response, but it was not found. Found only: " + str(response_data))
@@ -381,7 +381,7 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
         self.assertEqual(response_data[0]["created_at"], str(declaration.created_at))
         self.assertEqual(response_data[0]["created_by"], employee.key.integer_id())
         self.assertEqual(response_data[0]["approved_by"], supervisor.key.integer_id())
-        self.assertEqual(response_data[0]["assigned_to"], supervisor.key.integer_id())
+        self.assertEqual(response_data[0]["assigned_to"][0], supervisor.key.integer_id())
         self.assertEqual(response_data[0]["submitted_to_human_resources_by"], supervisor.key.integer_id())
         self.assertEqual(response_data[0]["id"], declaration.key.integer_id())
 
@@ -472,6 +472,6 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
         response_data = json.loads(response.body)
 
         self.assertEqual(len(response_data), 2)
-        self.assertEqual(response_data[0]["assigned_to"], logged_in_person.key.integer_id())
-        self.assertEqual(response_data[1]["assigned_to"], logged_in_person.key.integer_id())
+        self.assertEqual(response_data[0]["assigned_to"][0], logged_in_person.key.integer_id())
+        self.assertEqual(response_data[1]["assigned_to"][0], logged_in_person.key.integer_id())
 

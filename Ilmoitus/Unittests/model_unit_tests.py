@@ -14,7 +14,7 @@ class ModelTest(BaseTestClass):
         open_declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
 
         self.assertEqual(open_declaration.created_by, employee.key)
-        self.assertEqual(open_declaration.assigned_to, supervisor.key)
+        self.assertEqual(open_declaration.assigned_to[0], supervisor.key)
 
     def test_open_declaration_cant_set_other_properties_than_permitted(self):
         self.setup_test_server_without_handlers()
@@ -28,7 +28,7 @@ class ModelTest(BaseTestClass):
         open_declaration.submitted_to_human_resources_by = hr_employee
 
         self.assertEqual(open_declaration.created_by, employee.key)
-        self.assertEqual(open_declaration.assigned_to, supervisor.key)
+        self.assertEqual(open_declaration.assigned_to[0], supervisor.key)
 
         self.assertIsNone(open_declaration.submitted_to_human_resources_by)
 
