@@ -2,10 +2,8 @@ __author__ = 'alexanderbolhuis & sjorsboom'
 
 from google.appengine.ext import ndb
 from google.appengine.ext import blobstore
-from google.appengine.ext.ndb.key import Key
-from datetime import datetime
 import json
-
+import collections
 
 # Department Model class
 class Department(ndb.Model):
@@ -34,7 +32,6 @@ class Person(ndb.Model):
                                   "supervisor"],
                    "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
                                        "supervisor"]}
-
 
     def get_object_as_data_dict(self):
         return dict({'id': self.key.integer_id(), 'class_name': self.class_name}.items() +
@@ -69,58 +66,75 @@ class Declaration(ndb.Model):
     class_name = ndb.StringProperty()
     created_at = ndb.DateTimeProperty(auto_now_add=True)
     created_by = ndb.KeyProperty(kind=Person)
-    assigned_to = ndb.KeyProperty(kind=Person)
+    assigned_to = ndb.KeyProperty(kind=Person, repeated=True)
     comment = ndb.StringProperty()
+    supervisor_comment = ndb.StringProperty()
+    human_resources_comment = ndb.StringProperty()
     declined_by = ndb.KeyProperty(kind=Person)
-    submitted_to_hr_by = ndb.KeyProperty(kind=Person)
-    approved_by = ndb.KeyProperty(kind=Person)
+    submitted_to_human_resources_by = ndb.KeyProperty(kind=Person)
+    locked_at = ndb.DateTimeProperty()
+    sent_to_human_resources_at = ndb.DateTimeProperty()
+    supervisor_declined_at = ndb.DateTimeProperty()
+    supervisor_approved_at = ndb.DateTimeProperty()
+    human_resources_approved_at = ndb.DateTimeProperty()
+    human_resources_declined_at = ndb.DateTimeProperty()
+    will_be_payed_out_on = ndb.DateProperty()
+    human_resources_declined_by = ndb.KeyProperty(kind=Person)
+    supervisor_approved_by = ndb.KeyProperty(kind=Person)
+    human_resources_approved_by = ndb.KeyProperty(kind=Person)
+
 
     #'Static' dictionary with readable states
     readable_states = {
         "open_declaration": "Open",
-        "locked_declaration": "In behandeling",  #User story (leidinggevende kan declaratie locken)
-        "declined_declaration": "Afgekeurd leidinggevende",
-        "approved_declaration": "Goedgekeurd leidinggevende",
-        "closed_declaration": "Afgekeurd",  #Declined by hr I suppose?
-        "approved_declaration_hr": "Goedgekeurd",
+        "locked_declaration": "In behandeling",
+        "supervisor_declined_declaration": "Afgekeurd leidinggevende",
+        "supervisor_approved_declaration": "Goedgekeurd leidinggevende",
+        "human_resources_declined_declaration": "Afgekeurd",
+        "human_resources_approved_declaration": "Goedgekeurd",
     }
 
-    #'Static' dictionary with readable states
-    readable_states = {
-                    "open_declaration": "Open",
-                    "locked_declaration": "In behandeling",                 #User story (leidinggevende kan declaratie locken)
-                    "declined_declaration": "Afgekeurd leidinggevende",
-                    "approved_declaration": "Goedgekeurd leidinggevende",
-                    "closed_declaration": "Afgekeurd",                      #Declined bij hr i suppose?
-                    "approved_declaration_hr": "Goedgekeurd",
-    }
+    # this property is used to check the permissions against
+    all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "supervisor_comment",
+                             "human_resources_comment", "declined_by", "submitted_to_human_resources_by", "locked_at",
+                             "sent_to_human_resources_at", "supervisor_declined_at", "supervisor_approved_at",
+                             "human_resources_approved_at", "human_resources_declined_at","will_be_payed_out_on",
+                             "human_resources_approved_by"]
 
-    #'Static' dictionary with readable states
-    readable_states = {
-                    "open_declaration": "Open",
-                    "locked_declaration": "In behandeling",                 #User story (leidinggevende kan declaratie locken)
-                    "declined_declaration": "Afgekeurd leidinggevende",
-                    "approved_declaration": "Goedgekeurd leidinggevende",
-                    "closed_declaration": "Afgekeurd",                      #Declined by hr I suppose?
-                    "approved_declaration_hr": "Goedgekeurd",
-    }
-
-    all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                             "submitted_to_hr_by"]
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
-                   "closed_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by",
-                                          "submitted_to_hr_by"],
-                   "declined_declaration": ["created_at", "created_by", "assigned_to", "comment", "declined_by"],
-                   "approved_declaration": ["created_at", "created_by", "assigned_to", "comment", "submitted_to_hr_by",
-                                            "approved_by"]}
 
+                   "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "locked_at",
+                                          "supervisor_comment"],
+
+                   "supervisor_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
+                                                       "locked_at", "declined_by", "supervisor_declined_at",
+                                                       "supervisor_comment"],
+
+                   "supervisor_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
+                                                       "locked_at", "submitted_to_human_resources_by",
+                                                       "supervisor_approved_at", "supervisor_approved_by",
+                                                       "sent_to_human_resources_at", "supervisor_comment"],
+
+                   "human_resources_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
+                                                            "locked_at", "submitted_to_human_resources_by",
+                                                            "supervisor_approved_at", "supervisor_approved_by",
+                                                            "sent_to_human_resources_at", "declined_by",
+                                                            "supervisor_comment", "human_resources_comment",
+                                                            "human_resources_declined_at"],
+
+                   "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
+                                                            "locked_at", "submitted_to_human_resources_by",
+                                                            "supervisor_approved_at", "supervisor_approved_by",
+                                                            "sent_to_human_resources_at","supervisor_comment",
+                                                            "will_be_payed_out_on", "human_resources_comment",
+                                                            "human_resources_approved_by",
+                                                            "human_resources_approved_at"]}
 
     def get_object_as_data_dict(self):
         return dict({'id': self.key.integer_id(),
                      'class_name': self.class_name,
                      "state": self.readable_state()}.items() +
                     property_not_none_key_value_pair_with_permissions(self).items())
-
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -168,22 +182,26 @@ class Declaration(ndb.Model):
         else:
             return default_value
 
-    def all(self):
-        return Declaration.key
-
 
 # DeclarationSubType Model class
 class DeclarationSubType(ndb.Model):
     name = ndb.StringProperty()
     max_cost = ndb.IntegerProperty()  # Optional
 
+    def get_object_as_data_dict(self):
+        return {'id': self.key.integer_id(), 'name': self.name, 'max_cost': self.max_cost}
+
+    def get_object_json_data(self):
+        return json.dumps(self.get_object_as_data_dict())
+
 
 # DeclarationType Model class
 class DeclarationType(ndb.Model):
-    declaration_sub_types = ndb.KeyProperty(kind=DeclarationSubType)
+    name = ndb.StringProperty()
+    sub_types = ndb.KeyProperty(kind=DeclarationSubType, repeated=True)
 
     def get_object_as_data_dict(self):
-        return {'declaration_sub_types': self.declaration_sub_types.integer_id()}
+        return {'name': self.name, 'sub_types': json.dumps(map(lambda key: key.integer_id(), sub_types))}
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -194,15 +212,12 @@ class DeclarationLine(ndb.Model):
     declaration = ndb.KeyProperty(kind=Declaration)
     receipt_date = ndb.StringProperty()  # DateProperty?
     cost = ndb.IntegerProperty()
-    declaration_type = ndb.KeyProperty(kind=DeclarationType)
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
-
     def get_object_as_data_dict(self):
-        return {'declaration': self.declaration.key.integer_id(),
+        return {'declaration': self.declaration.integer_id(),
                 'receipt_date': self.receipt_date,
                 'cost': self.cost,
-                'declaration_type': self.declaration_type.integer_id(),
                 'declaration_sub_type': self.declaration_sub_type.integer_id()}
 
     def get_object_json_data(self):
@@ -210,14 +225,17 @@ class DeclarationLine(ndb.Model):
 
 
 class Attachment(ndb.Model):
-    ndb.KeyProperty(kind=Declaration)
-    blobstore.BlobReferenceProperty(required=True)
+    declaration = ndb.KeyProperty(kind=Declaration)
+    blob = ndb.BlobKeyProperty(required=True)
 
     def get_object_as_data_dict(self):
-        return {'': ""}  # TODO get_object_as_data_dict
+        return {'id': self.key.integer_id(), 'declaration': self.declaration.integer_id(),
+                'blob': blob}
+            #TODO make it work, this can't be tested yet because we can't simulate adding something to the blobstore
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
+
 
 def property_not_none_key_value_pair_with_permissions(class_reference):
     return_data = {}
@@ -227,9 +245,14 @@ def property_not_none_key_value_pair_with_permissions(class_reference):
             for prop in permissions:
                 value = getattr(class_reference, prop)
                 if value is not None:
-                    value_type = type(value)
                     try:
-                        value = value.integer_id()
+                        if(isinstance(value, collections.MutableSequence)):
+                            temp = list()
+                            for key in value:
+                                temp.append(key.integer_id())
+                            value = temp
+                        else:
+                            value = value.integer_id()
                     except AttributeError:
                         value = str(value)
                     return_data = dict(return_data.items() + {prop: value}.items())

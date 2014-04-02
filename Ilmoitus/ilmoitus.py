@@ -281,7 +281,7 @@ class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
         if person is not None:
             if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
                 declaration_query = ilmoitus_model.Declaration.query(
-                    ilmoitus_model.Declaration.class_name == "approved_declaration")
+                    ilmoitus_model.Declaration.class_name == "supervisor_approved_declaration")
 
                 query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
@@ -304,9 +304,11 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
 
         declaration = ilmoitus_model.Declaration
         query = ilmoitus_model.Declaration.query(ndb.OR(declaration.created_by == key,
-                                 declaration.assigned_to == key,
-                                 declaration.approved_by == key,
-                                 declaration.submitted_to_hr_by == key,
+                                 declaration.assigned_to == key,  # TODO fix the list search
+                                 declaration.supervisor_approved_by == key,
+                                 declaration.submitted_to_human_resources_by == key,
+                                 declaration.human_resources_declined_by == key,
+                                 declaration.human_resources_approved_by == key,
                                  declaration.declined_by == key))
         query_result = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
         if len(query_result) != 0:
