@@ -784,10 +784,10 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
 
         data_two = dict(declaration_id = declaration_two.key.integer_id())
         self.positive_test_stub_handler(path, 'put_json', data_dict=data_two)
-        self.assertEqual(declaration_two.class_name, 'declined_declaration')
-        self.assertEqual(declaration_two.declined_by, logged_in_person.key)
-        #self.assertNotEqual(declaration_two.human_resources_declined_at, None)
-        self.assertEqual(declaration_three.class_name, 'approved_declaration')
+        self.assertEqual(declaration_two.class_name, 'human_resources_declined_declaration')
+        self.assertEqual(declaration_two.human_resources_declined_by, logged_in_person.key)
+        self.assertNotEqual(declaration_two.human_resources_declined_at, None)
+        self.assertEqual(declaration_three.class_name, 'supervisor_approved_declaration')
 
         self.negative_test_stub_handler(path, 'put_json', 500, data_dict=None)
 

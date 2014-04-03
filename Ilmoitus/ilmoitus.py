@@ -398,7 +398,7 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
                         give_error_response(self, 500, "Er is ongeldige data verstuurd; Kan het verzoek niet afhandelen", "Invalid json data; Invalid format", more_info=str(self.request.body))
                     declaration_id = data['declaration_id']
                     person_key = person.key
-                    current_date = datetime.date
+                    current_date = datetime.datetime.now()
                     declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
                     if declaration.class_name == 'supervisor_approved_declaration':
                         declaration.class_name = 'human_resources_declined_declaration'
