@@ -1,3 +1,5 @@
+from unicodedata import decimal
+
 __author__ = 'Sjors van Lemmen'
 import webapp2 as webapp
 import response_module
@@ -9,7 +11,6 @@ import data_bootstrapper
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from error_response_module import give_error_response
-
 
 
 def get_current_person(class_name=None):
@@ -314,6 +315,43 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
             self.abort(404)
 
 
+class SpecificDeclarationHandler(BaseRequestHandler):
+    def get(self, declaration_id):
+        person_data = get_current_person()
+        current_user = person_data["person_value"]
+
+        employee_rights = current_user.class_name
+
+        key = current_user.key
+        result = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
+
+        declaration_data = result
+
+        flag = False
+
+        if employee_rights == 'employee':
+
+            if declaration_data.created_by == key:
+                flag = True
+
+        elif employee_rights == 'supervisor' and declaration_data.class_name == 'open_declaration':
+
+            if declaration_data.assigned_to == key:
+                flag = True
+
+        elif employee_rights == 'human_resources' and declaration_data.class_name == 'approved_declaration':
+
+            if declaration_data.submitted_to_hr_by is not None:
+                flag = True
+        else:
+            flag = False
+
+        if flag is True:
+            response_module.give_response(self, declaration_data.get_object_json_data())
+        else:
+            #TODO: error messages:
+            self.abort(401)
+
 
 application = webapp.WSGIApplication(
     [
@@ -329,6 +367,7 @@ application = webapp.WSGIApplication(
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
+        ('/declaration/(.*)', SpecificDeclarationHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
