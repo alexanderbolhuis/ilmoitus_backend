@@ -187,9 +187,9 @@ class DeclarationsDataCreator():
         employee.supervisor = supervisor_key
 
         locked_declaration = ilmoitus_model.Declaration()
-        locked_declaration.class_name = "closed_declaration"
+        locked_declaration.class_name = "locked_declaration"
         locked_declaration.created_by = employee_key
-        locked_declaration.assigned_to = supervisor_key
+        locked_declaration.assigned_to.append(supervisor_key)
         locked_declaration.comment = "Thanks for taking care of this for me!"
 
         locked_declaration.put()
