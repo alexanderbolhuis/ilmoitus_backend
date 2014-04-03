@@ -318,7 +318,7 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
 
 
 class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
-    def post(self):
+    def put(self):
         person_data = get_current_person("human_resources")
         person = person_data["person_value"]
         if person is not None:
@@ -333,15 +333,15 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
                     person_key = person.key
                     current_date = datetime.date
                     declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
-                    if declaration.class_name == 'approved_declaration':
-                        declaration.class_name = 'declined_declaration'
-                        declaration.declined_by = person_key
-                        #declaration.human_resources_declined_at = current_date
+                    if declaration.class_name == 'supervisor_approved_declaration':
+                        declaration.class_name = 'human_resources_declined_declaration'
+                        declaration.human_resources_declined_by = person_key
+                        declaration.human_resources_declined_at = current_date
                         declaration.put()
                         response_module.give_response(self, declaration.get_object_json_data())
                     else:
                         #
-                        give_error_response(self, 500, "Kan geen declaratie afkeuren die niet eerst door een leidinggevende is goedgekeurd.", "Can only approve a supervisor_approved_declaration.")
+                        give_error_response(self, 500, "Kan geen declaratie afkeuren die niet eerst door een leidinggevende is goedgekeurd.", "Can only decline a supervisor_approved_declaration.")
                 else:
                     #
                     give_error_response(self, 500, "Er is geen data opgegeven!.", "Request body is None!.")
