@@ -384,6 +384,9 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
         else:
             self.abort(404)
 
+class AddNewDeclarationHandler(BaseRequestHandler):
+    def post(self):
+        pass
 
 class ApproveByHumanResources(BaseRequestHandler):
     def put(self):
@@ -479,6 +482,7 @@ application = webapp.WSGIApplication(
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
+        ("/declaration/(.*)", AddNewDeclarationHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth', AuthorizationStatusHandler),
