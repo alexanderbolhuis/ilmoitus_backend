@@ -140,6 +140,21 @@ class DeclarationsDataCreator():
         return open_declaration
 
     @staticmethod
+    def create_valid_locked_declaration(employee, supervisor):
+        employee_key = employee.key
+        supervisor_key = supervisor.key
+
+        employee.supervisor = supervisor_key
+
+        locked_declaration = ilmoitus_model.Declaration()
+        locked_declaration.class_name = "locked_declaration"
+        locked_declaration.created_by = employee_key
+        locked_declaration.assigned_to.append(supervisor_key)
+        locked_declaration.comment = "Thanks for taking care of this for me!"
+
+        locked_declaration.put()
+        return locked_declaration
+
     def create_valid_human_resources_approved_declaration(employee, supervisor):
         employee_key = employee.key
 
@@ -150,6 +165,7 @@ class DeclarationsDataCreator():
         open_declaration.assigned_to = [supervisor.key]
         open_declaration.locked_at = datetime.now()
         open_declaration.comment = "Thanks for taking care of this for me!"
+
         open_declaration.supervisor_approved_by = supervisor.key
         open_declaration.supervisor_approved_at = datetime.now()
         open_declaration.sent_to_human_resources_at = datetime.now()
@@ -171,6 +187,7 @@ class DeclarationsDataCreator():
         open_declaration.assigned_to = [supervisor.key]
         open_declaration.locked_at = datetime.now()
         open_declaration.comment = "Thanks for taking care of this for me!"
+
         open_declaration.supervisor_approved_by = supervisor.key
         open_declaration.supervisor_approved_at = datetime.now()
         open_declaration.sent_to_human_resources_at = datetime.now()
