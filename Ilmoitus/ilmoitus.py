@@ -84,8 +84,9 @@ class BaseRequestHandler(webapp.RequestHandler):
         self.response.write(self.request.body)
         try:
             self.response.set_status(exception.code)
-        except:
-            print exception
+        except AttributeError:
+            #The caught exception was not a HTTPException; we don't know how to handle this so just raise it again
+            raise exception
 
 
 class DefaultHandler(BaseRequestHandler):
@@ -275,7 +276,6 @@ class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
                                            " of de ingelogde persoon heeft niet de rechten van een"
                                            " leidinggevende binnen de applicatie.",
                                 "person_value key in get_current_person was None")
-
         declaration_data = None
         try:
             declaration_data = json.loads(self.request.body)
