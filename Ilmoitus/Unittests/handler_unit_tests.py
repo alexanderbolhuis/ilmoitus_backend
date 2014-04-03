@@ -3,6 +3,7 @@ import sys
 sys.path.append("../")
 import random
 import json
+import datetime
 import ilmoitus as main_application
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
 from Base.base_test_methods import BaseTestClass
@@ -477,3 +478,62 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
         self.assertEqual(response_data[0]["assigned_to"][0], logged_in_person.key.integer_id())
         self.assertEqual(response_data[1]["assigned_to"][0], logged_in_person.key.integer_id())
 
+
+class SetOpenToLockedDeclarationTest(BaseAuthorizationHandler):
+    def test_negative_not_logged_in(self):
+        user_is_logged_in = False
+        user_is_admin = '0'
+        path = "/declaration/lock"
+        self.setup_server_with_user([(path, main_application.SetOpenToLockedDeclaration)],
+                                    user_is_logged_in, user_is_admin)
+
+        self.negative_test_stub_handler(path, "put_json", 401)
+
+    def test_negative_no_permission(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/lock"
+        setup_data = self.setup_server_with_user([(path, main_application.SetOpenToLockedDeclaration)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        self.negative_test_stub_handler(path, "put_json", 401)
+
+    def test_positive(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/lock"
+        setup_data = self.setup_server_with_user([(path, main_application.SetOpenToLockedDeclaration)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+        logged_in_person.put()
+
+        person = PersonDataCreator.create_valid_employee_data()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        declaration1 = DeclarationsDataCreator.create_valid_open_declaration(person, supervisor)
+        declaration2 = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person, supervisor)
+        declaration3 = DeclarationsDataCreator.create_valid_open_declaration(person, supervisor)
+
+        #test locking a declaration
+        post_data = dict(id=declaration1.key.integer_id())
+        self.positive_test_stub_handler(path, "put_json", data_dict=post_data)
+        self.assertEqual(declaration1.class_name, "locked_declaration")
+        #seconds & minutes could easily change between insertion of the data and execution of this test.
+        # Because of this, only check date and hour.
+        self.assertEqual(declaration1.locked_at.strftime('%Y-%m-%d %H'),
+                         datetime.datetime.now().strftime('%Y-%m-%d %H'))
+        self.assertEqual(declaration2.class_name, "supervisor_approved_declaration")
+        self.assertEqual(declaration3.class_name, "open_declaration")
+
+        #test approving an other declaration. (should not be possible)
+        post_data = dict(id=declaration2.key.integer_id())
+        self.negative_test_stub_handler(path, "put_json", 500, data_dict=post_data)
+        self.assertEqual(declaration1.class_name, "locked_declaration")
+        self.assertEqual(declaration2.class_name, "supervisor_approved_declaration")
+        self.assertEqual(declaration3.class_name, "open_declaration")
