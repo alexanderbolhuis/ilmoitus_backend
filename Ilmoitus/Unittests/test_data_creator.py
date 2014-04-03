@@ -88,7 +88,7 @@ class DeclarationsDataCreator():
             line.put()
 
             lines.append(line)
-            
+
         return lines
 
     @staticmethod
@@ -165,7 +165,8 @@ class DeclarationsDataCreator():
         open_declaration.assigned_to = [supervisor.key]
         open_declaration.locked_at = datetime.now()
         open_declaration.comment = "Thanks for taking care of this for me!"
-        open_declaration.approved_by = supervisor.key
+
+        open_declaration.supervisor_approved_by = supervisor.key
         open_declaration.supervisor_approved_at = datetime.now()
         open_declaration.sent_to_human_resources_at = datetime.now()
         open_declaration.supervisor_comment = "No problem!"
@@ -186,7 +187,8 @@ class DeclarationsDataCreator():
         open_declaration.assigned_to = [supervisor.key]
         open_declaration.locked_at = datetime.now()
         open_declaration.comment = "Thanks for taking care of this for me!"
-        open_declaration.approved_by = supervisor.key
+
+        open_declaration.supervisor_approved_by = supervisor.key
         open_declaration.supervisor_approved_at = datetime.now()
         open_declaration.sent_to_human_resources_at = datetime.now()
         open_declaration.supervisor_comment = "No problem!"
