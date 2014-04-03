@@ -511,9 +511,12 @@ class SetLockedToSupervisorDeclinedDeclarationHandlerTest(BaseAuthorizationHandl
         user_is_logged_in = True
         user_is_admin = '1'
         path = "/decline_declaration/supervisor"
-        self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
+        setup_data = self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
                                     user_is_logged_in,
                                     user_is_admin)
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+        logged_in_person.put()
         locked_declaration_data = None
         self.negative_test_stub_handler(path, "put", 400, data_dict=locked_declaration_data)
 
@@ -521,9 +524,12 @@ class SetLockedToSupervisorDeclinedDeclarationHandlerTest(BaseAuthorizationHandl
         user_is_logged_in = True
         user_is_admin = '1'
         path = "/approve_declaration/supervisor"
-        self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
+        setup_data = self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
                                     user_is_logged_in,
                                     user_is_admin)
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+        logged_in_person.put()
         locked_declaration_data = {}
         self.negative_test_stub_handler(path, "put", 400, data_dict=json.dumps(locked_declaration_data))
 
@@ -531,9 +537,12 @@ class SetLockedToSupervisorDeclinedDeclarationHandlerTest(BaseAuthorizationHandl
         user_is_logged_in = True
         user_is_admin = '1'
         path = "/approve_declaration/supervisor"
-        self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
+        setup_data = self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
                                     user_is_logged_in,
                                     user_is_admin)
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+        logged_in_person.put()
         locked_declaration_data = "Some string that will pass the None and length check, " \
                                   "but should fail on the valid json check"
         self.negative_test_stub_handler(path, "put", 400, data_dict=json.dumps(locked_declaration_data))
@@ -542,9 +551,12 @@ class SetLockedToSupervisorDeclinedDeclarationHandlerTest(BaseAuthorizationHandl
         user_is_logged_in = True
         user_is_admin = '1'
         path = "/approve_declaration/supervisor"
-        self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
+        setup_data = self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
                                     user_is_logged_in,
                                     user_is_admin)
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+        logged_in_person.put()
         employee = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
         locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
@@ -560,9 +572,12 @@ class SetLockedToSupervisorDeclinedDeclarationHandlerTest(BaseAuthorizationHandl
         user_is_logged_in = True
         user_is_admin = '1'
         path = "/approve_declaration/supervisor"
-        self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
+        setup_data = self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
                                     user_is_logged_in,
                                     user_is_admin)
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+        logged_in_person.put()
         employee = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
         locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
@@ -578,9 +593,12 @@ class SetLockedToSupervisorDeclinedDeclarationHandlerTest(BaseAuthorizationHandl
         user_is_logged_in = True
         user_is_admin = '1'
         path = "/approve_declaration/supervisor"
-        self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
+        setup_data = self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
                                     user_is_logged_in,
                                     user_is_admin)
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+        logged_in_person.put()
         employee = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
         locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
@@ -596,9 +614,12 @@ class SetLockedToSupervisorDeclinedDeclarationHandlerTest(BaseAuthorizationHandl
         user_is_logged_in = True
         user_is_admin = '1'
         path = "/approve_declaration/supervisor"
-        self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
+        setup_data = self.setup_server_with_user([(path, main_application.SetLockedToSupervisorDeclinedDeclarationHandler)],
                                     user_is_logged_in,
                                     user_is_admin)
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+        logged_in_person.put()
         employee = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
 
