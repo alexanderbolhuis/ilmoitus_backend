@@ -3,7 +3,7 @@ import webapp2 as webapp
 import response_module
 import ilmoitus_model
 import json
-import data_bootstrapper
+import datetime
 import logging
 import data_bootstrapper
 from google.appengine.api import users
@@ -261,7 +261,21 @@ class UserSettingsHandler(BaseRequestHandler):
 
 class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
     def put(self):
-        #TODO: Check user rights!!
+        #Only supervisors can perform the actions in this handler: check for that first
+        current_person_data = get_current_person("Supervisor")
+        if "user_is_logged_in" not in current_person_data.keys() or \
+                not current_person_data["user_is_logged_in"]:  # if logged in is false
+            give_error_response(self, 401,
+                                "Er is niemand ingelogd.",
+                                "get_current_person returned a False value for user_is_logged_in")
+
+        current_person_object = current_person_data["person_value"]
+        if current_person_object is None:
+            give_error_response(self, 401, "De ingelogd persoon in onbekend binnen de applicatie"
+                                           " of de ingelogde persoon heeft niet de rechten van een"
+                                           " leidinggevende binnen de applicatie.",
+                                "person_value key in get_current_person was None")
+
         declaration_data = None
         try:
             declaration_data = json.loads(self.request.body)
@@ -284,14 +298,25 @@ class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
                                 "De opgegeven data bevat een ongeldige identificatie voor een declaratie.",
                                 "Failed to parse the value of the ID key in the body to a long.")
 
-        #TODO: check if last entry in declaration assigned_to is equals to current logged in user
         declaration_object = ilmoitus_model.Declaration.get_by_id(declaration_id)
         try:
+            if current_person_object.key not in declaration_object.assigned_to:
+                give_error_response(self, 401, "Deze declaratie is niet aan de leidinggevende toegewezen die op"
+                                               " dit moment is ingelogd", "current_person_object's id was not in the"
+                                                                          " declaration_object's asigned_to list.")
             if declaration_object.class_name != "locked_declaration":
                 give_error_response(self, 422,
                                     "De opgegeven declaratie is niet gesloten en kan dus niet goedgekeurd worden.",
                                     "Class name of fetched object was not equal locked_declaration")
+
             declaration_object.class_name = "supervisor_approved_declaration"
+            declaration_object.submitted_to_human_resources_by = current_person_object.key
+            declaration_object.supervisor_approved_at = datetime.datetime.now()
+            if "supervisor_comment" in declaration_data.keys():
+                #No need to check if the string parsing could fail here; json will always have data that
+                #can be parsed to a string
+                declaration_object.supervisor_comment = str(declaration_data["supervisor_comment"])
+
         except AttributeError:
             give_error_response(self, 404,
                                 "De opgegeven identificatie is onbekend en behoort tot geen enkele declaratie.",
