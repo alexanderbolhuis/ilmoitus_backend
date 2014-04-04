@@ -323,7 +323,7 @@ class ApproveByHumanResources(BaseRequestHandler):
         person_data = get_current_person("human_resources")
         current_user = person_data["person_value"]
 
-        if current_user is not None and current_user.class_name == 'human_resources':
+        if current_user is not None:
             if self.request.body is not None:
                 data = None
                 try:
@@ -353,12 +353,13 @@ class ApproveByHumanResources(BaseRequestHandler):
                                     "Request body is None.")
         else:
             #user does not have the appropriate permissions or isn't logged in at all.
+            give_error_response(self, 401, "Geen permissie om een declaratie goed te keuren!",
+                                    "current_user is None or not from human_resources")
             self.abort(401)
 
 application = webapp.WSGIApplication(
     [
         ('/declaration/approve_by_hr', ApproveByHumanResources),
-
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
         ('/user/settings/', UserSettingsHandler),
