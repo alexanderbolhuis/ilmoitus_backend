@@ -4,6 +4,7 @@ import sys
 sys.path.append("../")
 import random
 import json
+import datetime
 import ilmoitus as main_application
 import datetime
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
@@ -654,7 +655,6 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
 
         response = self.positive_test_stub_handler(path, "get")
         response_data = json.loads(response.body)
-        print response_data
 
         self.assertEqual(response_data[0]["comment"], "Thanks for taking care of this for me!")
         self.assertEqual(response_data[0]["class_name"], "supervisor_approved_declaration")
@@ -756,6 +756,126 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
         self.assertEqual(response_data[0]["assigned_to"][0], logged_in_person.key.integer_id())
         self.assertEqual(response_data[1]["assigned_to"][0], logged_in_person.key.integer_id())
 
+        self.positive_test_stub_handler(path, "get")
+
+class ApproveDeclarationByHumanResourcesTest(BaseAuthorizationHandler):
+    def test_negative_approve_not_logged_in(self):
+        user_is_logged_in = False
+        user_is_admin = '0'
+        path = "/declaration/approve_by_hr"
+        self.setup_server_with_user([(path, main_application.ApproveByHumanResources)],
+                                    user_is_logged_in, user_is_admin)
+
+        self.negative_test_stub_handler(path, "put_json", 401)
+
+    def test_negative_approve_no_permission(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/approve_by_hr"
+        setup_data = self.setup_server_with_user([(path, main_application.ApproveByHumanResources)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        self.negative_test_stub_handler(path, "put_json", 401)
+
+    def test_positive_approve(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/approve_by_hr"
+        setup_data = self.setup_server_with_user([(path, main_application.ApproveByHumanResources)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "human_resources"
+        logged_in_person.put()
+
+        person = PersonDataCreator.create_valid_employee_data()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        declaration1 = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person, supervisor)
+        declaration2 = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person, supervisor)
+        declaration3 = DeclarationsDataCreator.create_valid_open_declaration(person, supervisor)
+
+        #test approving a supervisor approved declaration
+        post_data = dict(id=declaration1.key.integer_id(), pay_date="2014-04-02T00:00:00.000Z")
+        self.positive_test_stub_handler(path, "put_json", data_dict=post_data)
+        self.assertEqual(declaration1.class_name, "human_resources_approved_declaration")
+        self.assertEqual(declaration1.human_resources_approved_by, logged_in_person.key)
+        self.assertEqual(declaration1.will_be_payed_out_on.isoformat(), "2014-04-02")
+        #seconds & minutes could easily change between insertion of the data and execution of this test.
+        # Because of this, only check date and hour.
+        self.assertEqual(declaration1.human_resources_approved_at.strftime('%Y-%m-%d %H'),
+                         datetime.datetime.now().strftime('%Y-%m-%d %H'))
+        self.assertEqual(declaration2.class_name, "supervisor_approved_declaration")
+        self.assertEqual(declaration3.class_name, "open_declaration")
+
+        #test approving an open declaration. (should not be possible)
+        post_data = dict(id=declaration3.key.integer_id(), pay_date="2014-04-02T00:00:00.000Z")
+        self.negative_test_stub_handler(path, "put_json", 500, data_dict=post_data)
+        self.assertEqual(declaration1.class_name, "human_resources_approved_declaration")
+        self.assertEqual(declaration2.class_name, "supervisor_approved_declaration")
+        self.assertEqual(declaration3.class_name, "open_declaration")
+
+
+class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationHandler):
+    def test_positive_decline(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = '/declaration/declined_by_hr'
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "human_resources"
+        logged_in_person.put()
+
+        person_supervisor = PersonDataCreator.create_valid_supervisor()
+        person_employee = PersonDataCreator.create_valid_employee_data()
+
+        declaration_one = DeclarationsDataCreator.create_valid_open_declaration(person_employee, person_supervisor)
+        declaration_two = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person_employee, person_supervisor)
+        declaration_three = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person_employee, person_supervisor)
+
+        data_one = dict(declaration_id = declaration_one.key.integer_id())
+        self.negative_test_stub_handler(path, 'put_json', 500, data_one)
+
+        data_two = dict(declaration_id = declaration_two.key.integer_id())
+        self.positive_test_stub_handler(path, 'put_json', data_dict=data_two)
+        self.assertEqual(declaration_two.class_name, 'human_resources_declined_declaration')
+        self.assertEqual(declaration_two.human_resources_declined_by, logged_in_person.key)
+        self.assertNotEqual(declaration_two.human_resources_declined_at, None)
+        self.assertEqual(declaration_three.class_name, 'supervisor_approved_declaration')
+
+        self.negative_test_stub_handler(path, 'put_json', 500, data_dict=None)
+
+    def test_negative_decline_no_permission(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = '/declaration/declined_by_hr'
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        self.negative_test_stub_handler(path, "put_json", 401)
+
+    def test_negative_decline_not_logged_in(self):
+        user_is_logged_in = False
+        user_is_admin = '0'
+        path = '/declaration/declined_by_hr'
+
+        self.setup_server_with_user(
+            [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
 
 class SpecificDeclarationTest(BaseAuthorizationHandler):
 
