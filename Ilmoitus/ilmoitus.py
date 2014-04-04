@@ -406,12 +406,12 @@ class SpecificDeclarationHandler(BaseRequestHandler):
 
         elif employee_rights == 'supervisor' and declaration_data.class_name == 'open_declaration':
 
-            if declaration_data.assigned_to == key:
+            if declaration_data.assigned_to[0] == key:
                 flag = True
 
-        elif employee_rights == 'human_resources' and declaration_data.class_name == 'approved_declaration':
+        elif employee_rights == 'human_resources' and declaration_data.class_name == 'supervisor_approved_declaration':
 
-            if declaration_data.submitted_to_hr_by is not None:
+            if declaration_data.submitted_to_human_resources_by is not None:
                 flag = True
         else:
             flag = False

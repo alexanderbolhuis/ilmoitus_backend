@@ -809,7 +809,7 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         response_data = json.loads(response.body)
 
         # check for VALID declaration by logged_in_person
-        self.assertEquals(response_data["assigned_to"], logged_in_person.key.integer_id())
+        self.assertEquals(response_data["assigned_to"][0], logged_in_person.key.integer_id())
         self.assertEquals(response_data["id"], declaration_valid.key.integer_id())
         self.assertEquals(response_data["class_name"], "open_declaration")
 
@@ -827,7 +827,7 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         employee = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
 
-        declaration_valid = DeclarationsDataCreator.create_valid_approved_declaration(employee, supervisor)
+        declaration_valid = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(employee, supervisor)
 
         path = "/declaration/" + str(declaration_valid.key.integer_id())
 
@@ -835,9 +835,9 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         response_data = json.loads(response.body)
 
         # check for VALID declaration by logged_in_person
-        self.assertEquals(response_data["submitted_to_hr_by"], supervisor.key.integer_id())
+        self.assertEquals(response_data["submitted_to_human_resources_by"], supervisor.key.integer_id())
         self.assertEquals(response_data["id"], declaration_valid.key.integer_id())
-        self.assertEquals(response_data["class_name"], "approved_declaration")
+        self.assertEquals(response_data["class_name"], "supervisor_approved_declaration")
 
     def test_negative_get_employee_declaration(self):
         user_is_logged_in = True
@@ -882,7 +882,13 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         self.negative_test_stub_handler(path, "get", 401)
 
         # cheaks if supervisor can see an already approved declaration
-        approved_declaration = DeclarationsDataCreator.create_valid_approved_declaration(employee, logged_in_person)
+        approved_declaration = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(employee,
+                                                                                                    logged_in_person)
+        path = "/declaration/" + str(approved_declaration.key.integer_id())
+        self.negative_test_stub_handler(path, "get", 401)
+
+        approved_declaration = \
+            DeclarationsDataCreator.create_valid_supervisor_approved_declaration(employee, logged_in_person)
         path = "/declaration/" + str(approved_declaration.key.integer_id())
         self.negative_test_stub_handler(path, "get", 401)
 
