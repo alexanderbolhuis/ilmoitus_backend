@@ -9,7 +9,7 @@ handlers:
   script: google.appengine.ext.appstats.ui.app
   login: admin
 
-- ur: /static
+- url: /static
   static_dir: static
   login: required
 
