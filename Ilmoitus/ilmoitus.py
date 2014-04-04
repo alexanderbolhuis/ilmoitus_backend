@@ -400,7 +400,7 @@ application = webapp.WSGIApplication(
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
-        ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
+        ('/auth', AuthorizationStatusHandler),
         ('/clear', data_bootstrapper.ClearHandler),
         ('/fill', data_bootstrapper.FillHandler),
         ('/create', data_bootstrapper.CreateDataHandler),

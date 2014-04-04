@@ -22,18 +22,6 @@ class DataBootsTrapper(webapp2.RequestHandler):
         department_human_resources.name = "P&O"
         department_human_resources.put()
 
-        #APPLICATION ADMINS
-        #todo: add everyone else here
-        admin_one = ilmoitus_model.Person()
-        admin_one.class_name = "supervisor"
-        admin_one.first_name = "Vincent"
-        admin_one.last_name = "de Swart"
-        admin_one.email = "developers.42IN11EWa@gmail.com"  # DO NOT CHANGE!!
-        admin_one.employee_number = 0
-        admin_one.department = department_it.key
-        admin_one.supervisor = None
-        admin_one.put()
-
         #SUPERVISORS
         supervisor_one = ilmoitus_model.Person()
         supervisor_one.class_name = "supervisor"
@@ -70,7 +58,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         employee_one.class_name = "employee"
         employee_one.first_name = "Piet"
         employee_one.last_name = "Hein"
-        employee_one.email = "piet_hein@gmail.com"
+        employee_one.email = "developers.42IN11EWa@gmail.com"
         employee_one.employee_number = 2
         employee_one.department = department_it.key
         employee_one.supervisor = supervisor_two.key
