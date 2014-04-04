@@ -395,32 +395,37 @@ class SpecificDeclarationHandler(BaseRequestHandler):
         key = current_user.key
         result = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
 
-        declaration_data = result
+        flag_none_exists = True
+        if result is not None:
+            flag_none_exists = False
+            declaration_data = result
 
-        flag = False
+            flag_auth = False
 
-        if employee_rights == 'employee':
+            if employee_rights == 'employee':
+                if declaration_data.created_by == key:
+                    flag_auth = True
 
-            if declaration_data.created_by == key:
-                flag = True
+            elif employee_rights == 'supervisor' and declaration_data.class_name == 'open_declaration':
+                if declaration_data.assigned_to[0] == key:
+                    flag_auth = True
 
-        elif employee_rights == 'supervisor' and declaration_data.class_name == 'open_declaration':
+            elif employee_rights == 'human_resources' and declaration_data.class_name == \
+                                    'supervisor_approved_declaration':
+                if declaration_data.submitted_to_human_resources_by is not None:
+                    flag_auth = True
+            else:
+                flag_auth = False
 
-            if declaration_data.assigned_to[0] == key:
-                flag = True
-
-        elif employee_rights == 'human_resources' and declaration_data.class_name == 'supervisor_approved_declaration':
-
-            if declaration_data.submitted_to_human_resources_by is not None:
-                flag = True
-        else:
-            flag = False
-
-        if flag is True:
-            response_module.give_response(self, declaration_data.get_object_json_data())
+        if flag_none_exists is False:
+            if flag_auth is True:
+                response_module.give_response(self, declaration_data.get_object_json_data())
+            else:
+                #TODO: error messages:
+                self.abort(401)
         else:
             #TODO: error messages:
-            self.abort(401)
+            self.abort(404)
 
 application = webapp.WSGIApplication(
     [

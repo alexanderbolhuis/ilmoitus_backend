@@ -909,3 +909,16 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         open_declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
         path = "/declaration/" + str(open_declaration.key.integer_id())
         self.negative_test_stub_handler(path, "get", 401)
+
+    def test_negative_declaration_not_found(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "human_resources"
+        logged_in_person.put()
+        path = "/declaration/12345678765432"
+        self.negative_test_stub_handler(path, "get", 404)
