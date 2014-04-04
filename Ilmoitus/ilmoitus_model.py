@@ -25,11 +25,11 @@ class Person(ndb.Model):
 
     all_custom_properties = ["first_name", "last_name", "email", "employee_number", "department",
                              "supervisor"]
-    permissions = {"user": ["first_name", "last_name", "email"],
+    permissions = {"user": ["first_name", "last_name", "email", "class_name"],
                    "employee": ["first_name", "last_name", "email", "employee_number", "department",
-                                "supervisor"],
+                                "supervisor", "class_name"],
                    "supervisor": ["first_name", "last_name", "email", "employee_number", "department",
-                                  "supervisor"],
+                                  "supervisor", "class_name"],
                    "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
                                        "supervisor"]}
 
@@ -97,13 +97,15 @@ class Declaration(ndb.Model):
     # this property is used to check the permissions against
     all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "supervisor_comment",
                              "human_resources_comment", "declined_by", "submitted_to_human_resources_by", "locked_at",
+
                              "sent_to_human_resources_at", "supervisor_declined_at", "supervisor_approved_at",
-                             "human_resources_approved_at", "human_resources_declined_at","will_be_payed_out_on",
+                             "human_resources_approved_at", "human_resources_declined_at", "will_be_payed_out_on",
                              "human_resources_approved_by"]
 
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
 
                    "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "locked_at",
+
                                           "supervisor_comment"],
 
                    "supervisor_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
@@ -125,7 +127,7 @@ class Declaration(ndb.Model):
                    "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                             "locked_at", "submitted_to_human_resources_by",
                                                             "supervisor_approved_at", "supervisor_approved_by",
-                                                            "sent_to_human_resources_at","supervisor_comment",
+                                                            "sent_to_human_resources_at", "supervisor_comment",
                                                             "will_be_payed_out_on", "human_resources_comment",
                                                             "human_resources_approved_by",
                                                             "human_resources_approved_at"]}
@@ -140,7 +142,7 @@ class Declaration(ndb.Model):
         return json.dumps(self.get_object_as_data_dict())
 
     def readable_state(self):
-        return self.readable_states[self.class_name];
+        return self.readable_states[self.class_name]
 
     def __setattr__(self, key, value):
         """
@@ -201,7 +203,8 @@ class DeclarationType(ndb.Model):
     sub_types = ndb.KeyProperty(kind=DeclarationSubType, repeated=True)
 
     def get_object_as_data_dict(self):
-        return {'name': self.name, 'sub_types': json.dumps(map(lambda key: key.integer_id(), sub_types))}
+        return {'name': self.name, 'sub_types': json.dumps(map(lambda key: key.integer_id(), self.sub_types))}
+
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -230,8 +233,9 @@ class Attachment(ndb.Model):
 
     def get_object_as_data_dict(self):
         return {'id': self.key.integer_id(), 'declaration': self.declaration.integer_id(),
-                'blob': blob}
-            #TODO make it work, this can't be tested yet because we can't simulate adding something to the blobstore
+                'blob': self.blob}
+        #TODO make it work, this can't be tested yet because we can't simulate adding something to the blobstore
+
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -246,7 +250,7 @@ def property_not_none_key_value_pair_with_permissions(class_reference):
                 value = getattr(class_reference, prop)
                 if value is not None:
                     try:
-                        if(isinstance(value, collections.MutableSequence)):
+                        if (isinstance(value, collections.MutableSequence)):
                             temp = list()
                             for key in value:
                                 temp.append(key.integer_id())
