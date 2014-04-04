@@ -785,7 +785,6 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         # check for VALID declaration by logged_in_person
         self.assertEqual(response_data["created_by"], logged_in_person.key.integer_id())
         self.assertEqual(response_data["id"], declaration_valid.key.integer_id())
-        #self.assertEqual(response_data[""])
 
     def test_positive_get_supervisor_declaration(self):
         user_is_logged_in = True
@@ -856,7 +855,7 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         employee = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
 
-        # checks if other user can het the declaration
+        # checks if other user can get the declaration
         declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
         path = "/declaration/" + str(declaration.key.integer_id())
         self.negative_test_stub_handler(path, "get", 401)
@@ -881,7 +880,7 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         path = "/declaration/" + str(open_declaration.key.integer_id())
         self.negative_test_stub_handler(path, "get", 401)
 
-        # cheaks if supervisor can see an already approved declaration
+        # checks if supervisor can see an already approved declaration
         approved_declaration = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(employee,
                                                                                                     logged_in_person)
         path = "/declaration/" + str(approved_declaration.key.integer_id())
