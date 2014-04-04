@@ -4,6 +4,7 @@ import response_module
 import ilmoitus_model
 import json
 import datetime
+import dateutil.parser
 import data_bootstrapper
 import logging
 import data_bootstrapper
@@ -384,6 +385,46 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
             self.abort(404)
 
 
+class ApproveByHumanResources(BaseRequestHandler):
+    def put(self):
+        person_data = get_current_person("human_resources")
+        current_user = person_data["person_value"]
+
+        if current_user is not None:
+            if self.request.body is not None:
+                data = None
+                try:
+                    data = json.loads(self.request.body)
+                except ValueError:
+                    give_error_response(self, 500, "Er is ongeldige data verstuurd; kan het verzoek niet afhandelen",
+                                        "Invalid JSON data; invalid format.", more_info=str(self.request.body))
+
+                declaration_id = data["id"]
+                pay_date = dateutil.parser.parse(data["pay_date"])
+                today_date = datetime.datetime.now()
+
+                declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
+
+                if declaration.class_name == "supervisor_approved_declaration":
+                    declaration.class_name = "human_resources_approved_declaration"
+                    declaration.human_resources_approved_at = today_date
+                    declaration.will_be_payed_out_on = pay_date
+                    declaration.human_resources_approved_by = current_user.key
+                    declaration.put()
+                    response_module.give_response(self, declaration.get_object_json_data())
+                else:
+                    give_error_response(self, 500, "Kan geen declaratie goedkeuren die niet eerst door een leidinggevende is goedgekeurd.",
+                                        "Can only approve a supervisor_approved_declaration.")
+            else:
+                give_error_response(self, 500, "Er is geen data opgegeven.",
+                                    "Request body is None.")
+        else:
+            #user does not have the appropriate permissions or isn't logged in at all.
+            give_error_response(self, 401, "Geen permissie om een declaratie goed te keuren!",
+                                    "current_user is None or not from human_resources")
+            self.abort(401)
+
+
 class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
     def put(self):
         person_data = get_current_person("human_resources")
@@ -423,6 +464,7 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
 
 application = webapp.WSGIApplication(
     [
+        ('/declaration/approve_by_hr', ApproveByHumanResources),
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
         ('/user/settings/', UserSettingsHandler),
