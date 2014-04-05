@@ -77,14 +77,15 @@ class DeclarationsDataCreator():
     @staticmethod
     def create_valid_declaration_lines(declaration, amount_of_lines):
         declaration_type = DeclarationsDataCreator.create_valid_declaration_type()
-        subtype = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(declaration_type)
+        subtype = declaration_type.sub_types[0]
 
         lines = []
 
         for i in range(0, amount_of_lines):
             line = ilmoitus_model.DeclarationLine()
-            line.declaration_sub_type = subtype.key
-            line.cost = decimal.Decimal(random.randrange(10000))/100
+            line.declaration_sub_type = subtype
+            line.receipt_date = datetime.now()
+            line.cost = random.randint(0, 100)  # TODO make float
             line.put()
 
             lines.append(line)

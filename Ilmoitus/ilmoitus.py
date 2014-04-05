@@ -8,6 +8,7 @@ import dateutil.parser
 import data_bootstrapper
 import logging
 import data_bootstrapper
+import dateutil.parser
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from error_response_module import give_error_response
@@ -386,7 +387,121 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
 
 class AddNewDeclarationHandler(BaseRequestHandler):
     def post(self):
-        pass
+        # Check if logged in
+        current_person_data = get_current_person("employee")
+        if "user_is_logged_in" not in current_person_data.keys() or \
+                not current_person_data["user_is_logged_in"]:
+            give_error_response(self, 401,
+                                "Er is niemand ingelogd.",
+                                "get_current_person returned a False value for user_is_logged_in")
+        # Check if body is set
+        post_data = None
+        try:
+            post_data = json.loads(self.request.body)
+        except ValueError:
+            if self.request.body is None or len(self.request.body) <= 0:
+                give_error_response(self, 400, "Er is geen declaratie opgegeven om aan te maken.",
+                                    "Request body was None.")
+
+        if post_data is None:
+            give_error_response(self, 400, "Er is geen declaratie opgegeven om aan te maken.",
+                                "Request.body did not contain valid json data")
+
+        # Check if body contains declaration data
+        declaration_data = None
+        try:
+            declaration_data = post_data["declaration"]
+        except ValueError:
+            give_error_response(self, 400, "Er is geen declaratie opgegeven om aan te maken.",
+                                    "Request body was None.")
+
+        # Check if body contains declarationlines
+        declarationlines_data = None
+        try:
+            declarationlines_data = post_data["lines"]
+        except ValueError:
+            give_error_response(self, 400, "Er zijn geen declaratieitems opgegeven om aan te maken.",
+                                    "Request body was None.")
+
+        # TODO get attachments from body
+
+        # Check if declaration has owner and assigned to values (mandatory)
+        try:
+            created_by = declaration_data["created_by"]
+            assigned_to = declaration_data["assigned_to"][0]
+        except KeyError:
+            give_error_response(self, 400, "De opgegeven data mist waardes voor een declaratie.",
+                                "The body misses keys.")
+        except Exception:
+            give_error_response(self, 400, "De opgegeven data mist waardes voor een declaratie.",
+                                "The body misses keys.")
+
+        # Check if assigned_to is a valid user
+        try:
+            assigned_to = ilmoitus_model.Person.get_by_id(int(assigned_to))
+        except Exception:
+            give_error_response(self, 400, "De supervisor is niet bekent in het systeem.",
+                                "The supervisor is unknown.")
+
+        # Check if assigned_to is a supervisor
+        if assigned_to.class_name != "supervisor":
+            give_error_response(self, 400, "De supervisor is niet bekent in het systeem.",
+                                "The supervisor is unknown.")
+
+        # Check if created_by is valid user
+        try:
+            created_by = ilmoitus_model.Person.get_by_id(int(created_by))
+        except Exception:
+            give_error_response(self, 400, "De owner is niet bekent in het systeem.",
+                                "The owner is unknown.")
+
+        # Check if each declarationline has a receipt_date, a cost, and a declaration_sub_type
+        try:
+            for line in declarationlines_data:
+                line["receipt_date"]
+                line["cost"]
+                line["declaration_sub_type"]
+        except Exception:
+            give_error_response(self, 400, "De opgegeven data mist waardes voor een declaratieline.",
+                                "The body misses keys.")
+
+        # Check if declaration subtypes exist
+        for line in declarationlines_data:
+            sub_type = ilmoitus_model.DeclarationSubType.get_by_id(int(line["declaration_sub_type"]))
+            if sub_type is None:
+               give_error_response(self, 400, "De declaratie_sub_type bestaat niet.",
+                                "The declaration_sub_type is unknown.")
+
+        # TODO check attachments keys
+
+        # Post declaration
+        declaration = ilmoitus_model.Declaration()
+        declaration.class_name = "open_declaration"
+        declaration.assigned_to = [assigned_to.key]
+        declaration.created_by = created_by.key
+        declaration.comment = declaration_data["comment"]
+        declaration.put()
+
+        posted_lines = []
+        # Post declarationlines
+        for line in declarationlines_data:
+            newline = ilmoitus_model.DeclarationLine()
+            newline.declaration = declaration.key
+            newline.cost = int(line["cost"])
+            newline.receipt_date = dateutil.parser.parse(line["receipt_date"])
+            newline.declaration_sub_type = ilmoitus_model.DeclarationSubType.get_by_id(int(line["declaration_sub_type"])).key
+            newline.put()
+            posted_lines.append(newline)
+
+        # TODO Post attachments
+
+        lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), posted_lines)
+        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
+                                    'lines': lines,
+                                    'attachment': ""})
+
+        response_module.give_response(self, combined_dict)
+
 
 class ApproveByHumanResources(BaseRequestHandler):
     def put(self):
@@ -482,7 +597,7 @@ application = webapp.WSGIApplication(
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
-        ("/declaration/(.*)", AddNewDeclarationHandler),
+        ("/declaration", AddNewDeclarationHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
         ('/auth', AuthorizationStatusHandler),
