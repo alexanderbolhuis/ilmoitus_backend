@@ -891,6 +891,8 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
         declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 1)
 
+        # TODO create attachments
+
         lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
 
         combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
@@ -912,7 +914,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         response_declarationlines = response_data["lines"]
         response_attachments = response_data["attachment"]
 
-        # add attachments
+        # TODO add attachments
         try:
             self.assertIsNotNone(response_declaration["id"])
             self.assertIsNotNone(response_declaration["created_by"])
@@ -953,6 +955,8 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
         declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 3)
 
+        # TODO create attachments
+
         lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
 
         combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
@@ -973,7 +977,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         response_declarationlines = response_data["lines"]
         response_attachments = response_data["attachment"]
 
-        # add attachments
+        # TODO add attachments
         try:
             self.assertIsNotNone(response_declaration["id"])
             self.assertIsNotNone(response_declaration["created_by"])
