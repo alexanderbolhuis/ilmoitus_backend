@@ -156,6 +156,7 @@ class DeclarationsDataCreator():
         locked_declaration.put()
         return locked_declaration
 
+    @staticmethod
     def create_valid_human_resources_approved_declaration(employee, supervisor):
         employee_key = employee.key
 
