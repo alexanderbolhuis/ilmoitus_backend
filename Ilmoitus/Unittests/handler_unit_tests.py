@@ -758,6 +758,276 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
 
         self.positive_test_stub_handler(path, "get")
 
+
+class DeclarationTypeHandlerTest(BaseTestClass):
+    def test_positive_get_all_declaration_types(self):
+        path = "/declarationtypes/"
+        setup_data = self.setup_test_server_with_custom_routes(
+            [(path, main_application.AllDeclarationTypesHandler)])
+
+        declaration_type1 = DeclarationsDataCreator.create_valid_declaration_type("Maaltijd/Consumpties/Verblijf",
+                                                                                  False)
+        declaration_type2 = DeclarationsDataCreator.create_valid_declaration_type("Reiskosten", False)
+        declaration_type3 = DeclarationsDataCreator.create_valid_declaration_type("Overig", False)
+
+        #Maaltijd/Consumpties/Verblijf
+        declaration_sub_type1 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Zakelijke lunch/Diner met relaties")
+
+        declaration_sub_type2 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Logies/Verblijfskosten (eventueel incl. maaltijd)")
+
+        declaration_sub_type3 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie")
+
+        declaration_sub_type4 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Logies/Verblijfskosten buitenland")
+
+        declaration_sub_type5 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost(
+            "Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
+
+        declaration_sub_type6 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost(
+            "Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
+
+        #Reiskosten
+        declaration_sub_type7 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Tankpas")
+
+        declaration_sub_type8 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Openbaar vervoer")
+        declaration_sub_type9 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Taxi")
+
+        #Overig
+        declaration_sub_typ10 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost("Overig")
+
+        #Assign all the DeclarationSubTypes to DeclarationTypes
+        declaration_type1.sub_types = [declaration_sub_type1.key, declaration_sub_type2.key, declaration_sub_type3.key,
+                                       declaration_sub_type4.key, declaration_sub_type5.key, declaration_sub_type6.key]
+        declaration_type1.put()
+
+        declaration_type2.sub_types = [declaration_sub_type7.key, declaration_sub_type8.key, declaration_sub_type9.key]
+        declaration_type2.put()
+
+        declaration_type3.sub_types = [declaration_sub_typ10.key]
+        declaration_type3.put()
+
+        response = self.positive_test_stub_handler(path, "get")
+        response_data = json.loads(response.body)
+
+        try:
+            self.assertEqual(response_data[0]['name'], declaration_type1.name)
+            self.assertEqual(response_data[0]['sub_types'], str(map(lambda sub_type: int(sub_type.integer_id()),
+                                                                declaration_type1.sub_types)))
+            self.assertEqual(response_data[1]['name'], declaration_type2.name)
+            self.assertEqual(response_data[1]['sub_types'], str(map(lambda sub_type: int(sub_type.integer_id()),
+                                                                declaration_type2.sub_types)))
+            self.assertEqual(response_data[2]['name'], declaration_type3.name)
+            self.assertEqual(response_data[2]['sub_types'], str(map(lambda sub_type: int(sub_type.integer_id()),
+                                                                declaration_type3.sub_types)))
+        except ValueError as error:
+            self.fail("Test Failed! There is an invalid value in the response data. "
+                      "This usually happens with parsing wrong input values.\n"
+                      "The values expected for each key are:\n"
+                      "{\"name\" : string,\n"
+                      "\"sub_types\" : [int, int, int, ...],\n"
+                      "______________________\n"
+                      "Full error message:\n"
+                      + str(error))
+
+    def test_negative_get_all_declaration_types_none_in_datastore(self):
+        path = "/declarationtypes/"
+        setup_data = self.setup_test_server_with_custom_routes(
+            [(path, main_application.AllDeclarationTypesHandler)])
+
+        response = self.negative_test_stub_handler(path, "get", 404)
+
+
+class DeclarationSubTypeHandlerTest(BaseTestClass):
+    def test_positive_get_all_declaration_sub_types(self):
+        path = "/declarationsubtypes"
+        setup_data = self.setup_test_server_with_custom_routes(
+            [(path, main_application.AllDeclarationSubTypesHandler)])
+
+        declaration_type1 = DeclarationsDataCreator.create_valid_declaration_type("Maaltijd/Consumpties/Verblijf",
+                                                                                  False)
+        declaration_type2 = DeclarationsDataCreator.create_valid_declaration_type("Reiskosten", False)
+        declaration_type3 = DeclarationsDataCreator.create_valid_declaration_type("Overig", False)
+
+        #Maaltijd/Consumpties/Verblijf
+        declaration_sub_type1 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Zakelijke lunch/Diner met relaties")
+
+        declaration_sub_type2 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Logies/Verblijfskosten (eventueel incl. maaltijd)")
+
+        declaration_sub_type3 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie")
+
+        declaration_sub_type4 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Logies/Verblijfskosten buitenland")
+
+        declaration_sub_type5 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost(
+            "Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
+
+        declaration_sub_type6 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost(
+            "Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
+
+        #Reiskosten
+        declaration_sub_type7 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Tankpas")
+
+        declaration_sub_type8 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Openbaar vervoer")
+        declaration_sub_type9 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Taxi")
+
+        #Overig
+        declaration_sub_type10 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost("Overig")
+
+        #Assign all the DeclarationSubTypes to DeclarationTypes
+        declaration_type1.sub_types = [declaration_sub_type1.key, declaration_sub_type2.key, declaration_sub_type3.key,
+                                       declaration_sub_type4.key, declaration_sub_type5.key, declaration_sub_type6.key]
+        declaration_type1.put()
+
+        declaration_type2.sub_types = [declaration_sub_type7.key, declaration_sub_type8.key, declaration_sub_type9.key]
+        declaration_type2.put()
+
+        declaration_type3.sub_types = [declaration_sub_type10.key]
+        declaration_type3.put()
+
+        response = self.positive_test_stub_handler(path, "get")
+        response_data = json.loads(response.body)
+
+        try:
+            sub_types_list = [declaration_sub_type1, declaration_sub_type2, declaration_sub_type3,
+                              declaration_sub_type4, declaration_sub_type5, declaration_sub_type6,
+                              declaration_sub_type7, declaration_sub_type8, declaration_sub_type9,
+                              declaration_sub_type10]
+            i = 0
+            for sub_type in sub_types_list:
+                self.assertEqual(response_data[i]["id"], sub_type.key.integer_id())
+                self.assertEqual(response_data[i]["name"], sub_type.name)
+                self.assertEqual(response_data[i]["max_cost"], sub_type.max_cost)
+                i += 1
+
+        except ValueError as error:
+            self.fail("Test Failed! There is an invalid value in the response data. "
+                      "This usually happens with parsing wrong input values.\n"
+                      "The values expected for each key are:\n"
+                      "{\"id\" : integer,\n"
+                      "\"name\" : string,\n"
+                      "\"max_cost\" : integer}\n"
+                      "______________________\n"
+                      "Full error message:\n"
+                      + str(error))
+
+    def test_positive_get_all_declaration_sub_types_of_decaration_type(self):
+        path = "/declarationsubtypes/(.*)"
+        setup_data = self.setup_test_server_with_custom_routes(
+            [(path, main_application.DeclarationSubTypeHandlerForDeclarationId)])
+
+        declaration_type1 = DeclarationsDataCreator.create_valid_declaration_type("Maaltijd/Consumpties/Verblijf",
+                                                                                  False)
+        declaration_type2 = DeclarationsDataCreator.create_valid_declaration_type("Reiskosten", False)
+        declaration_type3 = DeclarationsDataCreator.create_valid_declaration_type("Overig", False)
+
+        #Maaltijd/Consumpties/Verblijf
+        declaration_sub_type1 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Zakelijke lunch/Diner met relaties")
+
+        declaration_sub_type2 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Logies/Verblijfskosten (eventueel incl. maaltijd)")
+
+        declaration_sub_type3 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie")
+
+        declaration_sub_type4 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Logies/Verblijfskosten buitenland")
+
+        declaration_sub_type5 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost(
+            "Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
+
+        declaration_sub_type6 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost(
+            "Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
+
+        #Reiskosten
+        declaration_sub_type7 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Tankpas")
+
+        declaration_sub_type8 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Openbaar vervoer")
+        declaration_sub_type9 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
+            "Taxi")
+
+        #Overig
+        declaration_sub_type10 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost("Overig")
+
+        #Assign all the DeclarationSubTypes to DeclarationTypes
+        sub_types = [declaration_sub_type1, declaration_sub_type2, declaration_sub_type3,
+                     declaration_sub_type4, declaration_sub_type5, declaration_sub_type6]
+        declaration_type1.sub_types = map(lambda sub_type: sub_type.key, sub_types)
+        declaration_type1.put()
+
+        declaration_type2.sub_types = [declaration_sub_type7.key, declaration_sub_type8.key, declaration_sub_type9.key]
+        declaration_type2.put()
+
+        declaration_type3.sub_types = [declaration_sub_type10.key]
+        declaration_type3.put()
+
+        path = "/declarationsubtypes/" + str(declaration_type1.key.integer_id())
+        response = self.positive_test_stub_handler(path, "get")
+        response_data = json.loads(response.body)
+
+        try:
+            i = 0
+            for sub_type in sub_types:
+                self.assertEqual(response_data[i]["id"], sub_type.key.integer_id())
+                self.assertEqual(response_data[i]["name"], sub_type.name)
+                self.assertEqual(response_data[i]["max_cost"], sub_type.max_cost)
+                i += 1
+
+        except ValueError as error:
+            self.fail("Test Failed! There is an invalid value in the response data. "
+                      "This usually happens with parsing wrong input values.\n"
+                      "The values expected for each key are:\n"
+                      "{\"id\" : integer,\n"
+                      "\"name\" : string,\n"
+                      "\"max_cost\" : integer}\n"
+                      "______________________\n"
+                      "Full error message:\n"
+                      + str(error))
+
+    def test_negative_get_all_declaration_sub_types_of_declaration_type_none_declaration_sub_type_in_datastore(self):
+        path = "/declarationsubtypes/(.*)"
+        setup_data = self.setup_test_server_with_custom_routes(
+            [(path, main_application.DeclarationSubTypeHandlerForDeclarationId)])
+        empty_declaration_type = DeclarationsDataCreator.create_valid_declaration_type("empty", False)
+
+        path = "/declarationsubtypes/" + str(empty_declaration_type.key.integer_id())
+
+        self.negative_test_stub_handler(path, "get", 404)
+
+    def test_negative_get_all_declaration_sub_types_of_declaration_type_none_declaration_type_in_datastore(self):
+        path = "/declarationsubtypes/(.*)"
+        setup_data = self.setup_test_server_with_custom_routes(
+            [(path, main_application.DeclarationSubTypeHandlerForDeclarationId)])
+        declaration_type = DeclarationsDataCreator.create_valid_declaration_type("filled declaration type")
+        key_int = declaration_type.key.integer_id()
+        declaration_type.key.delete()
+        path = "/declarationsubtypes/" + str(key_int)
+
+        self.negative_test_stub_handler(path, "get", 404)
+
+    def test_negative_invalid_id(self):
+        path = "/declarationsubtypes/(.*)"
+        setup_data = self.setup_test_server_with_custom_routes(
+            [(path, main_application.DeclarationSubTypeHandlerForDeclarationId)])
+        path = "/declarationsubtypes/" + "invalid_id"
+
+        self.negative_test_stub_handler(path, "get", 500)
+
+
 class ApproveDeclarationByHumanResourcesTest(BaseAuthorizationHandler):
     def test_negative_approve_not_logged_in(self):
         user_is_logged_in = False
