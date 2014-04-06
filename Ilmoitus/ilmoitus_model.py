@@ -82,6 +82,7 @@ class Declaration(ndb.Model):
     human_resources_declined_by = ndb.KeyProperty(kind=Person)
     supervisor_approved_by = ndb.KeyProperty(kind=Person)
     human_resources_approved_by = ndb.KeyProperty(kind=Person)
+    declaration_lines = ndb.KeyProperty(kind="DeclarationLine", repeated=True)
 
 
     #'Static' dictionary with readable states
@@ -95,41 +96,39 @@ class Declaration(ndb.Model):
     }
 
     # this property is used to check the permissions against
-    all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "supervisor_comment",
-                             "human_resources_comment", "declined_by", "submitted_to_human_resources_by", "locked_at",
+    all_custom_properties = ["created_at", "created_by", "assigned_to", "declaration_lines", "comment",
+                             "supervisor_comment", "human_resources_comment", "declined_by",
+                             "submitted_to_human_resources_by", "locked_at", "sent_to_human_resources_at",
+                             "supervisor_declined_at", "supervisor_approved_at", "human_resources_approved_at",
+                             "human_resources_declined_at", "will_be_payed_out_on", "human_resources_approved_by"]
 
-                             "sent_to_human_resources_at", "supervisor_declined_at", "supervisor_approved_at",
-                             "human_resources_approved_at", "human_resources_declined_at", "will_be_payed_out_on",
-                             "human_resources_approved_by"]
+    permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "declaration_lines", "comment"],
 
-    permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
+                   "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "declaration_lines",
+                                          "locked_at", "supervisor_comment"],
 
-                   "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "locked_at",
-
-                                          "supervisor_comment"],
-
-                   "supervisor_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
-                                                       "locked_at", "declined_by", "supervisor_declined_at",
+                   "supervisor_declined_declaration": ["created_at", "created_by", "assigned_to", "declaration_lines",
+                                                       "comment", "locked_at", "declined_by", "supervisor_declined_at",
                                                        "supervisor_comment"],
 
-                   "supervisor_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
-                                                       "locked_at", "submitted_to_human_resources_by",
+                   "supervisor_approved_declaration": ["created_at", "created_by", "assigned_to", "declaration_lines",
+                                                       "comment", "locked_at", "submitted_to_human_resources_by",
                                                        "supervisor_approved_at", "supervisor_approved_by",
                                                        "sent_to_human_resources_at", "supervisor_comment"],
 
-                   "human_resources_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
-                                                            "locked_at", "submitted_to_human_resources_by",
-                                                            "supervisor_approved_at", "supervisor_approved_by",
-                                                            "sent_to_human_resources_at", "declined_by",
-                                                            "supervisor_comment", "human_resources_comment",
-                                                            "human_resources_declined_at"],
+                   "human_resources_declined_declaration": ["created_at", "created_by", "assigned_to",
+                                                            "declaration_lines", "comment", "locked_at",
+                                                            "submitted_to_human_resources_by", "supervisor_approved_at",
+                                                            "supervisor_approved_by", "sent_to_human_resources_at",
+                                                            "declined_by", "supervisor_comment",
+                                                            "human_resources_comment", "human_resources_declined_at"],
 
-                   "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
-                                                            "locked_at", "submitted_to_human_resources_by",
-                                                            "supervisor_approved_at", "supervisor_approved_by",
-                                                            "sent_to_human_resources_at", "supervisor_comment",
-                                                            "will_be_payed_out_on", "human_resources_comment",
-                                                            "human_resources_approved_by",
+                   "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to",
+                                                            "declaration_lines", "comment", "locked_at",
+                                                            "submitted_to_human_resources_by", "supervisor_approved_at",
+                                                            "supervisor_approved_by", "sent_to_human_resources_at",
+                                                            "supervisor_comment", "will_be_payed_out_on",
+                                                            "human_resources_comment", "human_resources_approved_by",
                                                             "human_resources_approved_at"]}
 
     def get_object_as_data_dict(self):
@@ -212,14 +211,12 @@ class DeclarationType(ndb.Model):
 
 # DeclarationLine Model class
 class DeclarationLine(ndb.Model):
-    declaration = ndb.KeyProperty(kind=Declaration)
     receipt_date = ndb.StringProperty()  # DateProperty?
     cost = ndb.IntegerProperty()
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
     def get_object_as_data_dict(self):
-        return {'declaration': self.declaration.integer_id(),
-                'receipt_date': self.receipt_date,
+        return {'receipt_date': self.receipt_date,
                 'cost': self.cost,
                 'declaration_sub_type': self.declaration_sub_type.integer_id()}
 

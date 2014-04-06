@@ -75,7 +75,7 @@ class DeclarationsDataCreator():
         pass
 
     @staticmethod
-    def create_valid_declaration_lines(declaration, amount_of_lines):
+    def create_valid_declaration_lines(amount_of_lines):
         declaration_type = DeclarationsDataCreator.create_valid_declaration_type()
         subtype = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(declaration_type)
 
