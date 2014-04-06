@@ -413,10 +413,8 @@ class DeclarationSubTypeHandlerForDeclarationId(BaseRequestHandler):
             give_error_response(self, 404, "there is no declarationType with that id")
 
         query = ilmoitus_model.DeclarationSubType.query()
-        sub_types = []
-        map(lambda sub_type_key: sub_types.append(
-            ilmoitus_model.DeclarationSubType.get_by_id(sub_type_key.integer_id())), item.sub_types)
-
+        result = query.fetch()
+        sub_types = [res for res in query.fetch() if res.key in item.sub_types]
 
         if len(sub_types) is 0:
             give_error_response(self, 404, "there are no DeclarationSubTypes associated to this DeclarationType")
@@ -466,7 +464,8 @@ class ApproveByHumanResources(BaseRequestHandler):
                     declaration.put()
                     response_module.give_response(self, declaration.get_object_json_data())
                 else:
-                    give_error_response(self, 500, "Kan geen declaratie goedkeuren die niet eerst door een leidinggevende is goedgekeurd.",
+                    give_error_response(self, 500,
+                                        "Kan geen declaratie goedkeuren die niet eerst door een leidinggevende is goedgekeurd.",
                                         "Can only approve a supervisor_approved_declaration.")
             else:
                 give_error_response(self, 500, "Er is geen data opgegeven.",
@@ -474,7 +473,7 @@ class ApproveByHumanResources(BaseRequestHandler):
         else:
             #user does not have the appropriate permissions or isn't logged in at all.
             give_error_response(self, 401, "Geen permissie om een declaratie goed te keuren!",
-                                    "current_user is None or not from human_resources")
+                                "current_user is None or not from human_resources")
             self.abort(401)
 
 
@@ -489,7 +488,9 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
                     try:
                         data = json.loads(self.request.body)
                     except ValueError:
-                        give_error_response(self, 500, "Er is ongeldige data verstuurd; Kan het verzoek niet afhandelen", "Invalid json data; Invalid format", more_info=str(self.request.body))
+                        give_error_response(self, 500,
+                                            "Er is ongeldige data verstuurd; Kan het verzoek niet afhandelen",
+                                            "Invalid json data; Invalid format", more_info=str(self.request.body))
                     declaration_id = data['declaration_id']
                     person_key = person.key
                     current_date = datetime.datetime.now()
@@ -502,7 +503,9 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
                         response_module.give_response(self, declaration.get_object_json_data())
                     else:
                         #
-                        give_error_response(self, 500, "Kan geen declaratie afkeuren die niet eerst door een leidinggevende is goedgekeurd.", "Can only decline a supervisor_approved_declaration.")
+                        give_error_response(self, 500,
+                                            "Kan geen declaratie afkeuren die niet eerst door een leidinggevende is goedgekeurd.",
+                                            "Can only decline a supervisor_approved_declaration.")
                 else:
                     #
                     give_error_response(self, 500, "Er is geen data opgegeven!.", "Request body is None!.")
