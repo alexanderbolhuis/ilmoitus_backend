@@ -188,7 +188,7 @@ class Declaration(ndb.Model):
 # DeclarationSubType Model class
 class DeclarationSubType(ndb.Model):
     name = ndb.StringProperty()
-    max_cost = ndb.IntegerProperty()  # Optional
+    max_cost = ndb.FloatProperty()  # Optional
 
     def get_object_as_data_dict(self):
         return {'id': self.key.integer_id(), 'name': self.name, 'max_cost': self.max_cost}
