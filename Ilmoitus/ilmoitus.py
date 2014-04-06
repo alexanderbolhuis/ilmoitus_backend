@@ -401,8 +401,8 @@ class SpecificDeclarationHandler(BaseRequestHandler):
             result = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
 
             if result is None:
-                give_error_response(self, 404, "could not find the declaration",
-                                    "declaration id should be an int and can not be None", 404)
+                give_error_response(self, 404, "Kan de opgevraagde declaratie niet vinden",
+                                    "Declaration id can only be of the type integer and cannot be None", 404)
 
             if employee_rights == 'employee' and result.created_by == key:
                 response_module.give_response(self, result.get_object_json_data())
@@ -412,7 +412,7 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                     response_module.give_response(self, result.get_object_json_data())
                 else:
                     give_error_response(self, 401,
-                                        "This declaration is not assigned to you", None, 401)
+                                        "Deze declratie is niet aan jouw toegewezen", None, 401)
 
             elif employee_rights == 'human_resources' and result.class_name == \
                     'supervisor_approved_declaration' and result.submitted_to_human_resources_by is not None:
@@ -420,11 +420,11 @@ class SpecificDeclarationHandler(BaseRequestHandler):
 
             else:
                 give_error_response(self, 401,
-                                    "You don't have the required rights to open this declaration", None, 401)
+                                    "je hebt niet de juiste rechten op deze declratie te openen", None, 401)
         # if declaration_id not is int
         else:
-            give_error_response(SpecificDeclarationHandler, 400, "could not find the declaration",
-                                "declaration id should be an int and can not be None", 400)
+            give_error_response(SpecificDeclarationHandler, 400, "Kan de opgevraagde declaratie niet vinden",
+                                "Declaration id can only be of the type integer and cannot be None", 400)
 
 
 class ApproveByHumanResources(BaseRequestHandler):
