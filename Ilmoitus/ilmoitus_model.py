@@ -70,7 +70,7 @@ class Declaration(ndb.Model):
     comment = ndb.StringProperty()
     supervisor_comment = ndb.StringProperty()
     human_resources_comment = ndb.StringProperty()
-    declined_by = ndb.KeyProperty(kind=Person)
+    supervisor_declined_by = ndb.KeyProperty(kind=Person)
     submitted_to_human_resources_by = ndb.KeyProperty(kind=Person)
     locked_at = ndb.DateTimeProperty()
     sent_to_human_resources_at = ndb.DateTimeProperty()
@@ -97,10 +97,11 @@ class Declaration(ndb.Model):
 
     # this property is used to check the permissions against
     all_custom_properties = ["created_at", "created_by", "assigned_to", "declaration_lines", "comment",
-                             "supervisor_comment", "human_resources_comment", "declined_by",
+                             "supervisor_comment", "human_resources_comment", "supervisor_declined_by",
                              "submitted_to_human_resources_by", "locked_at", "sent_to_human_resources_at",
                              "supervisor_declined_at", "supervisor_approved_at", "human_resources_approved_at",
-                             "human_resources_declined_at", "will_be_payed_out_on", "human_resources_approved_by"]
+                             "human_resources_declined_at", "will_be_payed_out_on", "human_resources_approved_by",
+                             "human_resources_declined_by"]
 
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "declaration_lines", "comment"],
 
@@ -108,7 +109,7 @@ class Declaration(ndb.Model):
                                           "locked_at", "supervisor_comment"],
 
                    "supervisor_declined_declaration": ["created_at", "created_by", "assigned_to", "declaration_lines",
-                                                       "comment", "locked_at", "declined_by", "supervisor_declined_at",
+                                                       "comment", "locked_at", "supervisor_declined_by", "supervisor_declined_at",
                                                        "supervisor_comment"],
 
                    "supervisor_approved_declaration": ["created_at", "created_by", "assigned_to", "declaration_lines",
@@ -120,7 +121,7 @@ class Declaration(ndb.Model):
                                                             "declaration_lines", "comment", "locked_at",
                                                             "submitted_to_human_resources_by", "supervisor_approved_at",
                                                             "supervisor_approved_by", "sent_to_human_resources_at",
-                                                            "declined_by", "supervisor_comment",
+                                                            "human_resources_declined_by", "supervisor_comment",
                                                             "human_resources_comment", "human_resources_declined_at"],
 
                    "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to",
@@ -158,7 +159,7 @@ class Declaration(ndb.Model):
 
         This implementation specifically will check if the requested set operation for a specific property is
         allowed with the current value of the class_name property. If that value is "open_declaration" for instance,
-        the declined_by property is not allowed to be set (but is when the class_name property is set to
+        the supervisor_declined_by property is not allowed to be set (but is when the class_name property is set to
         "closed_declaration").
 
         Uses the handle_custom_property_set_operation function to actually determine if the value should be changed

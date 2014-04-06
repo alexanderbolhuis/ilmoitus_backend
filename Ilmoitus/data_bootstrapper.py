@@ -231,7 +231,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaration_eight.assigned_to.append(employee_one.supervisor)
         declaration_eight.comment = "Zakenlunches voor Februari."
         declaration_eight.locked_at = datetime.datetime.now() - datetime.timedelta(days=9)
-        declaration_eight.declined_by = employee_one.supervisor
+        declaration_eight.supervisor_declined_by = employee_one.supervisor
         declaration_eight.supervisor_declined_at = datetime.datetime.now() - datetime.timedelta(days=4)
         declaration_eight.supervisor_comment = "Deze worden niet vergoed aangezien ze niet vooraf zijn besproken."
         declaration_eight.put()
@@ -295,7 +295,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaration_eleven.supervisor_approved_at = datetime.datetime.now() - datetime.timedelta(days=26)
         declaration_eleven.supervisor_approved_by = employee_one.supervisor
         declaration_eleven.sent_to_human_resources_at = datetime.datetime.now() - datetime.timedelta(days=26)
-        declaration_eleven.declined_by = employee_six.key
+        declaration_eleven.supervisor_declined_by = employee_six.key
         declaration_eleven.human_resources_comment = \
             "Muhammed heeft er een dubbel doorgestuurd; deze wordt niet uitbetaald."
         declaration_eleven.human_resources_declined_at = datetime.datetime.now() - datetime.timedelta(days=18)
@@ -315,7 +315,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaration_five.created_by = employee_two.key
         declaration_five.assigned_to.append(employee_two.supervisor)
         declaration_five.comment = "Bedrijfsuitje"
-        declaration_five.declined_by = employee_two.supervisor
+        declaration_five.supervisor_declined_by = employee_two.supervisor
         declaration_five.submitted_to_human_resources_by = employee_two.supervisor
         declaration_five.put()
 
