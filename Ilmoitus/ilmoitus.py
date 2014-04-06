@@ -1,5 +1,3 @@
-from unicodedata import decimal
-
 __author__ = 'Sjors van Lemmen'
 import webapp2 as webapp
 import response_module
@@ -392,42 +390,41 @@ class SpecificDeclarationHandler(BaseRequestHandler):
         person_data = get_current_person()
         current_user = person_data["person_value"]
 
-        employee_rights = current_user.class_name
+        if current_user is None:
+            give_error_response(SpecificDeclarationHandler, 401, "There is no user logged in", None, 401)
 
-        key = current_user.key
-        result = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
+        # checks if declaration_id is of type int
+        if str.isdigit(declaration_id):
+            employee_rights = current_user.class_name
 
-        flag_none_exists = True
-        if result is not None:
-            flag_none_exists = False
-            declaration_data = result
+            key = current_user.key
+            result = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
 
-            flag_auth = False
+            if result is None:
+                give_error_response(self, 404, "could not find the declaration",
+                                    "declaration id should be an int and can not be None", 404)
 
-            if employee_rights == 'employee':
-                if declaration_data.created_by == key:
-                    flag_auth = True
+            if employee_rights == 'employee' and result.created_by == key:
+                response_module.give_response(self, result.get_object_json_data())
 
-            elif employee_rights == 'supervisor' and declaration_data.class_name == 'open_declaration':
-                if declaration_data.assigned_to[0] == key:
-                    flag_auth = True
+            elif employee_rights == 'supervisor' and result.class_name == 'open_declaration':
+                if key in result.assigned_to:
+                    response_module.give_response(self, result.get_object_json_data())
+                else:
+                    give_error_response(self, 401,
+                                        "This declaration is not assigned to you", None, 401)
 
-            elif employee_rights == 'human_resources' and declaration_data.class_name == \
-                                    'supervisor_approved_declaration':
-                if declaration_data.submitted_to_human_resources_by is not None:
-                    flag_auth = True
+            elif employee_rights == 'human_resources' and result.class_name == \
+                    'supervisor_approved_declaration' and result.submitted_to_human_resources_by is not None:
+                response_module.give_response(self, result.get_object_json_data())
+
             else:
-                flag_auth = False
-
-        if flag_none_exists is False:
-            if flag_auth is True:
-                response_module.give_response(self, declaration_data.get_object_json_data())
-            else:
-                #TODO: error messages:
-                self.abort(401)
+                give_error_response(self, 401,
+                                    "You don't have the required rights to open this declaration", None, 401)
+        # if declaration_id not is int
         else:
-            #TODO: error messages:
-            self.abort(404)
+            give_error_response(SpecificDeclarationHandler, 400, "could not find the declaration",
+                                "declaration id should be an int and can not be None", 400)
 
 
 class ApproveByHumanResources(BaseRequestHandler):
@@ -458,7 +455,8 @@ class ApproveByHumanResources(BaseRequestHandler):
                     declaration.put()
                     response_module.give_response(self, declaration.get_object_json_data())
                 else:
-                    give_error_response(self, 500, "Kan geen declaratie goedkeuren die niet eerst door een leidinggevende is goedgekeurd.",
+                    give_error_response(self, 500,
+                                        "Kan geen declaratie goedkeuren die niet eerst door een leidinggevende is goedgekeurd.",
                                         "Can only approve a supervisor_approved_declaration.")
             else:
                 give_error_response(self, 500, "Er is geen data opgegeven.",
@@ -466,7 +464,7 @@ class ApproveByHumanResources(BaseRequestHandler):
         else:
             #user does not have the appropriate permissions or isn't logged in at all.
             give_error_response(self, 401, "Geen permissie om een declaratie goed te keuren!",
-                                    "current_user is None or not from human_resources")
+                                "current_user is None or not from human_resources")
             self.abort(401)
 
 
@@ -481,7 +479,9 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
                     try:
                         data = json.loads(self.request.body)
                     except ValueError:
-                        give_error_response(self, 500, "Er is ongeldige data verstuurd; Kan het verzoek niet afhandelen", "Invalid json data; Invalid format", more_info=str(self.request.body))
+                        give_error_response(self, 500,
+                                            "Er is ongeldige data verstuurd; Kan het verzoek niet afhandelen",
+                                            "Invalid json data; Invalid format", more_info=str(self.request.body))
                     declaration_id = data['declaration_id']
                     person_key = person.key
                     current_date = datetime.datetime.now()
@@ -494,7 +494,9 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
                         response_module.give_response(self, declaration.get_object_json_data())
                     else:
                         #
-                        give_error_response(self, 500, "Kan geen declaratie afkeuren die niet eerst door een leidinggevende is goedgekeurd.", "Can only decline a supervisor_approved_declaration.")
+                        give_error_response(self, 500,
+                                            "Kan geen declaratie afkeuren die niet eerst door een leidinggevende is goedgekeurd.",
+                                            "Can only decline a supervisor_approved_declaration.")
                 else:
                     #
                     give_error_response(self, 500, "Er is geen data opgegeven!.", "Request body is None!.")
