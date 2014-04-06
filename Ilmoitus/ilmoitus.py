@@ -346,7 +346,7 @@ class SetLockedToSupervisorDeclinedDeclarationHandler(BaseRequestHandler):
             try:
                 if declaration.class_name != "locked_declaration":
                     give_error_response(self, 422,
-                                        "De opgegeven declaratie is niet gesloten en kan dus niet goedgekeurd worden.",
+                                        "De opgegeven declaratie is niet gesloten en kan dus niet afgekeurd worden.",
                                         "Class name of fetched object was not equal locked_declaration")
                 declaration.class_name = "supervisor_declined_declaration"
                 declaration.declined_by = current_supervisor.key
