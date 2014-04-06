@@ -413,7 +413,6 @@ class DeclarationSubTypeHandlerForDeclarationId(BaseRequestHandler):
             give_error_response(self, 404, "there is no declarationType with that id")
 
         query = ilmoitus_model.DeclarationSubType.query()
-        result = query.fetch()
         sub_types = [res for res in query.fetch() if res.key in item.sub_types]
 
         if len(sub_types) is 0:
