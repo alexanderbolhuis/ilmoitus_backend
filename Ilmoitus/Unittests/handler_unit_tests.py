@@ -886,7 +886,11 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
                                                  user_is_logged_in, user_is_admin)
 
-        employee = PersonDataCreator.create_valid_employee_data()
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        employee = logged_in_person
         supervisor = PersonDataCreator.create_valid_supervisor()
         declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
         declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 1)
@@ -950,7 +954,11 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
                                                  user_is_logged_in, user_is_admin)
 
-        employee = PersonDataCreator.create_valid_employee_data()
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        employee = logged_in_person
         supervisor = PersonDataCreator.create_valid_supervisor()
         declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
         declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 3)
@@ -1019,7 +1027,11 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
                                                  user_is_logged_in, user_is_admin)
 
-        employee = PersonDataCreator.create_valid_employee_data()
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        employee = logged_in_person
         supervisor = PersonDataCreator.create_valid_supervisor()
         declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
         declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 1)
@@ -1047,7 +1059,11 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
                                                  user_is_logged_in, user_is_admin)
 
-        employee = PersonDataCreator.create_valid_employee_data()
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        employee = logged_in_person
         supervisor = PersonDataCreator.create_valid_supervisor()
         declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
         declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 1)
@@ -1076,7 +1092,11 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
                                                  user_is_logged_in, user_is_admin)
 
-        employee = PersonDataCreator.create_valid_employee_data()
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        employee = logged_in_person
         supervisor = PersonDataCreator.create_valid_supervisor()
         declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
         declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 3)

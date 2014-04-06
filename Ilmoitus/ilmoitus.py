@@ -429,12 +429,22 @@ class AddNewDeclarationHandler(BaseRequestHandler):
         try:
             created_by = declaration_data["created_by"]
             assigned_to = declaration_data["assigned_to"][0]
-        except KeyError:
-            give_error_response(self, 400, "De opgegeven data mist waardes voor een declaratie.",
-                                "The body misses keys.")
         except Exception:
             give_error_response(self, 400, "De opgegeven data mist waardes voor een declaratie.",
                                 "The body misses keys.")
+
+        # Check if created_by is a valid user
+        try:
+            created_by = ilmoitus_model.Person.get_by_id(int(created_by))
+        except Exception:
+            give_error_response(self, 400, "De maker is niet bekent in het systeem.",
+                                "The owner is unknown.")
+
+        # Check if created_by is logged_in
+        logged_in_person = get_current_person()
+        if created_by.key != logged_in_person["person_value"].key:
+            give_error_response(self, 400, "De maker is niet ingelogd in het systeem.",
+                                "The owner is not logged in.")
 
         # Check if assigned_to is a valid user
         try:
@@ -447,13 +457,6 @@ class AddNewDeclarationHandler(BaseRequestHandler):
         if assigned_to.class_name != "supervisor":
             give_error_response(self, 400, "De supervisor is niet bekent in het systeem.",
                                 "The supervisor is unknown.")
-
-        # Check if created_by is valid user
-        try:
-            created_by = ilmoitus_model.Person.get_by_id(int(created_by))
-        except Exception:
-            give_error_response(self, 400, "De owner is niet bekent in het systeem.",
-                                "The owner is unknown.")
 
         # Check if each declarationline has a receipt_date, a cost, and a declaration_sub_type
         try:
@@ -487,7 +490,13 @@ class AddNewDeclarationHandler(BaseRequestHandler):
         for line in declarationlines_data:
             newline = ilmoitus_model.DeclarationLine()
             newline.declaration = declaration.key
-            newline.cost = int(line["cost"])
+
+            try:
+                newline.cost = int(line["cost"])
+            except Exception:
+                give_error_response(self, 400, "De opgegeven data bevat foute waardes voor een declaratieline.",
+                                "The body contains wrong values.")
+
             newline.receipt_date = dateutil.parser.parse(line["receipt_date"])
             newline.declaration_sub_type = ilmoitus_model.DeclarationSubType.get_by_id(int(line["declaration_sub_type"])).key
             newline.put()
