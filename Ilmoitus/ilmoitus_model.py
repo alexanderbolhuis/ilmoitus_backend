@@ -213,7 +213,7 @@ class DeclarationType(ndb.Model):
 # DeclarationLine Model class
 class DeclarationLine(ndb.Model):
     receipt_date = ndb.StringProperty()  # DateProperty?
-    cost = ndb.IntegerProperty()
+    cost = ndb.FloatProperty()
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
     def get_object_as_data_dict(self):
