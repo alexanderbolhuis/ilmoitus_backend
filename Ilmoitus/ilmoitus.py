@@ -412,8 +412,12 @@ class DeclarationSubTypeHandlerForDeclarationId(BaseRequestHandler):
         if item is None:
             give_error_response(self, 404, "there is no declarationType with that id")
 
-        query = ilmoitus_model.DeclarationSubType.query()
-        sub_types = [res for res in query.fetch() if res.key in item.sub_types]
+        if len(item.sub_types) is 0:
+            give_error_response(self, 404, "there are no DeclarationSubTypes associated to this DeclarationType")
+
+        query = ilmoitus_model.DeclarationSubType.query(ilmoitus_model.DeclarationSubType.key.IN(item.sub_types))
+        sub_types = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+            #[res for res in query.fetch() if res.key in item.sub_types]
 
         if len(sub_types) is 0:
             give_error_response(self, 404, "there are no DeclarationSubTypes associated to this DeclarationType")
