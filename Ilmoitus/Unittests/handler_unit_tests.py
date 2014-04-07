@@ -1055,3 +1055,39 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         path = "/declaration/" + str(declaration_id)
 
         self.negative_test_stub_handler(path, "get", 404)
+
+    def test_negative_declaration_sent_test_as_id(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SpecificDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+
+        logged_in_person.put()
+
+        path = "/declaration/test"
+
+        self.negative_test_stub_handler(path, "get", 400)
+
+    def test_negative_declaration_no_user_logging(self):
+        user_is_logged_in = False
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SpecificDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+
+        logged_in_person.put()
+
+        path = "/declaration/test"
+
+        self.negative_test_stub_handler(path, "get", 401)

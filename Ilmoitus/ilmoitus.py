@@ -391,11 +391,10 @@ class SpecificDeclarationHandler(BaseRequestHandler):
         current_user = person_data["person_value"]
 
         if current_user is None:
-            give_error_response(SpecificDeclarationHandler, 401, "There is no user logged in", None, 401)
+            give_error_response(self, 401, "There is no user logged in", None, 401)
 
         # checks if declaration_id is of type int
         if str.isdigit(declaration_id):
-            employee_rights = current_user.class_name
 
             key = current_user.key
             result = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
@@ -404,26 +403,25 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                 give_error_response(self, 404, "Kan de opgevraagde declaratie niet vinden",
                                     "Declaration id can only be of the type integer and cannot be None", 404)
 
-            if employee_rights == 'employee' and result.created_by == key:
+            if current_user.class_name == 'employee' and result.created_by == key:
                 response_module.give_response(self, result.get_object_json_data())
 
-            elif employee_rights == 'supervisor' and result.class_name == 'open_declaration':
+            elif current_user.class_name == 'supervisor' and result.class_name == 'open_declaration':
                 if key in result.assigned_to:
                     response_module.give_response(self, result.get_object_json_data())
                 else:
                     give_error_response(self, 401,
                                         "Deze declratie is niet aan jouw toegewezen", None, 401)
 
-            elif employee_rights == 'human_resources' and result.class_name == \
+            elif current_user.class_name == 'human_resources' and result.class_name == \
                     'supervisor_approved_declaration' and result.submitted_to_human_resources_by is not None:
                 response_module.give_response(self, result.get_object_json_data())
-
             else:
                 give_error_response(self, 401,
-                                    "je hebt niet de juiste rechten op deze declratie te openen", None, 401)
+                                    "Je hebt niet de juiste rechten op deze declratie te openen", None, 401)
         # if declaration_id not is int
         else:
-            give_error_response(SpecificDeclarationHandler, 400, "Kan de opgevraagde declaratie niet vinden",
+            give_error_response(self, 400, "Kan de opgevraagde declaratie niet vinden",
                                 "Declaration id can only be of the type integer and cannot be None", 400)
 
 
