@@ -1011,12 +1011,6 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         path = "/declaration/" + str(open_declaration.key.integer_id())
         self.negative_test_stub_handler(path, "get", 401)
 
-        # checks if supervisor can see an already approved declaration
-        approved_declaration = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(employee,
-                                                                                                    logged_in_person)
-        path = "/declaration/" + str(approved_declaration.key.integer_id())
-        self.negative_test_stub_handler(path, "get", 401)
-
         # checks if an supervisor can see an declaration assigned to an other supervisor
         open_declaration = \
             DeclarationsDataCreator.create_valid_open_declaration(employee, other_supervisor)
