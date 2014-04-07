@@ -403,10 +403,10 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                 give_error_response(self, 404, "Kan de opgevraagde declaratie niet vinden",
                                     "Declaration id can only be of the type integer and cannot be None", 404)
 
-            if current_user.class_name == 'employee' and result.created_by == key:
+            if result.created_by == key:
                 response_module.give_response(self, result.get_object_json_data())
 
-            elif current_user.class_name == 'supervisor' and result.class_name == 'open_declaration':
+            elif current_user.class_name == 'supervisor':
                 if key in result.assigned_to:
                     response_module.give_response(self, result.get_object_json_data())
                 else:

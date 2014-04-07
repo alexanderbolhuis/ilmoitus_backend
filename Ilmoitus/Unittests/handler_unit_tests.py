@@ -758,6 +758,7 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
 
         self.positive_test_stub_handler(path, "get")
 
+
 class ApproveDeclarationByHumanResourcesTest(BaseAuthorizationHandler):
     def test_negative_approve_not_logged_in(self):
         user_is_logged_in = False
@@ -879,7 +880,6 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
 
 
 class SpecificDeclarationTest(BaseAuthorizationHandler):
-
     def test_positive_get_employee_declaration(self):
         user_is_logged_in = True
         user_is_admin = '0'
@@ -895,11 +895,9 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         logged_in_person.put()
 
         supervisor = PersonDataCreator.create_valid_supervisor()
-
         declaration_valid = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
 
         path = "/declaration/" + str(declaration_valid.key.integer_id())
-
         response = self.positive_test_stub_handler(path, "get")
         response_data = json.loads(response.body)
 
@@ -921,17 +919,29 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
 
         employee = PersonDataCreator.create_valid_employee_data()
 
-        declaration_valid = DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
+        # check if supervisor can open an open declaration
+        declaration_open = DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
+        path1 = "/declaration/" + str(declaration_open.key.integer_id())
 
-        path = "/declaration/" + str(declaration_valid.key.integer_id())
-
-        response = self.positive_test_stub_handler(path, "get")
-        response_data = json.loads(response.body)
+        response1 = self.positive_test_stub_handler(path1, "get")
+        response_data1 = json.loads(response1.body)
 
         # check for VALID declaration by logged_in_person
-        self.assertEquals(response_data["assigned_to"][0], logged_in_person.key.integer_id())
-        self.assertEquals(response_data["id"], declaration_valid.key.integer_id())
-        self.assertEquals(response_data["class_name"], "open_declaration")
+        self.assertEquals(response_data1["assigned_to"][0], logged_in_person.key.integer_id())
+        self.assertEquals(response_data1["id"], declaration_open.key.integer_id())
+        self.assertEquals(response_data1["class_name"], "open_declaration")
+
+         # check if supervisor can open an locked declaration
+        declaration_lock = DeclarationsDataCreator.create_valid_locked_declaration(employee, logged_in_person)
+        path2 = "/declaration/" + str(declaration_lock.key.integer_id())
+
+        response2 = self.positive_test_stub_handler(path2, "get")
+        response_data2 = json.loads(response2.body)
+
+        # check for VALID declaration by logged_in_person
+        self.assertEquals(response_data2["assigned_to"][0], logged_in_person.key.integer_id())
+        self.assertEquals(response_data2["id"], declaration_lock.key.integer_id())
+        self.assertEquals(response_data2["class_name"], "locked_declaration")
 
     def test_positive_get_hr_declaration(self):
         user_is_logged_in = True
