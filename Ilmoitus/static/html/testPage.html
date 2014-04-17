@@ -1,0 +1,16 @@
+<div>
+	<table id="testTable">
+		<thead>
+			<tr><th>column1</th><th>column2</th></tr>
+		</thead>
+		<tbody>
+			<tr><td><input type="text"></td><td><select><option>one</option><option>two</option></select></td></tr>
+			<tr class="even"><td><input type="text"></td><td><select><option>one</option><option>two</option></select></td></tr>
+			<tr><td><input type="text"></td><td><select><option>one</option><option>two</option></select></td></tr>
+		</tbody>
+	</table>
+	<input type="button" value="add row" onclick="addTableRow('testTable');"/>
+	<input type="button" value="remove third row" onclick="removeTableRow('testTable', 2)" /><br/>
+	<br/>
+	<input type="button" value="show message" onclick="showMessage('testtttt...!!! <b>asdf</b><br/>Test!!!!','Message')"/>
+</div>
