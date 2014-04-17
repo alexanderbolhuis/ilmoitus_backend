@@ -1,9 +1,9 @@
 <div>
 	<div class="DeclarationFloatContainer">
-		<h2 style="float : left;">Mijn declaraties:</h2>
-		<div style="float : right;">
-			<input type="button" value="Declaratie annuleren" disabled />
-			<input type="button" value="Declaratie tonen" ng-click="openDeclarationDetails(5)" />
+		<h2 style="float:left;">Mijn declaraties:</h2>
+		<div style="float:right;">
+			<input type="button" value="Declaratie annuleren" ng-disabled="currentdeclaration.state != 'Open';" ng-click="deleteDeclarationDetailsBtn();" />
+			<input type="button" value="Declaratie tonen" ng-disabled="!currentdeclaration;" ng-click="openDeclarationDetailsBtn();" />
 		</div>
 	</div>
 	</br>
@@ -16,33 +16,14 @@
 			<th>Info (reden van afkeuring of uitkeringsdatum)</th>
 		</thead>
 		<tbody>
-			<tr id="0">
-				<td>26-12-2012</td>
-				<td>4</td>
-				<td>&euro; 180,-</td>
-				<td>In behandeling</td>
-				<td></td>
-			</tr>
-			<tr id="1">
-				<td>23-12-2012</td>
-				<td>5</td>
-				<td>&euro; 190,-</td>
-				<td>Afgekeurd</td>
-				<td>Er mist een bewijsstuk voor het etentje</td>
-			</tr>
-			<tr id="2">
-				<td>15-11-2012</td>
-				<td>4</td>
-				<td>&euro; 54,-</td>
-				<td>Goedgekeurd</td>
-				<td>Komt op loonstrook voor: 31-11-2012</td>
-			</tr>
-			<tr id="3">
-				<td>03-11-2012</td>
-				<td>3</td>
-				<td>&euro; 49,99</td>
-				<td>Goedgekeurd</td>
-				<td>Komt op loonstrook voor: 31-11-2012</td>
+			<tr ng-repeat="declaration in declarationList" ng-dblclick="openDeclarationDetails(declaration.id);" id="{{ declaration.id }}" 
+                ng-class="{selected:currentdeclaration.id==declaration.id}" ng-click="selectDeclaration(declaration);">
+                
+				<td>{{ declaration.created_at.split(' ')[0] }}</td>
+				<td>{{ declaration.itemCount }}</td>
+				<td>&euro; {{ declaration.totalprice }}</td>
+				<td>{{ declaration.state }}</td>
+				<td>{{ declaration.info }}</td>
 			</tr>
 		</tbody>
 	</table>

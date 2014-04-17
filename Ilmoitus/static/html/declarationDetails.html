@@ -1,12 +1,8 @@
 <div>
     <div>
         <table>
-            <tr><td>Leidinggevende:</td><td>
-                <select>
-                    <option value="100000">Jakob de Rotte</option>
-                </select>
-            </td></tr>
-            <tr><td>Personeelsnr</td><td>9303835</td></tr>
+            <tr><td>Leidinggevende:</td><td>{{supervisor}}</td></tr>
+            <tr><td>Personeelsnr:</td><td>{{supervisorId}}</td></tr>
         </table>
     </div>
 
@@ -15,7 +11,7 @@
     <div>
         <div class="floatContainer">
             <div class="DeclarationTableTitle"><h3>Declaratie items:</h3></div>
-            <div class="TotalDeclarationPrice"> Totaal declaratiebedrag: &euro; 150,- </div>
+            <div class="TotalDeclarationPrice"> Totaal declaratiebedrag: &euro; {{totalPrice}} </div>
         </div>
         <div>
             <table class="styledTable">
@@ -29,19 +25,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>01-12-2012</td>
-                        <td>Reiskosten</td>
-                        <td>Zakelijke reiskosten (OV - trein / bus / metro / taxi)</td>
-                        <td>&euro; 20,-</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>01-12-2012</td>
-                        <td>Reiskosten</td>
-                        <td>Parkeer- / Tol- / Veergeld (Auto van de zaak / lease-auto)</td>
-                        <td>&euro; 15,-</td>
-                        <td>Geen vrije plaatsen meer op de school. Moest parkeer garage nemen</td>
+                    <tr ng-repeat="line in itemList">
+                        <td>{{line.date}}</td>
+                        <td>{{line.sort}}</td>
+                        <td>{{line.subsort}}</td>
+                        <td>&euro; {{line.price}}</td>
+                        <td>{{line.comment}}</td>
                     </tr>
                 </tbody>
             </table>
@@ -53,7 +42,7 @@
     <div class="floatContainer">
         <div class="DeclarationCommentsDiv">
             <h3>Opmerkingen:</h3>
-            <textarea></textarea>
+            <textarea readonly>{{comments}}</textarea>
         </div>
         <div class="DeclarationEvidenceDiv">
             <h3>Bewijsstukken:</h3>
