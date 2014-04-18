@@ -202,7 +202,8 @@ class AllDeclarationsForEmployeeHandler(BaseRequestHandler):
         else:
             #TODO: error messages:
             #User is not logged in/registered; he/she needs to login first
-            self.abort(401)
+            give_error_response(self, 401, "Geen permissie om declaraties op te halen!",
+                                "current_user is None")
 
 
 class SpecificEmployeeDetailsHandler(BaseRequestHandler):
@@ -227,7 +228,8 @@ class AllDeclarationsForSupervisor(BaseRequestHandler):
             response_module.respond_with_existing_model_object_collection(self, query_result)
         else:
             #user does not have the appropriate permissions or isn't logged in at all.
-            self.abort(401)
+            give_error_response(self, 401, "Geen permissie om supervisor declaraties op te halen!",
+                                "current_user is None or not a supervisor")
 
 
 class CurrentUserDetailsHandler(BaseRequestHandler):
@@ -239,11 +241,11 @@ class CurrentUserDetailsHandler(BaseRequestHandler):
             if current_user is not None:
                 response_module.give_response(self, current_user.get_object_json_data())
             else:
-                print "Not Found"
-                self.abort(404)
+                give_error_response(self, 404, "Ingelogde gebruiker niet gevonden!",
+                                    "current_user is None")
         else:
-            print "Unauthorized"
-            self.abort(401)
+            give_error_response(self, 401, "Geen permissie om huidige user details op te halen!",
+                                "user_is_logged_in is False")
 
 
 class UserSettingsHandler(BaseRequestHandler):
@@ -338,7 +340,8 @@ class CurrentUserSupervisors(BaseRequestHandler):
 
             response_module.respond_with_existing_model_object_collection(self, query_result)
         else:
-            self.abort(401)
+            give_error_response(self, 401, "Geen permissie om gebruiker supervisors op te halen!",
+                                "current_user is None")
 
 
 class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
@@ -355,11 +358,12 @@ class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
                 response_module.respond_with_existing_model_object_collection(self, query_result)
             else:
                 #User is not authorised
-                self.abort(401)
+                give_error_response(self, 401, "Geen permissie om declaraties voor human resources op te halen!",
+                                    "current_user not from human_resources")
         else:
-            #TODO: error messages:
             #User is not logged in/registered; he/she needs to login first
-            self.abort(401)
+            give_error_response(self, 401, "Geen permissie om declaraties voor human resources op te halen!",
+                                "current_user is None")
 
 
 class CurrentUserAssociatedDeclarations(BaseRequestHandler):
@@ -382,7 +386,8 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
             response_module.give_response(self, json.dumps(
                 map(lambda declaration_item: declaration_item.get_object_as_data_dict(), query_result)))
         else:
-            self.abort(404)
+            give_error_response(self, 404, "Geen declaraties gevonden geassocieerd met de huidige gebruiker!",
+                                "query_result is empty")
 
 
 class ApproveByHumanResources(BaseRequestHandler):
@@ -421,8 +426,7 @@ class ApproveByHumanResources(BaseRequestHandler):
         else:
             #user does not have the appropriate permissions or isn't logged in at all.
             give_error_response(self, 401, "Geen permissie om een declaratie goed te keuren!",
-                                    "current_user is None or not from human_resources")
-            self.abort(401)
+                                "current_user is None or not from human_resources")
 
 
 class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
@@ -436,7 +440,8 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
                     try:
                         data = json.loads(self.request.body)
                     except ValueError:
-                        give_error_response(self, 500, "Er is ongeldige data verstuurd; Kan het verzoek niet afhandelen", "Invalid json data; Invalid format", more_info=str(self.request.body))
+                        give_error_response(self, 500, "Er is ongeldige data verstuurd; Kan het verzoek niet afhandelen",
+                                            "Invalid json data; Invalid format", more_info=str(self.request.body))
                     declaration_id = data['declaration_id']
                     person_key = person.key
                     current_date = datetime.datetime.now()
@@ -449,17 +454,19 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
                         response_module.give_response(self, declaration.get_object_json_data())
                     else:
                         #
-                        give_error_response(self, 500, "Kan geen declaratie afkeuren die niet eerst door een leidinggevende is goedgekeurd.", "Can only decline a supervisor_approved_declaration.")
+                        give_error_response(self, 500, "Kan geen declaratie afkeuren die niet eerst door een leidinggevende is goedgekeurd.",
+                                            "Can only decline a supervisor_approved_declaration.")
                 else:
                     #
                     give_error_response(self, 500, "Er is geen data opgegeven!.", "Request body is None!.")
             else:
                 #User is not authorised
-                self.abort(401)
+                give_error_response(self, 401, "Geen permissie om een declaratie af te keuren!",
+                                    "current_user is not from human_resources")
         else:
-            #TODO: error messages:
             #User is not logged in/registered; he/she needs to login first
-            self.abort(401)
+            give_error_response(self, 401, "Geen permissie om een declaratie af te keuren!",
+                                "current_user is None")
 
 
 application = webapp.WSGIApplication(
