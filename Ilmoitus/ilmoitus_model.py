@@ -68,6 +68,7 @@ class Declaration(ndb.Model):
     created_by = ndb.KeyProperty(kind=Person)
     assigned_to = ndb.KeyProperty(kind=Person, repeated=True)
     comment = ndb.StringProperty()
+    items_total_price = ndb.IntegerProperty()
     supervisor_comment = ndb.StringProperty()
     human_resources_comment = ndb.StringProperty()
     declined_by = ndb.KeyProperty(kind=Person)
@@ -95,41 +96,44 @@ class Declaration(ndb.Model):
     }
 
     # this property is used to check the permissions against
-    all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "supervisor_comment",
-                             "human_resources_comment", "declined_by", "submitted_to_human_resources_by", "locked_at",
+    all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "items_total_price",
+                             "supervisor_comment", "human_resources_comment", "declined_by",
+                             "submitted_to_human_resources_by", "locked_at",
 
                              "sent_to_human_resources_at", "supervisor_declined_at", "supervisor_approved_at",
                              "human_resources_approved_at", "human_resources_declined_at", "will_be_payed_out_on",
                              "human_resources_approved_by"]
 
-    permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
+    permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment", "items_total_price"],
 
-                   "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "locked_at",
+                   "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "items_total_price",
+                                          "locked_at",
 
                                           "supervisor_comment"],
 
                    "supervisor_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
-                                                       "locked_at", "declined_by", "supervisor_declined_at",
-                                                       "supervisor_comment"],
+                                                       "items_total_price", "locked_at", "declined_by",
+                                                       "supervisor_declined_at", "supervisor_comment"],
 
                    "supervisor_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
-                                                       "locked_at", "submitted_to_human_resources_by",
-                                                       "supervisor_approved_at", "supervisor_approved_by",
-                                                       "sent_to_human_resources_at", "supervisor_comment"],
+                                                       "items_total_price", "locked_at",
+                                                       "submitted_to_human_resources_by", "supervisor_approved_at",
+                                                       "supervisor_approved_by", "sent_to_human_resources_at",
+                                                       "supervisor_comment"],
 
                    "human_resources_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
-                                                            "locked_at", "submitted_to_human_resources_by",
-                                                            "supervisor_approved_at", "supervisor_approved_by",
-                                                            "sent_to_human_resources_at", "declined_by",
-                                                            "supervisor_comment", "human_resources_comment",
-                                                            "human_resources_declined_at"],
+                                                            "items_total_price", "locked_at",
+                                                            "submitted_to_human_resources_by", "supervisor_approved_at",
+                                                            "supervisor_approved_by", "sent_to_human_resources_at",
+                                                            "declined_by", "supervisor_comment",
+                                                            "human_resources_comment", "human_resources_declined_at"],
 
                    "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
-                                                            "locked_at", "submitted_to_human_resources_by",
-                                                            "supervisor_approved_at", "supervisor_approved_by",
-                                                            "sent_to_human_resources_at", "supervisor_comment",
-                                                            "will_be_payed_out_on", "human_resources_comment",
-                                                            "human_resources_approved_by",
+                                                            "items_total_price", "locked_at",
+                                                            "submitted_to_human_resources_by", "supervisor_approved_at",
+                                                            "supervisor_approved_by", "sent_to_human_resources_at",
+                                                            "supervisor_comment", "will_be_payed_out_on",
+                                                            "human_resources_comment", "human_resources_approved_by",
                                                             "human_resources_approved_at"]}
 
     def get_object_as_data_dict(self):
