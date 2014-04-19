@@ -190,8 +190,11 @@ class DeclarationSubType(ndb.Model):
     name = ndb.StringProperty()
     max_cost = ndb.IntegerProperty()  # Optional
 
+    all_custom_properties = ['name', 'max_cost']
+
     def get_object_as_data_dict(self):
-        return {'id': self.key.integer_id(), 'name': self.name, 'max_cost': self.max_cost}
+        return {'id': self.key.integer_id() + property_not_none_key_value_pair(self,
+                                                                               self.all_custom_properties).items()}
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -202,9 +205,10 @@ class DeclarationType(ndb.Model):
     name = ndb.StringProperty()
     sub_types = ndb.KeyProperty(kind=DeclarationSubType, repeated=True)
 
-    def get_object_as_data_dict(self):
-        return {'name': self.name, 'sub_types': json.dumps(map(lambda key: key.integer_id(), self.sub_types))}
+    all_custom_properties = ['name', 'sub_types']
 
+    def get_object_as_data_dict(self):
+        return property_not_none_key_value_pair(self, self.all_custom_properties)
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -213,15 +217,14 @@ class DeclarationType(ndb.Model):
 # DeclarationLine Model class
 class DeclarationLine(ndb.Model):
     declaration = ndb.KeyProperty(kind=Declaration)
-    receipt_date = ndb.StringProperty()  # DateProperty?
+    receipt_date = ndb.DateTimeProperty()
     cost = ndb.IntegerProperty()
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
+    all_custom_properties = ['declaration', 'receipt_date', 'cost', 'declaration_sub_type']
+
     def get_object_as_data_dict(self):
-        return {'declaration': self.declaration.integer_id(),
-                'receipt_date': self.receipt_date,
-                'cost': self.cost,
-                'declaration_sub_type': self.declaration_sub_type.integer_id()}
+        return property_not_none_key_value_pair(self, self.all_custom_properties)
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -236,29 +239,34 @@ class Attachment(ndb.Model):
                 'blob': self.blob}
         #TODO make it work, this can't be tested yet because we can't simulate adding something to the blobstore
 
-
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
 
 
 def property_not_none_key_value_pair_with_permissions(class_reference):
-    return_data = {}
     if class_reference is not None and class_reference.permissions is not None:
         permissions = class_reference.permissions[class_reference.class_name]
-        if permissions is not None:
-            for prop in permissions:
+        return property_not_none_key_value_pair(class_reference, permissions)
+
+
+def property_not_none_key_value_pair(class_reference, prop_list):
+        return_data = {}
+        if prop_list is not None:
+            for prop in prop_list:
                 value = getattr(class_reference, prop)
                 if value is not None:
                     try:
-                        if (isinstance(value, collections.MutableSequence)):
+                        if isinstance(value, collections.MutableSequence):
                             temp = list()
                             for key in value:
-                                temp.append(key.integer_id())
+                                try:
+                                    temp.append(key.integer_id())
+                                except AttributeError:
+                                    continue
                             value = temp
                         else:
                             value = value.integer_id()
                     except AttributeError:
                         value = str(value)
                     return_data = dict(return_data.items() + {prop: value}.items())
-
-    return return_data
+        return return_data

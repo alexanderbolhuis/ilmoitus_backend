@@ -756,7 +756,6 @@ class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
         self.assertEqual(response_data[0]["assigned_to"][0], logged_in_person.key.integer_id())
         self.assertEqual(response_data[1]["assigned_to"][0], logged_in_person.key.integer_id())
 
-        self.positive_test_stub_handler(path, "get")
 
 class ApproveDeclarationByHumanResourcesTest(BaseAuthorizationHandler):
     def test_negative_approve_not_logged_in(self):
@@ -876,3 +875,244 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
         self.setup_server_with_user(
             [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
             user_is_logged_in, user_is_admin)
+
+
+class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
+    def test_add_new_declartion_one_item_postive(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration"
+
+        setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        employee = logged_in_person
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
+        declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 1)
+
+        # TODO create attachments
+
+        lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
+
+        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
+                                    'lines': lines,
+                                    'attachment': ""})
+
+        for declarationline in declarationlines:
+            declarationline.key.delete()
+
+        declaration.key.delete()
+
+        response = self.positive_test_stub_handler(path,
+                                                        "post",
+                                                        data_dict=combined_dict)
+
+        response_data = json.loads(response.body)
+
+        response_declaration = response_data["declaration"]
+        response_declarationlines = response_data["lines"]
+        response_attachments = response_data["attachment"]
+
+        # TODO add attachments
+        try:
+            self.assertIsNotNone(response_declaration["id"])
+            self.assertIsNotNone(response_declaration["created_by"])
+            self.assertIsNotNone(response_declaration["assigned_to"])
+            self.assertIsNotNone(response_declarationlines[0]["declaration"])
+            self.assertIsNotNone(response_declarationlines[0]["declaration_sub_type"])
+
+            self.assertEqual(response_declaration["created_by"], (employee.key.integer_id()))
+            self.assertEqual(response_declaration["assigned_to"], [supervisor.key.integer_id()])
+            self.assertEqual(response_declarationlines[0]["declaration"], response_declaration["id"])
+
+        except KeyError as error:
+            self.fail("Test Failed! Expected the key: " + str(
+                error) + " to be present in the response, but it was not found. Found only: " + str(response_data))
+        except ValueError as error:
+            self.fail("Test Failed! There is an invalid value in the response data. "
+                      "This usually happens with parsing wrong input values.\n"
+                      "The values expected for each key are:\n"
+                      "{\"id\" : integer,\n"
+                      "\"created_by\" : integer,\n"
+                      "\"assigned_to\" : integer,\n"
+                      "\"declaration\" : integer,\n"
+                      "\"declaration_sub_type\" : integer}\n"
+                      "______________________\n"
+                      "Full error message:\n"
+                      + str(error))
+
+    def test_add_new_declartion_more_items_postive(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration"
+
+        setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        employee = logged_in_person
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
+        declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 3)
+
+        # TODO create attachments
+
+        lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
+
+        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
+                                    'lines': lines,
+                                    'attachment': ""})
+
+        for declarationline in declarationlines:
+            declarationline.key.delete()
+
+        declaration.key.delete()
+
+        response = self.positive_test_stub_handler(path,
+                                                   "post",
+                                                   data_dict=combined_dict)
+
+        response_data = json.loads(response.body)
+        response_declaration = response_data["declaration"]
+        response_declarationlines = response_data["lines"]
+        response_attachments = response_data["attachment"]
+
+        # TODO add attachments
+        try:
+            self.assertIsNotNone(response_declaration["id"])
+            self.assertIsNotNone(response_declaration["created_by"])
+            self.assertIsNotNone(response_declaration["assigned_to"])
+            self.assertIsNotNone(response_declarationlines[0]["declaration"])
+            self.assertIsNotNone(response_declarationlines[0]["declaration_sub_type"])
+            self.assertIsNotNone(response_declarationlines[1]["declaration"])
+            self.assertIsNotNone(response_declarationlines[1]["declaration_sub_type"])
+            self.assertIsNotNone(response_declarationlines[2]["declaration"])
+            self.assertIsNotNone(response_declarationlines[2]["declaration_sub_type"])
+
+            self.assertEqual(response_declaration["created_by"], (employee.key.integer_id()))
+            self.assertEqual(response_declaration["assigned_to"], [supervisor.key.integer_id()])
+            self.assertEqual(response_declarationlines[0]["declaration"], response_declaration["id"])
+            self.assertEqual(response_declarationlines[1]["declaration"], response_declaration["id"])
+            self.assertEqual(response_declarationlines[2]["declaration"], response_declaration["id"])
+
+        except KeyError as error:
+            self.fail("Test Failed! Expected the key: " + str(
+                error) + " to be present in the response, but it was not found. Found only: " + str(response_data))
+        except ValueError as error:
+            self.fail("Test Failed! There is an invalid value in the response data. "
+                      "This usually happens with parsing wrong input values.\n"
+                      "The values expected for each key are:\n"
+                      "{\"id\" : integer,\n"
+                      "\"created_by\" : integer,\n"
+                      "\"assigned_to\" : integer,\n"
+                      "\"declaration\" : integer,\n"
+                      "\"declaration_sub_type\" : integer}\n"
+                      "______________________\n"
+                      "Full error message:\n"
+                      + str(error))
+
+    def test_add_new_declaration_negative(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration"
+
+        setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        employee = logged_in_person
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
+        declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 1)
+
+        declaration.assigned_to[0] = None
+
+        lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
+
+        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
+                                    'lines': lines,
+                                    'attachment': ""})
+
+        for declarationline in declarationlines:
+            declarationline.key.delete()
+
+        declaration.key.delete()
+
+        self.negative_test_stub_handler(path, "post", 400, combined_dict)
+
+    def test_add_new_declaration_one_line_negative(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration"
+
+        setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        employee = logged_in_person
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
+        declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 1)
+
+        for declarationline in declarationlines:
+            declarationline.declaration_sub_type = None
+
+        lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
+
+        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
+                                    'lines': lines,
+                                    'attachment': ""})
+
+        for declarationline in declarationlines:
+            declarationline.key.delete()
+
+        declaration.key.delete()
+
+        self.negative_test_stub_handler(path, "post", 400, combined_dict)
+
+    def test_add_new_declaration_more_lines_negative(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration"
+
+        setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+
+        employee = logged_in_person
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
+        declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 3)
+
+        for declarationline in declarationlines:
+            declarationline.declaration_sub_type = None
+
+        lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
+
+        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
+                                    'lines': lines,
+                                    'attachment': ""})
+
+        for declarationline in declarationlines:
+            declarationline.key.delete()
+
+        declaration.key.delete()
+
+        self.negative_test_stub_handler(path, "post", 400, combined_dict)
