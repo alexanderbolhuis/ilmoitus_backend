@@ -99,19 +99,15 @@ class Declaration(ndb.Model):
     # this property is used to check the permissions against
     all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "items_total_price", "items_count"
                              "supervisor_comment", "human_resources_comment", "declined_by",
-                             "submitted_to_human_resources_by", "locked_at",
-
-                             "sent_to_human_resources_at", "supervisor_declined_at", "supervisor_approved_at",
-                             "human_resources_approved_at", "human_resources_declined_at", "will_be_payed_out_on",
-                             "human_resources_approved_by"]
+                             "submitted_to_human_resources_by", "locked_at", "sent_to_human_resources_at",
+                             "supervisor_declined_at", "supervisor_approved_at", "human_resources_approved_at",
+                             "human_resources_declined_at", "will_be_payed_out_on", "human_resources_approved_by"]
 
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment", "items_total_price",
                                         "items_count"],
 
                    "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "items_total_price",
-                                          "items_count", "locked_at",
-
-                                          "supervisor_comment"],
+                                          "items_count", "locked_at", "supervisor_comment"],
 
                    "supervisor_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                        "items_total_price", "items_count", "locked_at", "declined_by",
