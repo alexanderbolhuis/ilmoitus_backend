@@ -908,6 +908,8 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
 
         declaration.key.delete()
 
+        items_total_price = lines[0]["cost"]
+
         response = self.positive_test_stub_handler(path,
                                                         "post",
                                                         data_dict=combined_dict)
@@ -923,6 +925,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
             self.assertIsNotNone(response_declaration["id"])
             self.assertIsNotNone(response_declaration["created_by"])
             self.assertIsNotNone(response_declaration["assigned_to"])
+            self.assertEqual(response_declaration["items_total_price"], items_total_price)
             self.assertIsNotNone(response_declarationlines[0]["declaration"])
             self.assertIsNotNone(response_declarationlines[0]["declaration_sub_type"])
 
@@ -976,6 +979,10 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
 
         declaration.key.delete()
 
+        items_total_price = 0
+        for line in lines:
+            items_total_price += int(line["cost"])
+
         response = self.positive_test_stub_handler(path,
                                                    "post",
                                                    data_dict=combined_dict)
@@ -990,6 +997,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
             self.assertIsNotNone(response_declaration["id"])
             self.assertIsNotNone(response_declaration["created_by"])
             self.assertIsNotNone(response_declaration["assigned_to"])
+            self.assertEqual(response_declaration["items_total_price"], str(items_total_price))
             self.assertIsNotNone(response_declarationlines[0]["declaration"])
             self.assertIsNotNone(response_declarationlines[0]["declaration_sub_type"])
             self.assertIsNotNone(response_declarationlines[1]["declaration"])
