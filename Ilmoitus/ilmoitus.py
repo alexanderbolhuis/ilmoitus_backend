@@ -483,6 +483,7 @@ class AddNewDeclarationHandler(BaseRequestHandler):
         declaration.assigned_to = [assigned_to.key]
         declaration.created_by = created_by.key
         declaration.comment = declaration_data["comment"]
+        declaration.items_count = 0
         declaration.items_total_price = 0
         declaration.put()
 
@@ -494,6 +495,7 @@ class AddNewDeclarationHandler(BaseRequestHandler):
 
             try:
                 newline.cost = int(line["cost"])
+                declaration.items_count += 1
                 declaration.items_total_price += newline.cost
             except Exception:
                 give_error_response(self, 400, "De opgegeven data bevat foute waardes voor een declaratieline.",
