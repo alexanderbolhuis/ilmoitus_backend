@@ -32,10 +32,6 @@ ilmoitusApp.controller('declarationsController', function($scope, $state, $http)
 	$scope.navBtnSelect("declarationsBtn");
 	$http.get('/declarations/employee').then(function(res){
 		$scope.declarationList = res.data;
-		for(var i = 0 ; i < $scope.declarationList.length ; i++){
-			$scope.declarationList[i].totalprice = 90;
-			$scope.declarationList[i].itemCount = 3;
-		}
 	}, function(err) { 
 		console.error(err);
 	});
