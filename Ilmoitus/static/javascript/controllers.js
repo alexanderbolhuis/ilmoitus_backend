@@ -32,6 +32,31 @@ ilmoitusApp.controller('declarationsController', function($scope, $state, $http)
 	$scope.navBtnSelect("declarationsBtn");
 	$http.get('/declarations/employee').then(function(res){
 		$scope.declarationList = res.data;
+		for(var i = 0 ; i < $scope.declarationList.length ; i++){
+			switch($scope.declarationList[i].class_name){
+				case "supervisor_declined_declaration":
+					$scope.declarationList[i].info = $scope.declarationList[i].supervisor_comment;
+					break;
+				case "human_resources_declined_declaration":
+					$scope.declarationList[i].info = $scope.declarationList[i].human_resources_comment;
+					break;
+				case "human_resources_approved_declaration":
+					$scope.declarationList[i].info = "Word uitbetaald op: "+$scope.declarationList[i].will_be_payed_out_on;
+					break;
+				default:
+					$scope.declarationList[i].info = "";
+			}
+			//turn created_at dates to actual javascript dates for comparison and string convertion.
+			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
+		}
+
+		//sort the array on creation date
+		$scope.declarationList.sort(function(a, b) {
+		    a = a.created_at;
+		    b = b.created_at;
+		    return a>b ? -1 : a<b ? 1 : 0;
+		});
+
 	}, function(err) { 
 		console.error(err);
 	});

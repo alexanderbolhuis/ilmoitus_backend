@@ -19,7 +19,7 @@
 			<tr ng-repeat="declaration in declarationList" ng-dblclick="openDeclarationDetails(declaration.id);" id="{{ declaration.id }}" 
                 ng-class="{selected:currentdeclaration.id==declaration.id}" ng-click="selectDeclaration(declaration);">
                 
-				<td>{{ declaration.created_at.split(' ')[0] }}</td>
+				<td>{{ declaration.created_at.toLocaleDateString() }}</td>
 				<td>{{ declaration.items_count }}</td>
 				<td>&euro; {{ declaration.items_total_price }}</td>
 				<td>{{ declaration.state }}</td>
