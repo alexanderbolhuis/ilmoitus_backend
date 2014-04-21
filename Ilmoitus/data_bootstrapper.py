@@ -332,7 +332,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaration_nine.items_total_price = 87
         declaration_nine.put()
 
-        #Declaration lines for declaration three
+        #Declaration lines for declaration nine
         line_one = ilmoitus_model.DeclarationLine()
         line_one.declaration = declaration_nine.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
@@ -392,7 +392,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaration_eleven.items_total_price = 140
         declaration_eleven.put()
 
-        #Declaration lines for declaration three
+        #Declaration lines for declaration eleven
         line_one = ilmoitus_model.DeclarationLine()
         line_one.declaration = declaration_eleven.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
@@ -472,7 +472,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaration_four.items_total_price = 155
         declaration_four.put()
 
-        #Declaration lines for declaration three
+        #Declaration lines for declaration four
         line_one = ilmoitus_model.DeclarationLine()
         line_one.declaration = declaration_four.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
@@ -499,7 +499,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaration_five.items_total_price = 25
         declaration_five.put()
 
-        #Declaration lines for declaration three
+        #Declaration lines for declaration five
         line_one = ilmoitus_model.DeclarationLine()
         line_one.declaration = declaration_five.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
