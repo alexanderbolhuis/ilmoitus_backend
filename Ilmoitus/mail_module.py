@@ -32,4 +32,4 @@ def create_ending_of_the_body():
     return "With kind regards,\n\nIlmoitus team"
 
 def create_body(name):
-    return create_begin_of_the_body(name) + create_ending_of_the_body()
+    return create_begin_of_the_body(name) + create_ending_of_the_body
