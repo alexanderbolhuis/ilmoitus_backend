@@ -589,6 +589,42 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
             self.abort(401)
 
 
+class SetOpenToLockedDeclaration(BaseRequestHandler):
+    def put(self):
+        person_data = get_current_person("supervisor")
+        current_user = person_data["person_value"]
+
+        if current_user is not None and current_user.class_name == 'supervisor':
+            if self.request.body is not None:
+                data = None
+                try:
+                    data = json.loads(self.request.body)
+                except ValueError:
+                    give_error_response(self, 500, "Er is ongeldige data verstuurd; kan het verzoek niet afhandelen",
+                                        "Invalid JSON data; invalid format.", more_info=str(self.request.body))
+
+                declaration_id = long(data["id"])
+
+                today_date = datetime.datetime.now()
+
+                declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
+
+                if declaration.class_name == "open_declaration":
+                    declaration.class_name = "locked_declaration"
+                    declaration.locked_at = today_date
+                    declaration.put()
+                    response_module.give_response(self, declaration.get_object_json_data())
+                else:
+                    give_error_response(self, 500, "Moet een open declaration zijn",
+                                        "Can only approve a supervisor_approved_declaration.")
+            else:
+                give_error_response(self, 500, "Er is geen data opgegeven.",
+                                    "Request body is None.")
+        else:
+            #user does not have the appropriate permissions or isn't logged in at all.
+            self.abort(401)
+
+
 application = webapp.WSGIApplication(
     [
         ('/declaration/approve_by_hr', ApproveByHumanResources),
@@ -606,6 +642,7 @@ application = webapp.WSGIApplication(
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
+        ('/declaration/lock', SetOpenToLockedDeclaration),
         ("/declaration", AddNewDeclarationHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
