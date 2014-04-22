@@ -9,6 +9,7 @@ import ilmoitus as main_application
 import datetime
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
 from Base.base_test_methods import BaseTestClass
+import ilmoitus_model
 
 
 class EmployeeHandlerTest(BaseTestClass):
@@ -794,30 +795,41 @@ class ApproveDeclarationByHumanResourcesTest(BaseAuthorizationHandler):
         person = PersonDataCreator.create_valid_employee_data()
         supervisor = PersonDataCreator.create_valid_supervisor()
 
-        declaration1 = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person, supervisor)
-        declaration2 = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person, supervisor)
-        declaration3 = DeclarationsDataCreator.create_valid_open_declaration(person, supervisor)
+        declaration = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person, supervisor)
 
         #test approving a supervisor approved declaration
-        post_data = dict(id=declaration1.key.integer_id(), pay_date="2014-04-02T00:00:00.000Z")
-        self.positive_test_stub_handler(path, "put_json", data_dict=post_data)
-        self.assertEqual(declaration1.class_name, "human_resources_approved_declaration")
-        self.assertEqual(declaration1.human_resources_approved_by, logged_in_person.key)
-        self.assertEqual(declaration1.will_be_payed_out_on.isoformat(), "2014-04-02")
+        post_data = dict(id=declaration.key.integer_id(), pay_date="2014-04-02T00:00:00.000Z")
+        response = self.positive_test_stub_handler(path, "put_json", data_dict=post_data)
+        response_data = json.loads(response.body)
+        self.assertEqual(response_data["class_name"], "human_resources_approved_declaration")
+        self.assertEqual(response_data["human_resources_approved_by"], logged_in_person.key.integer_id())
+        self.assertEqual(response_data["will_be_payed_out_on"], "2014-04-02")
         #seconds & minutes could easily change between insertion of the data and execution of this test.
         # Because of this, only check date and hour.
-        self.assertEqual(declaration1.human_resources_approved_at.strftime('%Y-%m-%d %H'),
+        self.assertEqual(declaration.human_resources_approved_at.strftime('%Y-%m-%d %H'),
                          datetime.datetime.now().strftime('%Y-%m-%d %H'))
-        self.assertEqual(declaration2.class_name, "supervisor_approved_declaration")
-        self.assertEqual(declaration3.class_name, "open_declaration")
+
+        messages = self.mail_stub.get_sent_messages(to=ilmoitus_model.Person.get_by_id(response_data["created_by"]).email)
+        self.assertEqual(1, len(messages))
+
+def test_negative_approve_open_declaration(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/approve_by_hr"
+        setup_data = self.setup_server_with_user([(path, main_application.ApproveByHumanResources)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "human_resources"
+        logged_in_person.put()
+
+        person = PersonDataCreator.create_valid_employee_data()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(person, supervisor)
 
         #test approving an open declaration. (should not be possible)
-        post_data = dict(id=declaration3.key.integer_id(), pay_date="2014-04-02T00:00:00.000Z")
+        post_data = dict(id=declaration.key.integer_id(), pay_date="2014-04-02T00:00:00.000Z")
         self.negative_test_stub_handler(path, "put_json", 500, data_dict=post_data)
-        self.assertEqual(declaration1.class_name, "human_resources_approved_declaration")
-        self.assertEqual(declaration2.class_name, "supervisor_approved_declaration")
-        self.assertEqual(declaration3.class_name, "open_declaration")
-
 
 class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationHandler):
     def test_positive_decline(self):

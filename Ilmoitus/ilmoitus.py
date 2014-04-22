@@ -12,6 +12,7 @@ import dateutil.parser
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from error_response_module import give_error_response
+import mail_module
 
 
 def get_current_person(class_name=None):
@@ -538,6 +539,7 @@ class ApproveByHumanResources(BaseRequestHandler):
                     declaration.will_be_payed_out_on = pay_date
                     declaration.human_resources_approved_by = current_user.key
                     declaration.put()
+                    mail_module.send_mail_declaration_approved(self, declaration)
                     response_module.give_response(self, declaration.get_object_json_data())
                 else:
                     give_error_response(self, 500, "Kan geen declaratie goedkeuren die niet eerst door een leidinggevende is goedgekeurd.",
