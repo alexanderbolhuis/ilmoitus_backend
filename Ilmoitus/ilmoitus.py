@@ -3,14 +3,14 @@ import webapp2 as webapp
 import response_module
 import ilmoitus_model
 import json
-import datetime
-import dateutil.parser
 import data_bootstrapper
 import logging
+import datetime
 import data_bootstrapper
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from error_response_module import give_error_response
+
 
 
 def get_current_person(class_name=None):
@@ -86,9 +86,8 @@ class BaseRequestHandler(webapp.RequestHandler):
         self.response.write(self.request.body)
         try:
             self.response.set_status(exception.code)
-        except AttributeError:
-            #The caught exception was not a HTTPException; we don't know how to handle this so just raise it again
-            raise exception
+        except:
+            print exception
 
 
 class DefaultHandler(BaseRequestHandler):
@@ -219,9 +218,8 @@ class AllDeclarationsForSupervisor(BaseRequestHandler):
 
         if person is not None and person.class_name == 'supervisor':
 
-            declaration_query = ilmoitus_model.Declaration.query(
-                ilmoitus_model.Declaration.class_name == 'open_declaration',
-                ilmoitus_model.Declaration.assigned_to == person.key)
+            declaration_query = ilmoitus_model.Declaration.query(ilmoitus_model.Declaration.class_name == 'open_declaration',
+                                                        ilmoitus_model.Declaration.assigned_to == person.key)
             query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
             response_module.respond_with_existing_model_object_collection(self, query_result)
@@ -260,71 +258,6 @@ class UserSettingsHandler(BaseRequestHandler):
             employee.wants_email_notifications = bool(self.request.get("wants_email_notifications"))
             employee.wants_phone_notifications = bool(self.request.get("wants_phone_notifications"))
             #TODO what to do when employee is None?
-
-
-class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
-    def put(self):
-        #Only supervisors can perform the actions in this handler: check for that first
-        current_person_data = get_current_person("Supervisor")
-        if "user_is_logged_in" not in current_person_data.keys() or \
-                not current_person_data["user_is_logged_in"]:  # if logged in is false
-            give_error_response(self, 401,
-                                "Er is niemand ingelogd.",
-                                "get_current_person returned a False value for user_is_logged_in")
-
-        current_person_object = current_person_data["person_value"]
-        if current_person_object is None:
-            give_error_response(self, 401, "De ingelogd persoon in onbekend binnen de applicatie"
-                                           " of de ingelogde persoon heeft niet de rechten van een"
-                                           " leidinggevende binnen de applicatie.",
-                                "person_value key in get_current_person was None")
-        declaration_data = None
-        try:
-            declaration_data = json.loads(self.request.body)
-        except ValueError:
-            if self.request.body is None or len(self.request.body) <= 0:
-                give_error_response(self, 400, "Er is geen declratie opgegeven om aan te passen.",
-                                    "Request body was None.")
-        if declaration_data is None or not isinstance(declaration_data, dict):
-            give_error_response(self, 400, "Er is geen declratie opgegeven om aan te passen.",
-                                "Request.body did not contain valid json data")
-
-        declaration_id = None
-        try:
-            declaration_id = long(declaration_data["id"])
-        except KeyError:
-            give_error_response(self, 400, "De opgegeven data bevat geen identificatie voor een declaratie.",
-                                "The body doesn't contain an ID key.")
-        except (TypeError, ValueError):
-            give_error_response(self, 400,
-                                "De opgegeven data bevat een ongeldige identificatie voor een declaratie.",
-                                "Failed to parse the value of the ID key in the body to a long.")
-
-        declaration_object = ilmoitus_model.Declaration.get_by_id(declaration_id)
-        try:
-            if current_person_object.key not in declaration_object.assigned_to:
-                give_error_response(self, 401, "Deze declaratie is niet aan de leidinggevende toegewezen die op"
-                                               " dit moment is ingelogd", "current_person_object's id was not in the"
-                                                                          " declaration_object's asigned_to list.")
-            if declaration_object.class_name != "locked_declaration":
-                give_error_response(self, 422,
-                                    "De opgegeven declaratie is niet gesloten en kan dus niet goedgekeurd worden.",
-                                    "Class name of fetched object was not equal locked_declaration")
-
-            declaration_object.class_name = "supervisor_approved_declaration"
-            declaration_object.submitted_to_human_resources_by = current_person_object.key
-            declaration_object.supervisor_approved_at = datetime.datetime.now()
-            if "supervisor_comment" in declaration_data.keys():
-                #No need to check if the string parsing could fail here; json will always have data that
-                #can be parsed to a string
-                declaration_object.supervisor_comment = str(declaration_data["supervisor_comment"])
-
-        except AttributeError:
-            give_error_response(self, 404,
-                                "De opgegeven identificatie is onbekend en behoort tot geen enkele declaratie.",
-                                "Query result from the value of the ID key of the body returned None.")
-        declaration_object.put()
-        response_module.give_response(self, json.dumps(declaration_object.get_object_as_data_dict()))
 
 
 class CurrentUserSupervisors(BaseRequestHandler):
@@ -371,104 +304,28 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
 
         declaration = ilmoitus_model.Declaration
         query = ilmoitus_model.Declaration.query(ndb.OR(declaration.created_by == key,
-                                                        declaration.assigned_to == key,  # TODO fix the list search
-                                                        declaration.supervisor_approved_by == key,
-                                                        declaration.submitted_to_human_resources_by == key,
-                                                        declaration.human_resources_declined_by == key,
-                                                        declaration.human_resources_approved_by == key,
-                                                        declaration.declined_by == key))
+                                 declaration.assigned_to == key,  # TODO fix the list search
+                                 declaration.supervisor_approved_by == key,
+                                 declaration.submitted_to_human_resources_by == key,
+                                 declaration.human_resources_declined_by == key,
+                                 declaration.human_resources_approved_by == key,
+                                 declaration.declined_by == key))
         query_result = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
         if len(query_result) != 0:
-            response_module.give_response(self, json.dumps(
-                map(lambda declaration_item: declaration_item.get_object_as_data_dict(), query_result)))
+            response_module.give_response(self, json.dumps(map(lambda declaration_item: declaration_item.get_object_as_data_dict(), query_result)))
         else:
             self.abort(404)
 
-
-class ApproveByHumanResources(BaseRequestHandler):
-    def put(self):
-        person_data = get_current_person("human_resources")
-        current_user = person_data["person_value"]
-
-        if current_user is not None:
-            if self.request.body is not None:
-                data = None
-                try:
-                    data = json.loads(self.request.body)
-                except ValueError:
-                    give_error_response(self, 500, "Er is ongeldige data verstuurd; kan het verzoek niet afhandelen",
-                                        "Invalid JSON data; invalid format.", more_info=str(self.request.body))
-
-                declaration_id = data["id"]
-                pay_date = dateutil.parser.parse(data["pay_date"])
-                today_date = datetime.datetime.now()
-
-                declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
-
-                if declaration.class_name == "supervisor_approved_declaration":
-                    declaration.class_name = "human_resources_approved_declaration"
-                    declaration.human_resources_approved_at = today_date
-                    declaration.will_be_payed_out_on = pay_date
-                    declaration.human_resources_approved_by = current_user.key
-                    declaration.put()
-                    response_module.give_response(self, declaration.get_object_json_data())
-                else:
-                    give_error_response(self, 500, "Kan geen declaratie goedkeuren die niet eerst door een leidinggevende is goedgekeurd.",
-                                        "Can only approve a supervisor_approved_declaration.")
-            else:
-                give_error_response(self, 500, "Er is geen data opgegeven.",
-                                    "Request body is None.")
-        else:
-            #user does not have the appropriate permissions or isn't logged in at all.
-            give_error_response(self, 401, "Geen permissie om een declaratie goed te keuren!",
-                                    "current_user is None or not from human_resources")
-            self.abort(401)
-
-
-class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
-    def put(self):
-        person_data = get_current_person("human_resources")
-        person = person_data["person_value"]
-        if person is not None:
-            if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
-                if self.request.body is not None:
-                    data = None
-                    try:
-                        data = json.loads(self.request.body)
-                    except ValueError:
-                        give_error_response(self, 500, "Er is ongeldige data verstuurd; Kan het verzoek niet afhandelen", "Invalid json data; Invalid format", more_info=str(self.request.body))
-                    declaration_id = data['declaration_id']
-                    person_key = person.key
-                    current_date = datetime.datetime.now()
-                    declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
-                    if declaration.class_name == 'supervisor_approved_declaration':
-                        declaration.class_name = 'human_resources_declined_declaration'
-                        declaration.human_resources_declined_by = person_key
-                        declaration.human_resources_declined_at = current_date
-                        declaration.put()
-                        response_module.give_response(self, declaration.get_object_json_data())
-                    else:
-                        #
-                        give_error_response(self, 500, "Kan geen declaratie afkeuren die niet eerst door een leidinggevende is goedgekeurd.", "Can only decline a supervisor_approved_declaration.")
-                else:
-                    #
-                    give_error_response(self, 500, "Er is geen data opgegeven!.", "Request body is None!.")
-            else:
-                #User is not authorised
-                self.abort(401)
-        else:
-            #TODO: error messages:
-            #User is not logged in/registered; he/she needs to login first
-            self.abort(401)
-
-
 class SetOpenToLockedDeclaration(BaseRequestHandler):
     def put(self):
+        print "ja1"
         person_data = get_current_person("supervisor")
         current_user = person_data["person_value"]
 
         if current_user is not None and current_user.class_name == 'supervisor':
+            print "ja2"
             if self.request.body is not None:
+                print "ja3"
                 data = None
                 try:
                     data = json.loads(self.request.body)
@@ -500,7 +357,6 @@ class SetOpenToLockedDeclaration(BaseRequestHandler):
 
 application = webapp.WSGIApplication(
     [
-        ('/declaration/approve_by_hr', ApproveByHumanResources),
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
         ('/user/settings/', UserSettingsHandler),
@@ -508,16 +364,15 @@ application = webapp.WSGIApplication(
         ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
-        ('/declaration/declined_by_hr', SupervisorDeclarationToHrDeclinedDeclarationHandler),
         ('/supervisors/', CurrentUserSupervisors),
         ('/declarations/employee', AllDeclarationsForEmployeeHandler),
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
-        ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
+        ('/declaration/lock', SetOpenToLockedDeclaration),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),
-        ('/auth', AuthorizationStatusHandler),
+        ('/auth/(.*)', AuthorizationStatusHandler),  # needs to be bellow other auth handlers!
         ('/clear', data_bootstrapper.ClearHandler),
         ('/fill', data_bootstrapper.FillHandler),
         ('/create', data_bootstrapper.CreateDataHandler),
