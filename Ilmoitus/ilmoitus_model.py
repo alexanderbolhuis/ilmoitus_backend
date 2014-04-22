@@ -19,6 +19,8 @@ class Person(ndb.Model):
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
     email = ndb.StringProperty()
+    password = ndb.StringProperty()
+    token = ndb.StringProperty()
     employee_number = ndb.IntegerProperty()
     department = ndb.KeyProperty(kind=Department)
     supervisor = ndb.KeyProperty(kind="Person")

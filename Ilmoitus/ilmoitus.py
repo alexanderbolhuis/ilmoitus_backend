@@ -12,37 +12,7 @@ import dateutil.parser
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from error_response_module import give_error_response
-
-
-def get_current_person(class_name=None):
-    """
-     Global function that will retrieve the user that is currently logged in (through Google's users API)
-     and fetch the person model object of this application that belongs to it through the email field.
-
-     :param class_name: (Optional) A reference to a person model class that should be used to find
-     the model class object that belongs to the logged in user. If not provided, model.Person will be used.
-
-     :returns: A dictionary containing two key-value pairs:
-
-         -"user_is_logged_in": Boolean that indicates whether a user is logged into the users API of Google.
-
-         -"person_value": Model object of the Person type (or any subclass, indicated by the person_class_reference
-        parameter). If there is either no user logged into Google's users API _OR_ the logged in user isn't found
-        in the model class, this will be None
-    """
-    current_logged_in_user = users.get_current_user()
-    return_data = {"user_is_logged_in": False, "person_value": None}
-    if current_logged_in_user is not None:
-        return_data["user_is_logged_in"] = True
-        if class_name is None:
-            person_query = ilmoitus_model.Person.query(ilmoitus_model.Person.email == current_logged_in_user.email())
-        else:
-            person_query = ilmoitus_model.Person.query(ilmoitus_model.Person.email == current_logged_in_user.email(),
-                                                       ilmoitus_model.Person.class_name == class_name)
-        query_result = person_query.get()
-        if query_result is not None:
-            return_data["person_value"] = query_result
-    return return_data
+import ilmoitus_auth
 
 
 class BaseRequestHandler(webapp.RequestHandler):
@@ -50,6 +20,9 @@ class BaseRequestHandler(webapp.RequestHandler):
     Wrapper class that will allow all other handler classes to make easily read what the
     limit and/or offset is for a request
     """
+    def get_header(self, key):
+        header = self.request.get(key, default_value=None)
+        return header
 
     def get_header_limit(self):
         limit = self.request.get("limit", default_value=20)
@@ -148,12 +121,14 @@ class AuthorizationStatusHandler(BaseRequestHandler):
          is True, we still have to check if person value is not None. by directly checking person is not None, we
          get the same result with less code.
         """
-        person_data = get_current_person()
-        person = person_data["person_value"]
-        if person is not None:
+        result = ilmoitus_auth.get_current_person(self)
+
+        if result["user_is_logged_in"]:
+            person = result["person_value"]
+
             #Create a default data dictionary to limit code duplication
             response_data = {"person_id": person.key.integer_id(), "is_logged_in": True,
-                             "is_application_admin": users.is_current_user_admin()}
+                             "is_application_admin": users.is_current_user_admin() }
             response_module.give_response(self, json.dumps(response_data))
         else:
             #Person is not known in the application's model
@@ -162,36 +137,22 @@ class AuthorizationStatusHandler(BaseRequestHandler):
 
 class LoginHandler(BaseRequestHandler):
     def get(self):
-        person_data = get_current_person()
-        person = person_data["person_value"]
-        if person is None:
-            self.redirect(users.create_login_url('/auth/login'))
-            # We will return to the same url after logging in since this handler will than check if the login
-            # was really successful, and automatically redirect to the main page if so.
-        else:
-            #TODO: redirect here to the actual "main" page
-            #TODO: research/discuss how to make this work cross platform (how will iOS & Android handle redirects?)
-            self.redirect("/main_page")
+        result = ilmoitus_auth.authencate(self.request.POST["email"], self.request.POST["password"])
 
+        if result["passed"]:
+            person = result["person_value"]
 
-class LogoutHandler(BaseRequestHandler):
-    def get(self):
-        person_data = get_current_person()
-        person = person_data["person_value"]
-        if person is not None:
-            self.redirect(users.create_logout_url('/auth/logout/'))
-            # We will return to the same url after logging out since this handler will than check if the login
-            # was really successful, and automatically redirect to the login page if so.
+            response_data = {"person_id": person.key.integer_id(), "is_logged_in": True,
+                             "is_application_admin": users.is_current_user_admin(), "token":result["token"] }
+            response_module.give_response(self, json.dumps(response_data))
         else:
-            #TODO: redirect here to the actual login page
-            #TODO: research/discuss how to make this work cross platform (how will iOS & Android handle redirects?)
-            self.redirect("/login_page")
+            response_module.give_response(self, json.dumps({"is_logged_in": False}))
 
 
 class AllDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
         #model.Employee as param since this handler handles calls from their POV.
-        person_data = get_current_person("employee")
+        person_data = ilmoitus_auth.get_current_person(self, "employee")
         person = person_data["person_value"]
 
         if person is not None:
@@ -215,7 +176,7 @@ class SpecificEmployeeDetailsHandler(BaseRequestHandler):
 
 class AllDeclarationsForSupervisor(BaseRequestHandler):
     def get(self):
-        person_data = get_current_person("supervisor")
+        person_data = ilmoitus_auth.get_current_person(self, "supervisor")
         person = person_data["person_value"]
 
         if person is not None and person.class_name == 'supervisor':
@@ -233,7 +194,7 @@ class AllDeclarationsForSupervisor(BaseRequestHandler):
 
 class CurrentUserDetailsHandler(BaseRequestHandler):
     def get(self):
-        current_user_data = get_current_person()
+        current_user_data = ilmoitus_auth.get_current_person(self)
         user_is_logged_in = current_user_data["user_is_logged_in"]
         if user_is_logged_in is True:
             current_user = current_user_data["person_value"]
@@ -249,14 +210,14 @@ class CurrentUserDetailsHandler(BaseRequestHandler):
 
 class UserSettingsHandler(BaseRequestHandler):
     def get(self):
-        employee = get_current_person()
+        employee = ilmoitus_auth.get_current_person(self)
         if employee is not None:
             response_module.give_response(self, json.dumps(employee.details()))
             response_module.give_response(self, employee.get_object_json_data())
             #TODO what to do when employee is None?
 
     def put(self):
-        employee = get_current_person()
+        employee = ilmoitus_auth.get_current_person(self)
         if employee is not None:
             employee.wants_email_notifications = bool(self.request.get("wants_email_notifications"))
             employee.wants_phone_notifications = bool(self.request.get("wants_phone_notifications"))
@@ -266,7 +227,7 @@ class UserSettingsHandler(BaseRequestHandler):
 class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
     def put(self):
         #Only supervisors can perform the actions in this handler: check for that first
-        current_person_data = get_current_person("Supervisor")
+        current_person_data = ilmoitus_auth.get_current_person(self, "Supervisor")
         if "user_is_logged_in" not in current_person_data.keys() or \
                 not current_person_data["user_is_logged_in"]:  # if logged in is false
             give_error_response(self, 401,
@@ -331,7 +292,7 @@ class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
 class CurrentUserSupervisors(BaseRequestHandler):
     def get(self):
         #TODO now this function gets all supervisors, we need to know if it only need supervisors of current person
-        current_user_data = get_current_person()
+        current_user_data = ilmoitus_auth.get_current_person(self)
         user_is_logged_in = current_user_data["user_is_logged_in"]
         if user_is_logged_in is True:
             supervisor_query = ilmoitus_model.Person.query(ilmoitus_model.Person.class_name == "supervisor")
@@ -344,7 +305,7 @@ class CurrentUserSupervisors(BaseRequestHandler):
 
 class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
     def get(self):
-        person_data = get_current_person("human_resources")
+        person_data = ilmoitus_auth.get_current_person(self, "human_resources")
         person = person_data["person_value"]
         if person is not None:
             if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
@@ -365,7 +326,7 @@ class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
 
 class CurrentUserAssociatedDeclarations(BaseRequestHandler):
     def get(self):
-        person_data = get_current_person()
+        person_data = ilmoitus_auth.get_current_person(self)
         current_user = person_data["person_value"]
 
         key = current_user.key
@@ -388,7 +349,7 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
 class AddNewDeclarationHandler(BaseRequestHandler):
     def post(self):
         # Check if logged in
-        current_person_data = get_current_person("employee")
+        current_person_data = ilmoitus_auth.get_current_person(self, "employee")
         if "user_is_logged_in" not in current_person_data.keys() or \
                 not current_person_data["user_is_logged_in"]:
             give_error_response(self, 401,
@@ -441,7 +402,7 @@ class AddNewDeclarationHandler(BaseRequestHandler):
                                 "The owner is unknown.")
 
         # Check if created_by is logged_in
-        logged_in_person = get_current_person()
+        logged_in_person = ilmoitus_auth.get_current_person(self)
         if created_by.key != logged_in_person["person_value"].key:
             give_error_response(self, 400, "De maker is niet ingelogd in het systeem.",
                                 "The owner is not logged in.")
@@ -514,7 +475,7 @@ class AddNewDeclarationHandler(BaseRequestHandler):
 
 class ApproveByHumanResources(BaseRequestHandler):
     def put(self):
-        person_data = get_current_person("human_resources")
+        person_data = ilmoitus_auth.get_current_person(self, "human_resources")
         current_user = person_data["person_value"]
 
         if current_user is not None:
@@ -554,7 +515,7 @@ class ApproveByHumanResources(BaseRequestHandler):
 
 class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
     def put(self):
-        person_data = get_current_person("human_resources")
+        person_data = ilmoitus_auth.get_current_person(self, "human_resources")
         person = person_data["person_value"]
         if person is not None:
             if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
@@ -608,7 +569,6 @@ application = webapp.WSGIApplication(
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
         ("/declaration", AddNewDeclarationHandler),
         ('/auth/login', LoginHandler),
-        ('/auth/logout', LogoutHandler),
         ('/auth', AuthorizationStatusHandler),
         ('/clear', data_bootstrapper.ClearHandler),
         ('/fill', data_bootstrapper.FillHandler),
