@@ -328,6 +328,66 @@ class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
         response_module.give_response(self, json.dumps(declaration_object.get_object_as_data_dict()))
 
 
+class SetOpenToLockedDeclarationHandler(BaseRequestHandler):
+    def put(self):
+        #Only supervisors can perform the actions in this handler: check for that first
+        current_person_data = get_current_person("Supervisor")
+        if "user_is_logged_in" not in current_person_data.keys() or \
+                not current_person_data["user_is_logged_in"]:  # if logged in is false
+            give_error_response(self, 401,
+                                "Er is niemand ingelogd.",
+                                "get_current_person returned a False value for user_is_logged_in")
+
+        current_person_object = current_person_data["person_value"]
+        if current_person_object is None:
+            give_error_response(self, 401, "De ingelogd persoon in onbekend binnen de applicatie"
+                                           " of de ingelogde persoon heeft niet de rechten van een"
+                                           " leidinggevende binnen de applicatie.",
+                                "person_value key in get_current_person was None")
+        declaration_data = None
+        try:
+            declaration_data = json.loads(self.request.body)
+        except ValueError:
+            if self.request.body is None or len(self.request.body) <= 0:
+                give_error_response(self, 400, "Er is geen declratie opgegeven om aan te passen.",
+                                    "Request body was None.")
+        if declaration_data is None or not isinstance(declaration_data, dict):
+            give_error_response(self, 400, "Er is geen declratie opgegeven om aan te passen.",
+                                "Request.body did not contain valid json data")
+
+        declaration_id = None
+        try:
+            declaration_id = long(declaration_data["id"])
+        except KeyError:
+            give_error_response(self, 400, "De opgegeven data bevat geen identificatie voor een declaratie.",
+                                "The body doesn't contain an ID key.")
+        except (TypeError, ValueError):
+            give_error_response(self, 400,
+                                "De opgegeven data bevat een ongeldige identificatie voor een declaratie.",
+                                "Failed to parse the value of the ID key in the body to a long.")
+
+        declaration_object = ilmoitus_model.Declaration.get_by_id(declaration_id)
+        try:
+            if current_person_object.key not in declaration_object.assigned_to:
+                give_error_response(self, 401, "Deze declaratie is niet aan de leidinggevende toegewezen die op"
+                                               " dit moment is ingelogd", "current_person_object's id was not in the"
+                                                                          " declaration_object's asigned_to list.")
+            if declaration_object.class_name != "open_declaration":
+                give_error_response(self, 422,
+                                    "De opgegeven declaratie is niet open en kan dus niet gesloten worden.",
+                                    "Class name of fetched object was not equal to open_declaration")
+
+            declaration_object.class_name = "locked_declaration"
+            declaration_object.locked_at = datetime.datetime.now()
+
+        except AttributeError:
+            give_error_response(self, 404,
+                                "De opgegeven identificatie is onbekend en behoort tot geen enkele declaratie.",
+                                "Query result from the value of the ID key of the body returned None.")
+        declaration_object.put()
+        response_module.give_response(self, json.dumps(declaration_object.get_object_as_data_dict()))
+
+
 class CurrentUserSupervisors(BaseRequestHandler):
     def get(self):
         #TODO now this function gets all supervisors, we need to know if it only need supervisors of current person
@@ -606,6 +666,7 @@ application = webapp.WSGIApplication(
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
+        ('/declarations/lock_open', SetOpenToLockedDeclarationHandler),
         ("/declaration", AddNewDeclarationHandler),
         ('/auth/login', LoginHandler),
         ('/auth/logout', LogoutHandler),

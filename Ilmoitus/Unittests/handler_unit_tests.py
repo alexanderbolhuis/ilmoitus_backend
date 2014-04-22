@@ -1116,3 +1116,221 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         declaration.key.delete()
 
         self.negative_test_stub_handler(path, "post", 400, combined_dict)
+
+class SetOpenToLockedDeclarationHandlerTest(BaseAuthorizationHandler):
+    def test_positive_put_one(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/lock_open"
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SetOpenToLockedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        person = setup_data["random_person"]
+        person.class_name = "Supervisor"
+        person.put()
+
+        supervisor = person
+        employee = PersonDataCreator.create_valid_employee_data()
+        open_declaration_data = DeclarationsDataCreator.create_valid_open_declaration(
+            employee,
+            supervisor).get_object_as_data_dict()
+        open_declaration_data_json_string = json.dumps(open_declaration_data)
+
+        response = self.positive_test_stub_handler(path, "put", data_dict=open_declaration_data_json_string)
+
+        response_data = json.loads(response.body)
+
+        self.assertTrue("id" in response_data.keys())
+        self.assertEqual(open_declaration_data["id"], response_data["id"])
+
+        self.assertTrue("locked_at" in response_data.keys())
+
+        self.assertTrue("class_name" in response_data.keys())
+        self.assertEqual(response_data["class_name"], "locked_declaration")
+
+    def test_negative_put_none(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/lock_open"
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SetOpenToLockedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        person = setup_data["random_person"]
+        person.class_name = "Supervisor"
+        person.put()
+
+        open_declaration_data = None
+
+        self.negative_test_stub_handler(path, "put", 400, data_dict=open_declaration_data)
+
+    def test_negative_put_empty_dict(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/lock_open"
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SetOpenToLockedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        person = setup_data["random_person"]
+        person.class_name = "Supervisor"
+        person.put()
+
+        open_declaration_data = {}
+
+        self.negative_test_stub_handler(path, "put", 400, data_dict=json.dumps(open_declaration_data))
+
+    def test_negative_put_meaningless_string(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/lock_open"
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SetOpenToLockedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        person = setup_data["random_person"]
+        person.class_name = "Supervisor"
+        person.put()
+
+        open_declaration_data = "Some string that will pass the None and length check, " \
+                                  "but should fail on the valid json check"
+
+        self.negative_test_stub_handler(path, "put", 400, data_dict=json.dumps(open_declaration_data))
+
+    def test_negative_put_invalid_id(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/lock_open"
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SetOpenToLockedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        person = setup_data["random_person"]
+        person.class_name = "Supervisor"
+        person.put()
+
+        supervisor = person
+        employee = PersonDataCreator.create_valid_employee_data()
+
+        open_declaration_data = DeclarationsDataCreator.create_valid_open_declaration(
+            employee,
+            supervisor).get_object_as_data_dict()
+
+        #Change the id to a string which is not a long (i.e. an invalid ID)
+        open_declaration_data["id"] = "some string that wont be a valid id"
+
+        self.negative_test_stub_handler(path, "put", 400, data_dict=json.dumps(open_declaration_data))
+
+    def test_negative_put_id_not_found(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/lock_open"
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SetOpenToLockedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        person = setup_data["random_person"]
+        person.class_name = "Supervisor"
+        person.put()
+
+        supervisor = person
+        employee = PersonDataCreator.create_valid_employee_data()
+
+        open_declaration_data = DeclarationsDataCreator.create_valid_open_declaration(
+            employee,
+            supervisor).get_object_as_data_dict()
+
+        #Change the id to a long that does not exists in the datastore
+        open_declaration_data["id"] = long(578814894151775871)
+
+        self.negative_test_stub_handler(path, "put", 404, data_dict=json.dumps(open_declaration_data))
+
+    def test_negative_put_no_id(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/lock_open"
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SetOpenToLockedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        person = setup_data["random_person"]
+        person.class_name = "Supervisor"
+        person.put()
+
+        supervisor = person
+        employee = PersonDataCreator.create_valid_employee_data()
+
+        open_declaration_data = DeclarationsDataCreator.create_valid_open_declaration(
+            employee,
+            supervisor).get_object_as_data_dict()
+
+        #Change the id to None
+        open_declaration_data["id"] = None
+
+        self.negative_test_stub_handler(path, "put", 400, data_dict=json.dumps(open_declaration_data))
+
+    def test_negative_put_logged_in_user_is_not_assigned(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/lock_open"
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SetOpenToLockedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        person = setup_data["random_person"]
+        person.class_name = "Supervisor"
+        person.put()
+
+        supervisor = person
+        employee = PersonDataCreator.create_valid_employee_data()
+
+        open_declaration = DeclarationsDataCreator.create_valid_open_declaration(
+            employee,
+            supervisor)
+
+        #Change the assigned to to another supervisor
+        open_declaration.assigned_to = [PersonDataCreator.create_valid_supervisor().key]
+        open_declaration_data = open_declaration.get_object_as_data_dict()
+
+        self.negative_test_stub_handler(path, "put", 401, data_dict=json.dumps(open_declaration_data))
+
+    def test_negative_put_when_not_supervisor(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declarations/lock_open"
+        self.setup_server_with_user(
+            [(path, main_application.SetOpenToLockedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        #leave the person from the setup function so that it's not a supervisor
+
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        employee = PersonDataCreator.create_valid_employee_data()
+
+        open_declaration_data = DeclarationsDataCreator.create_valid_open_declaration(
+            employee,
+            supervisor).get_object_as_data_dict()
+
+        self.negative_test_stub_handler(path, "put", 401, data_dict=json.dumps(open_declaration_data))
+
+    def test_negative_put_when_no_one_is_logged_in(self):
+        user_is_logged_in = False
+        user_is_admin = '0'
+        path = "/declarations/lock_open"
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SetOpenToLockedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        person = setup_data["random_person"]
+        person.class_name = "Supervisor"
+        person.put()
+
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        employee = PersonDataCreator.create_valid_employee_data()
+
+        open_declaration_data = DeclarationsDataCreator.create_valid_open_declaration(
+            employee,
+            supervisor).get_object_as_data_dict()
+
+        self.negative_test_stub_handler(path, "put", 401, data_dict=json.dumps(open_declaration_data))
