@@ -1170,9 +1170,27 @@ class SetOpenToLockedDeclarationTest(BaseAuthorizationHandler):
         self.assertEqual(declaration2.class_name, "supervisor_approved_declaration")
         self.assertEqual(declaration3.class_name, "open_declaration")
 
+    def test_negative_not_open(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/lock"
+        setup_data = self.setup_server_with_user([(path, main_application.SetOpenToLockedDeclaration)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+        logged_in_person.put()
+
+        person = PersonDataCreator.create_valid_employee_data()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        declaration1 = DeclarationsDataCreator.create_valid_open_declaration(person, supervisor)
+        declaration2 = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person, supervisor)
+        declaration3 = DeclarationsDataCreator.create_valid_open_declaration(person, supervisor)
+
         #test approving an other declaration. (should not be possible)
         post_data = dict(id=declaration2.key.integer_id())
         self.negative_test_stub_handler(path, "put_json", 500, data_dict=post_data)
-        self.assertEqual(declaration1.class_name, "locked_declaration")
+        self.assertEqual(declaration1.class_name, "open_declaration")
         self.assertEqual(declaration2.class_name, "supervisor_approved_declaration")
         self.assertEqual(declaration3.class_name, "open_declaration")
