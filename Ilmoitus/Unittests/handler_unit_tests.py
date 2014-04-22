@@ -1204,3 +1204,115 @@ class SetOpenToLockedDeclarationTest(BaseAuthorizationHandler):
         self.assertEqual(declaration1.class_name, "open_declaration")
         self.assertEqual(declaration2.class_name, "supervisor_approved_declaration")
         self.assertEqual(declaration3.class_name, "open_declaration")
+
+
+class DeclarationCountAndTotalAmountTest(BaseAuthorizationHandler):
+    def test_one_declaration_positive(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/employees/total_declarations/(.*)"
+
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificEmployeeTotalDeclarationsHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "Supervisor"
+        logged_in_person.put()
+
+        person = PersonDataCreator.create_valid_employee_data()
+        person.supervisor = logged_in_person.key
+        person.put()
+
+        valid_approved_declaration = DeclarationsDataCreator.create_valid_human_resources_approved_declaration(person, logged_in_person)
+        valid_approved_declaration.items_total_price = 500
+        valid_approved_declaration.put()
+
+        getpath = "/employees/total_declarations/" + str(person.key.integer_id())
+        response = self.positive_test_stub_handler(getpath, "get")
+        response_data = json.loads(response.body)
+
+        try:
+            self.assertIsNotNone(response_data["open_declarations"])
+            self.assertIsNotNone(response_data["accepted_declarations"])
+            self.assertIsNotNone(response_data["denied_declarations"])
+            self.assertIsNotNone(response_data["total_declarated_price"])
+
+            self.assertEqual(response_data["total_declarated_price"], valid_approved_declaration.items_total_price)
+            self.assertEqual(response_data["accepted_declarations"], 1)
+            self.assertEqual(response_data["open_declarations"], 0)
+            self.assertEqual(response_data["denied_declarations"], 0)
+        except KeyError as error:
+            self.fail("Test Failed! Expected the key: " + str(
+                error) + " to be present in the response, but it was not found. Found only: " + str(response_data))
+        except ValueError as error:
+            self.fail("Test Failed! There is an invalid value in the response data. "
+                      "This usually happens with parsing wrong input values.\n"
+                      "Full error message:\n"
+                      + str(error))
+
+    def test_more_declarations_positive(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/employees/total_declarations/(.*)"
+
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificEmployeeTotalDeclarationsHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "Supervisor"
+        logged_in_person.put()
+
+        person = PersonDataCreator.create_valid_employee_data()
+        person.supervisor = logged_in_person.key
+        person.put()
+
+        valid_approved_declaration1 = DeclarationsDataCreator.create_valid_human_resources_approved_declaration(person, logged_in_person)
+        valid_approved_declaration1.items_total_price = 500
+        valid_approved_declaration1.put()
+        valid_approved_declaration2 = DeclarationsDataCreator.create_valid_human_resources_approved_declaration(person, logged_in_person)
+        valid_approved_declaration2.items_total_price = 250
+        valid_approved_declaration2.put()
+
+        getpath = "/employees/total_declarations/" + str(person.key.integer_id())
+        response = self.positive_test_stub_handler(getpath, "get")
+        response_data = json.loads(response.body)
+
+        try:
+            total_cost = valid_approved_declaration1.items_total_price + valid_approved_declaration2.items_total_price
+
+            self.assertIsNotNone(response_data["open_declarations"])
+            self.assertIsNotNone(response_data["accepted_declarations"])
+            self.assertIsNotNone(response_data["denied_declarations"])
+            self.assertIsNotNone(response_data["total_declarated_price"])
+
+            self.assertEqual(response_data["total_declarated_price"], total_cost)
+            self.assertEqual(response_data["accepted_declarations"], 2)
+            self.assertEqual(response_data["open_declarations"], 0)
+            self.assertEqual(response_data["denied_declarations"], 0)
+        except KeyError as error:
+            self.fail("Test Failed! Expected the key: " + str(
+                error) + " to be present in the response, but it was not found. Found only: " + str(response_data))
+        except ValueError as error:
+            self.fail("Test Failed! There is an invalid value in the response data. "
+                      "This usually happens with parsing wrong input values.\n"
+                      "Full error message:\n"
+                      + str(error))
+
+    def test_negative_get_id_not_found(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/employees/total_declarations/(.*)"
+
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificEmployeeTotalDeclarationsHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "Supervisor"
+        logged_in_person.put()
+
+        person = PersonDataCreator.create_valid_employee_data()
+        person.supervisor = logged_in_person.key
+        person.put()
+
+        getpath = "/employees/total_declarations/" + str(99999)
+        self.negative_test_stub_handler(getpath, "get", 404)
