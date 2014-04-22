@@ -398,6 +398,9 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
         self.assertTrue("supervisor_comment" in response_data.keys())
         self.assertEqual(response_data["supervisor_comment"], supervisors_comment)
 
+        messages = self.mail_stub.get_sent_messages()
+        self.assertEqual(-1, len(messages))
+
     def test_negative_put_none(self):
         user_is_logged_in = True
         user_is_admin = '0'
@@ -836,19 +839,52 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
         person_supervisor = PersonDataCreator.create_valid_supervisor()
         person_employee = PersonDataCreator.create_valid_employee_data()
 
-        declaration_one = DeclarationsDataCreator.create_valid_open_declaration(person_employee, person_supervisor)
         declaration_two = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person_employee, person_supervisor)
-        declaration_three = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person_employee, person_supervisor)
 
-        data_one = dict(declaration_id = declaration_one.key.integer_id())
+        data = dict(declaration_id = declaration_two.key.integer_id())
+        response = self.positive_test_stub_handler(path, 'put_json', data_dict=data)
+        response_data = json.loads(response.body)
+        self.assertEqual(response_data["class_name"], 'human_resources_declined_declaration')
+        self.assertEqual(response_data["human_resources_declined_by"], logged_in_person.key)
+        self.assertNotEqual(response_data["human_resources_declined_at"], None)
+
+        messages = self.mail_stub.get_sent_messages()
+        self.assertEqual(-1, len(messages))
+
+
+    def test_negative_decline_open_declaration_by_human_resources(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = '/declaration/declined_by_hr'
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "human_resources"
+        logged_in_person.put()
+
+        person_supervisor = PersonDataCreator.create_valid_supervisor()
+        person_employee = PersonDataCreator.create_valid_employee_data()
+
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(person_employee, person_supervisor)
+
+        data_one = dict(declaration_id = declaration.key.integer_id())
         self.negative_test_stub_handler(path, 'put_json', 500, data_one)
 
-        data_two = dict(declaration_id = declaration_two.key.integer_id())
-        self.positive_test_stub_handler(path, 'put_json', data_dict=data_two)
-        self.assertEqual(declaration_two.class_name, 'human_resources_declined_declaration')
-        self.assertEqual(declaration_two.human_resources_declined_by, logged_in_person.key)
-        self.assertNotEqual(declaration_two.human_resources_declined_at, None)
-        self.assertEqual(declaration_three.class_name, 'supervisor_approved_declaration')
+    def test_negative_put_is_none(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = '/declaration/declined_by_hr'
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "human_resources"
+        logged_in_person.put()
 
         self.negative_test_stub_handler(path, 'put_json', 500, data_dict=None)
 
@@ -878,7 +914,7 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
 
 
 class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
-    def test_add_new_declartion_one_item_postive(self):
+    def test_add_new_declaration_one_item_positive(self):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/declaration"
@@ -946,7 +982,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
                       "Full error message:\n"
                       + str(error))
 
-    def test_add_new_declartion_more_items_postive(self):
+    def test_add_new_declaration_more_items_positive(self):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/declaration"

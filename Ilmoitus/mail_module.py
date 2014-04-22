@@ -5,6 +5,8 @@ __author__ = 'Sjors_Boom'
 from google.appengine.api import mail
 import ilmoitus_model
 
+default_sender = "info.sns-ilmoitus@gmail.com"  # TODO: Check
+
 
 def send_email_to_user(request_handler, sender, to, subject, body, html_body=None):
     if not mail.is_email_valid(sender):
@@ -33,7 +35,7 @@ def create_ending_of_the_body():
     return "With kind regards,\n\nIlmoitus team"
 
 def send_message_declaration_status_changed(request_handler, declaration):
-    person = ilmoitus_model.Person.get_by_id(declaration.created_by.integer_id)
+    person = ilmoitus_model.Person.get_by_id(declaration.created_by.integer_id())
     to = person.email
     body = create_begin_of_the_body(person.last_name) + \
     "We send you this email to inform you that the status of your declaration (submitted on " + \
