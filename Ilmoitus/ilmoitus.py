@@ -7,6 +7,7 @@ import datetime
 import dateutil.parser
 import data_bootstrapper
 import logging
+import datetime
 import data_bootstrapper
 import dateutil.parser
 from google.appengine.api import users
@@ -587,7 +588,6 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
             #TODO: error messages:
             #User is not logged in/registered; he/she needs to login first
             self.abort(401)
-
 
 application = webapp.WSGIApplication(
     [
