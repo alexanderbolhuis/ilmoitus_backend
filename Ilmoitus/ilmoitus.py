@@ -316,16 +316,14 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
         else:
             self.abort(404)
 
+
 class SetOpenToLockedDeclaration(BaseRequestHandler):
     def put(self):
-        print "ja1"
         person_data = get_current_person("supervisor")
         current_user = person_data["person_value"]
 
         if current_user is not None and current_user.class_name == 'supervisor':
-            print "ja2"
             if self.request.body is not None:
-                print "ja3"
                 data = None
                 try:
                     data = json.loads(self.request.body)
