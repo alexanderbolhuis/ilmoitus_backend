@@ -3,6 +3,7 @@ from webob.acceptparse import NoAccept
 __author__ = 'Sjors_Boom'
 
 from google.appengine.api import mail
+import ilmoitus_model
 
 
 def send_email_to_user(request_handler, sender, to, subject, body, html_body=None):
@@ -30,6 +31,15 @@ def create_begin_of_the_body(name):
 
 def create_ending_of_the_body():
     return "With kind regards,\n\nIlmoitus team"
+
+def send_message_declaration_status_changed(request_handler, declaration):
+    person = ilmoitus_model.Person.get_by_id(declaration.created_by.integer_id)
+    to = person.email
+    body = create_begin_of_the_body(person.last_name) + \
+    "We send you this email to inform you that the status of your declaration (submitted on " + \
+    declaration.created_at.strftime('%Y-%m-%d %H:%M') + "). Has changed to \"" + declaration.readable_state() + \
+    "\".\n\n" + create_ending_of_the_body()
+
 
 def create_body(name):
     return create_begin_of_the_body(name) + create_ending_of_the_body

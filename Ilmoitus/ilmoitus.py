@@ -12,6 +12,7 @@ import dateutil.parser
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from error_response_module import give_error_response
+import mail_module
 
 
 def get_current_person(class_name=None):
@@ -325,6 +326,7 @@ class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
                                 "De opgegeven identificatie is onbekend en behoort tot geen enkele declaratie.",
                                 "Query result from the value of the ID key of the body returned None.")
         declaration_object.put()
+        mail_module.send_message_declaration_status_changed(self, declaration_object)
         response_module.give_response(self, json.dumps(declaration_object.get_object_as_data_dict()))
 
 
@@ -573,6 +575,7 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
                         declaration.human_resources_declined_by = person_key
                         declaration.human_resources_declined_at = current_date
                         declaration.put()
+                        mail_module.send_message_declaration_status_changed(self, declaration)
                         response_module.give_response(self, declaration.get_object_json_data())
                     else:
                         #
