@@ -632,7 +632,7 @@ class SetOpenToLockedDeclaration(BaseRequestHandler):
                                     "No premissions for locking a declaration")
 
 
-class SpecififEmployeeTotalDeclarationsHandler(BaseRequestHandler):
+class SpecificEmployeeTotalDeclarationsHandler(BaseRequestHandler):
     def get(self, employee_id):
         # Only supervisors can perform the actions in this handler: check for that first
         current_person_data = get_current_person("Supervisor")
@@ -685,7 +685,7 @@ application = webapp.WSGIApplication(
         ('/user/settings/', UserSettingsHandler),
         ('/employees', AllEmployeesHandler),
         ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
-        ('/employees/total_declarations/(.*)', SpecififEmployeeTotalDeclarationsHandler),
+        ('/employees/total_declarations/(.*)', SpecificEmployeeTotalDeclarationsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
         ('/declaration/declined_by_hr', SupervisorDeclarationToHrDeclinedDeclarationHandler),

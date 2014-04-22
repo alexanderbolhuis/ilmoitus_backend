@@ -1212,7 +1212,7 @@ class DeclarationCountAndTotalAmountTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/employees/total_declarations/(.*)"
 
-        setup_data = self.setup_server_with_user([(path, main_application.SpecififEmployeeTotalDeclarationsHandler)],
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificEmployeeTotalDeclarationsHandler)],
                                                  user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
@@ -1255,7 +1255,7 @@ class DeclarationCountAndTotalAmountTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/employees/total_declarations/(.*)"
 
-        setup_data = self.setup_server_with_user([(path, main_application.SpecififEmployeeTotalDeclarationsHandler)],
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificEmployeeTotalDeclarationsHandler)],
                                                  user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
@@ -1303,7 +1303,7 @@ class DeclarationCountAndTotalAmountTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/employees/total_declarations/(.*)"
 
-        setup_data = self.setup_server_with_user([(path, main_application.SpecififEmployeeTotalDeclarationsHandler)],
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificEmployeeTotalDeclarationsHandler)],
                                                  user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
