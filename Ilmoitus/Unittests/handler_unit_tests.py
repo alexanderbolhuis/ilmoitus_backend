@@ -399,7 +399,7 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
         self.assertEqual(response_data["supervisor_comment"], supervisors_comment)
 
         messages = self.mail_stub.get_sent_messages()
-        self.assertEqual(-1, len(messages))
+        self.assertEqual(1, len(messages))
 
     def test_negative_put_none(self):
         user_is_logged_in = True
@@ -845,11 +845,12 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
         response = self.positive_test_stub_handler(path, 'put_json', data_dict=data)
         response_data = json.loads(response.body)
         self.assertEqual(response_data["class_name"], 'human_resources_declined_declaration')
-        self.assertEqual(response_data["human_resources_declined_by"], logged_in_person.key)
+        self.assertEqual(response_data["human_resources_declined_by"], logged_in_person.key.integer_id())
+        self.assertEqual(response_data["human_resources_declined_by"], logged_in_person.key.integer_id())
         self.assertNotEqual(response_data["human_resources_declined_at"], None)
 
         messages = self.mail_stub.get_sent_messages()
-        self.assertEqual(-1, len(messages))
+        self.assertEqual(1, len(messages))
 
 
     def test_negative_decline_open_declaration_by_human_resources(self):

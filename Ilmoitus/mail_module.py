@@ -4,19 +4,20 @@ __author__ = 'Sjors_Boom'
 
 from google.appengine.api import mail
 import ilmoitus_model
+from error_response_module import give_error_response
 
 default_sender = "info.sns-ilmoitus@gmail.com"  # TODO: Check
 
 
 def send_email_to_user(request_handler, sender, to, subject, body, html_body=None):
     if not mail.is_email_valid(sender):
-        request_handler.give_error_response(500, "sender is not a valid E-mail address: \"" + sender + "\"")
+        give_error_response(request_handler, 500, "sender is not a valid E-mail address: \"" + sender + "\"")
 
     if not mail.is_email_valid(to):
-        request_handler.give_error_response(500, "to is not a valid E-mail address: \"" + to + "\"")
+        give_error_response(request_handler, 500, "to is not a valid E-mail address: \"" + to + "\"")
 
-    if body is not None:
-        request_handler.give_error_response(500, "body is None")
+    if body is None:
+        give_error_response(request_handler, 500, "body is None")
     message = mail.EmailMessage()
     message.sender = sender
     message.to = to
@@ -31,8 +32,10 @@ def send_email_to_user(request_handler, sender, to, subject, body, html_body=Non
 def create_begin_of_the_body(name):
     return "Dear " + name + ", \n\n"
 
+
 def create_ending_of_the_body():
     return "With kind regards,\n\nIlmoitus team"
+
 
 def send_message_declaration_status_changed(request_handler, declaration):
     person = ilmoitus_model.Person.get_by_id(declaration.created_by.integer_id())
