@@ -5,7 +5,6 @@ import json
 import webtest
 from google.appengine.ext import testbed
 import traceback
-import unicodedata
 import ilmoitus as main_application
 
 
@@ -226,7 +225,7 @@ class BaseTestClass(TestCase):
             self.fail("Error while trying to send the request to the testapp. Are you sure that the given request-type " + str(request_reference) +
                       "is a valid http request method (i.e. GET, POST, PUT or DELETE)?")
 
-        #Execute the basic te;sts
+        #Execute the basic tests
         self.assertIsNotNone(response)
         self.assertEqual(response.status_int, 200)
 
