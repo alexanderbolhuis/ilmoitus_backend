@@ -22,16 +22,17 @@ class Person(ndb.Model):
     employee_number = ndb.IntegerProperty()
     department = ndb.KeyProperty(kind=Department)
     supervisor = ndb.KeyProperty(kind="Person")
+    max_declaration_price = ndb.IntegerProperty()
 
     all_custom_properties = ["first_name", "last_name", "email", "employee_number", "department",
-                             "supervisor"]
+                             "supervisor", "max_declaration_price"]
     permissions = {"user": ["first_name", "last_name", "email", "class_name"],
                    "employee": ["first_name", "last_name", "email", "employee_number", "department",
                                 "supervisor", "class_name"],
                    "supervisor": ["first_name", "last_name", "email", "employee_number", "department",
-                                  "supervisor", "class_name"],
+                                  "supervisor", "class_name", "max_declaration_price"],
                    "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
-                                       "supervisor"]}
+                                       "supervisor", "max_declaration_price"]}
 
     def get_object_as_data_dict(self):
         return dict({'id': self.key.integer_id(), 'class_name': self.class_name}.items() +

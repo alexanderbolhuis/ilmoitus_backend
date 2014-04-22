@@ -301,6 +301,33 @@ class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
                                 "De opgegeven data bevat een ongeldige identificatie voor een declaratie.",
                                 "Failed to parse the value of the ID key in the body to a long.")
 
+        declarationlines_data = None
+        try:
+            declarationlines_data = declaration_data["lines"]
+        except ValueError:
+            give_error_response(self, 400, "Er zijn geen declaratieitems opgegeven om aan te maken.",
+                                    "Request body was None.")
+
+        try:
+            for line in declarationlines_data:
+                line["receipt_date"]
+                line["cost"]
+                line["declaration_sub_type"]
+        except Exception:
+            give_error_response(self, 400, "De opgegeven data mist waardes voor een declaratieline.",
+                                "The body misses keys.")
+
+        for line in declarationlines_data:
+            sub_type = ilmoitus_model.DeclarationSubType.get_by_id(int(line["declaration_sub_type"]))
+            if sub_type is None:
+               give_error_response(self, 400, "De declaratie_sub_type bestaat niet.",
+                                "The declaration_sub_type is unknown.")
+
+        declaration_cost = None
+        for line in declarationlines_data:
+            declaration_cost = line["cost"]
+            if declaration_cost > sub_type_cost
+
         declaration_object = ilmoitus_model.Declaration.get_by_id(declaration_id)
         try:
             if current_person_object.key not in declaration_object.assigned_to:

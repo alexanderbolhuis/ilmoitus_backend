@@ -43,6 +43,7 @@ class PersonDataCreator():
         if supervisors_supervisor is not None:
             supervisor.supervisor = supervisors_supervisor.key
         supervisor.employee_number = employee_number
+        supervisor.max_declaration_price = -1
         supervisor.put()
         return supervisor
 
