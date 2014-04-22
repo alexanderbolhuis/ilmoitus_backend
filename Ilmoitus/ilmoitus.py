@@ -625,8 +625,6 @@ class SetOpenToLockedDeclaration(BaseRequestHandler):
             give_error_response(self, 401, "Geen permissie om een declaratie te locken!",
                                     "No premissions for locking a declaration")
 
-            self.abort(401)
-
 
 application = webapp.WSGIApplication(
     [
