@@ -1223,25 +1223,23 @@ class DeclarationCountAndTotalAmountTest(BaseAuthorizationHandler):
         person.supervisor = logged_in_person.key
         person.put()
 
-        # Add Lines
         valid_approved_declaration = DeclarationsDataCreator.create_valid_human_resources_approved_declaration(person, logged_in_person)
+        valid_approved_declaration.items_total_price = 500
+        valid_approved_declaration.put()
 
         getpath = "/employees/total_declarations/" + str(person.key.integer_id())
         response = self.positive_test_stub_handler(getpath, "get")
         response_data = json.loads(response.body)
 
         try:
-            self.assertIsNotNone(response_data["id"])
-            self.assertIsNotNone(response_data["open_declaration"])
+            self.assertIsNotNone(response_data["open_declarations"])
             self.assertIsNotNone(response_data["accepted_declarations"])
             self.assertIsNotNone(response_data["denied_declarations"])
             self.assertIsNotNone(response_data["total_declarated_price"])
 
-
-            self.assertEqual(response_data["id"], (logged_in_person.key.integer_id()))
             self.assertEqual(response_data["total_declarated_price"], valid_approved_declaration.items_total_price)
             self.assertEqual(response_data["accepted_declarations"], 1)
-            self.assertEqual(response_data["open_declaration"], 0)
+            self.assertEqual(response_data["open_declarations"], 0)
             self.assertEqual(response_data["denied_declarations"], 0)
         except KeyError as error:
             self.fail("Test Failed! Expected the key: " + str(
@@ -1268,9 +1266,12 @@ class DeclarationCountAndTotalAmountTest(BaseAuthorizationHandler):
         person.supervisor = logged_in_person.key
         person.put()
 
-        #Add Lines
         valid_approved_declaration1 = DeclarationsDataCreator.create_valid_human_resources_approved_declaration(person, logged_in_person)
+        valid_approved_declaration1.items_total_price = 500
+        valid_approved_declaration1.put()
         valid_approved_declaration2 = DeclarationsDataCreator.create_valid_human_resources_approved_declaration(person, logged_in_person)
+        valid_approved_declaration2.items_total_price = 250
+        valid_approved_declaration2.put()
 
         getpath = "/employees/total_declarations/" + str(person.key.integer_id())
         response = self.positive_test_stub_handler(getpath, "get")
@@ -1279,17 +1280,14 @@ class DeclarationCountAndTotalAmountTest(BaseAuthorizationHandler):
         try:
             total_cost = valid_approved_declaration1.items_total_price + valid_approved_declaration2.items_total_price
 
-            self.assertIsNotNone(response_data["id"])
-            self.assertIsNotNone(response_data["open_declaration"])
+            self.assertIsNotNone(response_data["open_declarations"])
             self.assertIsNotNone(response_data["accepted_declarations"])
             self.assertIsNotNone(response_data["denied_declarations"])
             self.assertIsNotNone(response_data["total_declarated_price"])
 
-
-            self.assertEqual(response_data["id"], (logged_in_person.key.integer_id()))
             self.assertEqual(response_data["total_declarated_price"], total_cost)
             self.assertEqual(response_data["accepted_declarations"], 2)
-            self.assertEqual(response_data["open_declaration"], 0)
+            self.assertEqual(response_data["open_declarations"], 0)
             self.assertEqual(response_data["denied_declarations"], 0)
         except KeyError as error:
             self.fail("Test Failed! Expected the key: " + str(
@@ -1318,21 +1316,3 @@ class DeclarationCountAndTotalAmountTest(BaseAuthorizationHandler):
 
         getpath = "/employees/total_declarations/" + str(99999)
         self.negative_test_stub_handler(getpath, "get", 404)
-
-    def test_negative_not_supervisor(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/employees/total_declarations/(.*)"
-
-        setup_data = self.setup_server_with_user([(path, main_application.SpecififEmployeeTotalDeclarationsHandler)],
-                                                 user_is_logged_in, user_is_admin)
-
-        logged_in_person = setup_data["random_person"]
-        logged_in_person.class_name = "Supervisor"
-        logged_in_person.put()
-
-        person = PersonDataCreator.create_valid_employee_data()
-        # No supervisor for employee
-
-        getpath = "/employees/total_declarations/" + str(person.key.integer_id())
-        self.negative_test_stub_handler(getpath, "get", 401)

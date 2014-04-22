@@ -655,11 +655,6 @@ class SpecififEmployeeTotalDeclarationsHandler(BaseRequestHandler):
             give_error_response(self, 404, "Werknemer bestaat niet",
                                         "Employee not found")
 
-        # Check if currentuser is supervisor of employee
-        if employee.supervisor is not current_person_object:
-            give_error_response(self, 401, "De ingelogd persoon is niet de supervisor van de gebruiker",
-                                "The logged in user is not the employee supervisor")
-
         # Find declarations for employee
         accepted_declarations = ilmoitus_model.Declaration.gql("WHERE created_by = :cb AND class_name = :cn", cb=employee.key, cn="human_resources_approved_declaration").fetch()
         accepted = len(accepted_declarations)
@@ -671,14 +666,14 @@ class SpecififEmployeeTotalDeclarationsHandler(BaseRequestHandler):
         sv_denied = len(sv_denied_declarations)
 
         hr_denied_declarations = ilmoitus_model.Declaration.gql("WHERE created_by = :cb AND class_name = :cn", cb=employee.key, cn="human_resources_declined_declaration").fetch()
-        hr_denied = len(hr_denied)
+        hr_denied = len(hr_denied_declarations)
 
         total_cost = 0
 
         for declaration in accepted_declarations:
-            total_cost = total_cost + declaration["items_total_price"]
+            total_cost = total_cost + declaration.items_total_price
 
-        response_dict = {"id" : employee_id, "open_declarations" : open, "accepted_declarations" : accepted, "denied_declaratons" : (hr_denied + sv_denied), "total_declarated_price" : total_cost}
+        response_dict = {"id" : employee_id, "open_declarations" : open, "accepted_declarations" : accepted, "denied_declarations" : (hr_denied + sv_denied), "total_declarated_price" : total_cost}
         response_module.give_response(self, json.dumps(response_dict))
 
 
