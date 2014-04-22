@@ -483,6 +483,8 @@ class AddNewDeclarationHandler(BaseRequestHandler):
         declaration.assigned_to = [assigned_to.key]
         declaration.created_by = created_by.key
         declaration.comment = declaration_data["comment"]
+        declaration.items_count = 0
+        declaration.items_total_price = 0
         declaration.put()
 
         posted_lines = []
@@ -493,6 +495,8 @@ class AddNewDeclarationHandler(BaseRequestHandler):
 
             try:
                 newline.cost = int(line["cost"])
+                declaration.items_count += 1
+                declaration.items_total_price += newline.cost
             except Exception:
                 give_error_response(self, 400, "De opgegeven data bevat foute waardes voor een declaratieline.",
                                 "The body contains wrong values.")
@@ -501,6 +505,8 @@ class AddNewDeclarationHandler(BaseRequestHandler):
             newline.declaration_sub_type = ilmoitus_model.DeclarationSubType.get_by_id(int(line["declaration_sub_type"])).key
             newline.put()
             posted_lines.append(newline)
+
+        declaration.put()
 
         # TODO Post attachments
 
