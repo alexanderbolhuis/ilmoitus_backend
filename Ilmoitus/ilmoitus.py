@@ -594,32 +594,38 @@ class SetOpenToLockedDeclaration(BaseRequestHandler):
         person_data = get_current_person("supervisor")
         current_user = person_data["person_value"]
 
-        if self.request.body is not None:
-            data = None
-            try:
-                data = json.loads(self.request.body)
-            except ValueError:
-                give_error_response(self, 500, "Er is ongeldige data verstuurd; kan het verzoek niet afhandelen",
-                                    "Invalid JSON data; invalid format.", more_info=str(self.request.body))
+        if current_user is not None:
+            if self.request.body is not None:
+                data = None
+                try:
+                    data = json.loads(self.request.body)
+                except ValueError:
+                    give_error_response(self, 500, "Er is ongeldige data verstuurd; kan het verzoek niet afhandelen",
+                                        "Invalid JSON data; invalid format.", more_info=str(self.request.body))
 
-            declaration_id = long(data["id"])
+                declaration_id = long(data["id"])
 
-            today_date = datetime.datetime.now()
+                today_date = datetime.datetime.now()
 
-            declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
+                declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
 
-            if declaration.class_name == "open_declaration":
-                declaration.class_name = "locked_declaration"
-                declaration.locked_at = today_date
-                declaration.put()
-                response_module.give_response(self, declaration.get_object_json_data())
+                if declaration.class_name == "open_declaration":
+                    declaration.class_name = "locked_declaration"
+                    declaration.locked_at = today_date
+                    declaration.put()
+                    response_module.give_response(self, declaration.get_object_json_data())
+                else:
+                    give_error_response(self, 500, "Moet een open declaration zijn",
+                                        "Can only lock a open declaration.")
             else:
-                give_error_response(self, 500, "Kan alleen een open declaratie sluiten",
-                                    "Can only lock a open declaration.")
+                give_error_response(self, 500, "Er is geen data opgegeven.",
+                                    "Request body is None.")
         else:
-            give_error_response(self, 500, "Er is geen data opgegeven.",
-                                "Request body is None.")
+            #user does not have the appropriate permissions or isn't logged in at all.
+            give_error_response(self, 401, "Geen permissie om een declaratie te locken!",
+                                    "No premissions for locking a declaration")
 
+            self.abort(401)
 
 
 application = webapp.WSGIApplication(
