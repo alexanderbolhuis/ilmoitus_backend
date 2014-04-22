@@ -40,6 +40,8 @@ def send_message_declaration_status_changed(request_handler, declaration):
     declaration.created_at.strftime('%Y-%m-%d %H:%M') + "). Has changed to \"" + declaration.readable_state() + \
     "\".\n\n" + create_ending_of_the_body()
 
+    send_email_to_user(request_handler, default_sender, to, "The status or your declaration has changed.", body)
+
 
 def create_body(name):
     return create_begin_of_the_body(name) + create_ending_of_the_body
