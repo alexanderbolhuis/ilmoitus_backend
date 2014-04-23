@@ -1,4 +1,5 @@
 from webob.acceptparse import NoAccept
+from webob.dec import _MiddlewareFactory
 
 __author__ = 'Sjors_Boom'
 
@@ -40,13 +41,14 @@ def create_ending_of_the_body():
 def send_message_declaration_status_changed(request_handler, declaration):
     person = ilmoitus_model.Person.get_by_id(declaration.created_by.integer_id())
     to = person.email
-    body = create_begin_of_the_body(person.last_name) + \
-    "We send you this email to inform you that the status of your declaration (submitted on " + \
-    declaration.created_at.strftime('%Y-%m-%d %H:%M') + "). Has changed to \"" + declaration.readable_state() + \
-    "\".\n\n" + create_ending_of_the_body()
+    body = create_body(person.last_name,
+                       "We send you this email to inform you that the status of your declaration (submitted on " +
+                       declaration.created_at.strftime('%Y-%m-%d %H:%M') +
+                       "). Has changed to \"" + declaration.readable_state() + "\".\n\n" + create_ending_of_the_body()
+                       + "\n")
 
     send_email_to_user(request_handler, default_sender, to, "The status or your declaration has changed.", body)
 
 
-def create_body(name):
-    return create_begin_of_the_body(name) + create_ending_of_the_body
+def create_body(name, middle_body):
+    return create_begin_of_the_body(name) + middle_body + create_ending_of_the_body()
