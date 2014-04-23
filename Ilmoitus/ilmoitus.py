@@ -385,6 +385,7 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
         else:
             self.abort(404)
 
+
 class AddNewDeclarationHandler(BaseRequestHandler):
     def post(self):
         # Check if logged in
@@ -475,7 +476,29 @@ class AddNewDeclarationHandler(BaseRequestHandler):
                give_error_response(self, 400, "De declaratie_sub_type bestaat niet.",
                                 "The declaration_sub_type is unknown.")
 
-        # TODO check attachments keys
+        if "attachments" in post_data:
+            try:
+                for attachment_data in post_data["attachments"]:
+                    attachment_data["name"]
+                    attachment_data["base64"]
+            except KeyError:
+                give_error_response(self, 400, "Kan geen declaratie toevoegen. De opgestuurde bijlage gegevens "
+                                               "kloppen niet.",
+                                    "The body misses keys at an attachment.")
+
+            for attachment_data in post_data["attachments"]:
+                data = attachment_data["base64"].split(":")[0]
+                mime = attachment_data["base64"].split(":")[1].split(";")[0]
+                base = attachment_data["base64"].split(":")[1].split(";")[1].split(",")[0]
+
+                if data != "data" or base != "base64":
+                    give_error_response(self, 400, "Kan geen declaratie toevoegen. De opgestuurde bijlage gegevens "
+                                                       "kloppen niet.",
+                                        "The base64 string is incorrect.")
+
+                if mime != "application/pdf" and mime.split("/")[0] != "image":
+                    give_error_response(self, 400, "Kan geen declaratie toevoegen. Alleen pdf's of images zijn toegestaan.",
+                                        "MimeType does not equal application/pdf or image/*", more_info=mime)
 
         # Post declaration
         declaration = ilmoitus_model.Declaration()
@@ -508,12 +531,26 @@ class AddNewDeclarationHandler(BaseRequestHandler):
 
         declaration.put()
 
-        # TODO Post attachments
+        posted_attachments = []
+        if "attachments" in post_data:
+            try:
+                for attachment_data in post_data["attachments"]:
+                    attachment = ilmoitus_model.Attachment()
+                    attachment.declaration = declaration.key
+                    attachment.name = attachment_data["name"]
+                    attachment.file = attachment_data["base64"]
+                    attachment.put()
+                    posted_attachments.append(attachment.get_object_as_data_dict())
+            except Exception:
+                give_error_response(self, 400, "Kan geen declaratie toevoegen. De opgestuurde data bevat foute "
+                                               "waardes voor een bijlage.",
+                                    "The body contains wrong values.")
+
 
         lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), posted_lines)
         combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
                                     'lines': lines,
-                                    'attachment': ""})
+                                    'attachments': posted_attachments})
 
         response_module.give_response(self, combined_dict)
 
