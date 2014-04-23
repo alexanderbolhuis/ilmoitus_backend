@@ -6,9 +6,21 @@ ilmoitusApp.controller('loginController', function($scope, $state) {
 });
 
 ilmoitusApp.controller('templateController', function($scope, $state) {
-	//PLACEHOLDERS login info. This info should be retrieved from models (factories).
-	$scope.userName = "Piet Maas";
-	$scope.userId = "9120103";
+	
+	//Get current user details
+	var request = $.ajax({
+		type: "GET",
+		url: "/current_user/details",
+		error: function(jqXHR, textStatus, errorThrown){
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+
+	request.done(function(data){
+		$scope.userName = data.first_name + " " + data.last_name;
+		$scope.userId = data.employee_number;
+		$scope.$apply();
+	});
 
 	$scope.selectedNavBtn;
 
