@@ -136,7 +136,7 @@ class AuthorizationStatusHandler(BaseRequestHandler):
 
 
 class LoginHandler(BaseRequestHandler):
-    def get(self):
+    def post(self):
         result = ilmoitus_auth.authencate(self.request.POST["email"], self.request.POST["password"])
 
         if result["passed"]:

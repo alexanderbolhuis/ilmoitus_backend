@@ -5,7 +5,7 @@ import hashlib
 import random
 
 
-def get_current_person(requesthandler, class_name=None):
+def get_current_person(request_handler, class_name=None):
     """
      Global function that will retrieve the user that is currently logged in (through token based Auth)
      and fetch the person model object of this application that belongs to it through the email field.
@@ -24,15 +24,15 @@ def get_current_person(requesthandler, class_name=None):
     return_data = {"user_is_logged_in": False, "person_value": None}
 
     # Fetch header from request
-    auth_header = requesthandler.request.headers["Authorization"];
+    auth_header = request_handler.request.headers["Authorization"]
 
     if auth_header is not None:
-        auth_split = auth_header.split(" ");
+        auth_split = auth_header.split(" ")
 
         # Check if header consists of 2 parts (userid token)
         if len(auth_split) == 2:
-            auth_email = auth_split[0];
-            auth_token = auth_split[1];
+            auth_email = auth_split[0]
+            auth_token = auth_split[1]
 
             # Query user
             if class_name is None:
@@ -46,8 +46,8 @@ def get_current_person(requesthandler, class_name=None):
                 if query_result.token is not None and check_secret(auth_token, query_result.token):
                     return_data = {"user_is_logged_in": True, "person_value": query_result}
 
-
     return return_data
+
 
 def authencate(email, password):
     person_query = ilmoitus_model.Person.query(ilmoitus_model.Person.email == email)
@@ -59,7 +59,7 @@ def authencate(email, password):
             query_result.token = hash_secret(raw_token);
             query_result.put()
 
-            return {"passed": True, "person_value": query_result, "token": (query_result.email + ' ' + raw_token) }
+            return {"passed": True, "person_value": query_result, "token": (query_result.email + ' ' + raw_token)}
 
     return {"passed": False }
 
@@ -75,18 +75,20 @@ def hash_secret(input_token):
     # Append salt for retrieving
     return salt + ',' + m.hexdigest()
 
+
 # Generates secret string with input + salt
 def check_secret(input_token, check_token):
-    tokenparts = check_token.split(',')
-    if len(tokenparts) != 2:
+    token_parts = check_token.split(',')
+    if len(token_parts) != 2:
         return False
 
     m = hashlib.sha256()
-    m.update(tokenparts[0])
+    m.update(token_parts[0])
     m.update(input_token)
 
     # Compare tokens
-    return tokenparts[1] == m.hexdigest()
+    return token_parts[1] == m.hexdigest()
+
 
 def gen_salt(size):
     ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
