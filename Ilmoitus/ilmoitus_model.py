@@ -32,7 +32,7 @@ class Person(ndb.Model):
                    "supervisor": ["first_name", "last_name", "email", "employee_number", "department",
                                   "supervisor", "class_name", "max_declaration_price"],
                    "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
-                                       "supervisor", "max_declaration_price"]}
+                                       "supervisor"]}
 
     def get_object_as_data_dict(self):
         return dict({'id': self.key.integer_id(), 'class_name': self.class_name}.items() +
