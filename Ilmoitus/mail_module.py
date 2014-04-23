@@ -1,4 +1,5 @@
 from webob.acceptparse import NoAccept
+from webob.dec import _MiddlewareFactory
 
 __author__ = 'Sjors_Boom'
 
@@ -32,5 +33,5 @@ def create_begin_of_the_body(name):
 def create_ending_of_the_body():
     return "With kind regards,\n\nIlmoitus team"
 
-def create_body(name):
-    return create_begin_of_the_body(name) + create_ending_of_the_body
+def create_body(name, middle_body):
+    return create_begin_of_the_body(name) + middle_body + create_ending_of_the_body()
