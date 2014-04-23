@@ -379,18 +379,23 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
             user_is_logged_in,
             user_is_admin)
         person = setup_data["random_person"]
+        person.class_name = "supervisor"
         token = setup_data["token"]
-        person.class_name = "Supervisor"
         person.put()
 
         supervisor = person
         employee = PersonDataCreator.create_valid_employee_data()
-        locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
+        locked_declaration = DeclarationsDataCreator.create_valid_locked_declaration(
             employee,
-            supervisor).get_object_as_data_dict()
+            supervisor)
         supervisors_comment = "Ziet er goed uit maar let wel op item nummer 3!"
         #Add a comment as well
-        locked_declaration_data["supervisor_comment"] = supervisors_comment
+        locked_declaration.supervisor_comment = supervisors_comment
+        locked_declaration.items_total_price = 150
+        supervisor.max_declaration_price = -1
+        locked_declaration.put()
+        supervisor.put()
+        locked_declaration_data = locked_declaration.get_object_as_data_dict()
         locked_declaration_data_json_string = json.dumps(locked_declaration_data)
 
         response = self.positive_test_stub_handler(token, path, "put", data_dict=locked_declaration_data_json_string)
@@ -412,6 +417,130 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
         self.assertTrue("supervisor_comment" in response_data.keys())
         self.assertEqual(response_data["supervisor_comment"], supervisors_comment)
 
+    def test_positive_put_two(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/approve_declaration/supervisor"
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        person = setup_data["random_person"]
+        person.class_name = "supervisor"
+        token = setup_data["token"]
+        person.put()
+
+        supervisor = person
+        employee = PersonDataCreator.create_valid_employee_data()
+        locked_declaration = DeclarationsDataCreator.create_valid_locked_declaration(
+            employee,
+            supervisor)
+        supervisors_comment = "Ziet er goed uit maar let wel op item nummer 3!"
+        #Add a comment as well
+        locked_declaration.supervisor_comment = supervisors_comment
+        locked_declaration.items_total_price = 150
+        supervisor.max_declaration_price = 200
+        locked_declaration.put()
+        supervisor.put()
+        locked_declaration_data = locked_declaration.get_object_as_data_dict()
+        locked_declaration_data_json_string = json.dumps(locked_declaration_data)
+
+        response = self.positive_test_stub_handler(token, path, "put", data_dict=locked_declaration_data_json_string)
+
+        response_data = json.loads(response.body)
+
+        self.assertTrue("id" in response_data.keys())
+        self.assertEqual(locked_declaration_data["id"], response_data["id"])
+
+        self.assertTrue("class_name" in response_data.keys())
+        self.assertEqual(response_data["class_name"], "supervisor_approved_declaration")
+
+        self.assertTrue("submitted_to_human_resources_by" in response_data.keys())
+        self.assertEqual(response_data["submitted_to_human_resources_by"], supervisor.key.integer_id())
+
+        self.assertTrue("supervisor_approved_at" in response_data.keys())
+        # exact date-time is untestable: it's accurate in milliseconds.
+
+        self.assertTrue("supervisor_comment" in response_data.keys())
+        self.assertEqual(response_data["supervisor_comment"], supervisors_comment)
+
+    def test_positive_put_three(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/approve_declaration/supervisor"
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        person = setup_data["random_person"]
+        person.class_name = "supervisor"
+        token = setup_data["token"]
+        person.put()
+
+        supervisor = person
+        employee = PersonDataCreator.create_valid_employee_data()
+        locked_declaration = DeclarationsDataCreator.create_valid_locked_declaration(
+            employee,
+            supervisor)
+        supervisors_comment = "Ziet er goed uit maar let wel op item nummer 3!"
+        #Add a comment as well
+        locked_declaration.supervisor_comment = supervisors_comment
+        locked_declaration.items_total_price = 150
+        supervisor.max_declaration_price = 200
+        locked_declaration.put()
+        supervisor.put()
+        locked_declaration_data = locked_declaration.get_object_as_data_dict()
+        locked_declaration_data_json_string = json.dumps(locked_declaration_data)
+
+        response = self.positive_test_stub_handler(token, path, "put", data_dict=locked_declaration_data_json_string)
+
+        response_data = json.loads(response.body)
+
+        self.assertTrue("id" in response_data.keys())
+        self.assertEqual(locked_declaration_data["id"], response_data["id"])
+
+        self.assertTrue("class_name" in response_data.keys())
+        self.assertEqual(response_data["class_name"], "supervisor_approved_declaration")
+
+        self.assertTrue("submitted_to_human_resources_by" in response_data.keys())
+        self.assertEqual(response_data["submitted_to_human_resources_by"], supervisor.key.integer_id())
+
+        self.assertTrue("supervisor_approved_at" in response_data.keys())
+        # exact date-time is untestable: it's accurate in milliseconds.
+
+        self.assertTrue("supervisor_comment" in response_data.keys())
+        self.assertEqual(response_data["supervisor_comment"], supervisors_comment)
+
+    def test_negative_put_one(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/approve_declaration/supervisor"
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
+            user_is_logged_in,
+            user_is_admin)
+        person = setup_data["random_person"]
+        person.class_name = "supervisor"
+        token = setup_data["token"]
+        person.put()
+
+        supervisor = person
+        employee = PersonDataCreator.create_valid_employee_data()
+        locked_declaration = DeclarationsDataCreator.create_valid_locked_declaration(
+            employee,
+            supervisor)
+        supervisors_comment = "Ziet er goed uit maar let wel op item nummer 3!"
+        #Add a comment as well
+        locked_declaration.supervisor_comment = supervisors_comment
+        locked_declaration.items_total_price = 150
+        supervisor.max_declaration_price = 100
+        locked_declaration.put()
+        supervisor.put()
+        locked_declaration_data = locked_declaration.get_object_as_data_dict()
+        locked_declaration_data_json_string = json.dumps(locked_declaration_data)
+
+        self.negative_test_stub_handler(token, path, "put", 401, data_dict=locked_declaration_data_json_string)
+
     def test_negative_put_none(self):
         user_is_logged_in = True
         user_is_admin = '0'
@@ -421,8 +550,8 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
             user_is_logged_in,
             user_is_admin)
         person = setup_data["random_person"]
+        person.class_name = "supervisor"
         token = setup_data["token"]
-        person.class_name = "Supervisor"
         person.put()
 
         locked_declaration_data = None
@@ -438,8 +567,8 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
             user_is_logged_in,
             user_is_admin)
         person = setup_data["random_person"]
+        person.class_name = "supervisor"
         token = setup_data["token"]
-        person.class_name = "Supervisor"
         person.put()
 
         locked_declaration_data = {}
@@ -455,8 +584,8 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
             user_is_logged_in,
             user_is_admin)
         person = setup_data["random_person"]
+        person.class_name = "supervisor"
         token = setup_data["token"]
-        person.class_name = "Supervisor"
         person.put()
 
         locked_declaration_data = "Some string that will pass the None and length check, " \
@@ -473,8 +602,8 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
             user_is_logged_in,
             user_is_admin)
         person = setup_data["random_person"]
+        person.class_name = "supervisor"
         token = setup_data["token"]
-        person.class_name = "Supervisor"
         person.put()
 
         supervisor = person
@@ -498,8 +627,8 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
             user_is_logged_in,
             user_is_admin)
         person = setup_data["random_person"]
+        person.class_name = "supervisor"
         token = setup_data["token"]
-        person.class_name = "Supervisor"
         person.put()
 
         supervisor = person
@@ -523,8 +652,8 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
             user_is_logged_in,
             user_is_admin)
         person = setup_data["random_person"]
+        person.class_name = "supervisor"
         token = setup_data["token"]
-        person.class_name = "Supervisor"
         person.put()
 
         supervisor = person
@@ -548,8 +677,8 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
             user_is_logged_in,
             user_is_admin)
         person = setup_data["random_person"]
+        person.class_name = "supervisor"
         token = setup_data["token"]
-        person.class_name = "Supervisor"
         person.put()
 
         supervisor = person
@@ -571,8 +700,8 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
             user_is_logged_in,
             user_is_admin)
         person = setup_data["random_person"]
+        person.class_name = "supervisor"
         token = setup_data["token"]
-        person.class_name = "Supervisor"
         person.put()
 
         supervisor = person
@@ -616,7 +745,7 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
             user_is_logged_in,
             user_is_admin)
         person = setup_data["random_person"]
-        person.class_name = "Supervisor"
+        person.class_name = "supervisor"
         person.put()
 
         supervisor = PersonDataCreator.create_valid_supervisor()

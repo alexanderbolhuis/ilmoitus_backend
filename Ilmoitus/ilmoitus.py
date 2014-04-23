@@ -227,7 +227,7 @@ class UserSettingsHandler(BaseRequestHandler):
 class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
     def put(self):
         #Only supervisors can perform the actions in this handler: check for that first
-        current_person_data = ilmoitus_auth.get_current_person(self, "Supervisor")
+        current_person_data = ilmoitus_auth.get_current_person(self, "supervisor")
         if "user_is_logged_in" not in current_person_data.keys() or \
                 not current_person_data["user_is_logged_in"]:  # if logged in is false
             give_error_response(self, 401,
@@ -272,6 +272,11 @@ class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
                 give_error_response(self, 422,
                                     "De opgegeven declaratie is niet gesloten en kan dus niet goedgekeurd worden.",
                                     "Class name of fetched object was not equal locked_declaration")
+
+            if declaration_object.items_total_price > current_person_object.max_declaration_price and current_person_object.max_declaration_price != -1:
+                give_error_response(self, 401, "De huidige persoon mag deze declaratie niet goedkeuren. Bedrag te hoog.",
+                                    "Total item costs is: " + str(declaration_object.items_total_price) + " and the max amount is: "
+                                    + str(current_person_object.max_declaration_price) + " .")
 
             declaration_object.class_name = "supervisor_approved_declaration"
             declaration_object.submitted_to_human_resources_by = current_person_object.key

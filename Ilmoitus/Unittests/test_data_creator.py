@@ -47,6 +47,7 @@ class PersonDataCreator():
         if supervisors_supervisor is not None:
             supervisor.supervisor = supervisors_supervisor.key
         supervisor.employee_number = employee_number
+        supervisor.max_declaration_price = -1
         supervisor.password = ilmoitus_auth.hash_secret("123456")
         supervisor.employee_number = 1234567
         supervisor.put()
