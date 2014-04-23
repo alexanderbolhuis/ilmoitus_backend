@@ -1,4 +1,5 @@
 from webob.acceptparse import NoAccept
+from webob.dec import _MiddlewareFactory
 
 __author__ = 'Sjors_Boom'
 
@@ -48,5 +49,5 @@ def send_mail_declaration_approved(request_handler, declaration):
     send_email_to_user(request_handler, default_sender, person_to.email, "Your declaration is approved", body)
 
 
-def create_body(name):
-    return create_begin_of_the_body(name) + create_ending_of_the_body
+def create_body(name, middle_body):
+    return create_begin_of_the_body(name) + middle_body + create_ending_of_the_body()
