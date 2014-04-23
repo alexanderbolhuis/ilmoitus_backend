@@ -41,10 +41,9 @@ def create_ending_of_the_body():
 def send_mail_declaration_approved(request_handler, declaration):
     person_to = ilmoitus_model.Person.get_by_id(declaration.created_by.integer_id())
 
-    body = create_begin_of_the_body(person_to.last_name) + \
-           "We send this email because your submitted declaration (submitted on " + \
+    body = create_body(person_to.last_name, "We send this email because your submitted declaration (submitted on " + \
            declaration.created_at.strftime('%Y-%m-%d %H:%M') + " is completely approved and it will be payed out on: "+\
-           str(declaration.will_be_payed_out_on)
+           str(declaration.will_be_payed_out_on) + "\n")
 
     send_email_to_user(request_handler, default_sender, person_to.email, "Your declaration is approved", body)
 
