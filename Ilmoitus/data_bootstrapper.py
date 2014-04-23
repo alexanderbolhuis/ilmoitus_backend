@@ -3,7 +3,7 @@ __author__ = 'niek'
 import webapp2
 import ilmoitus_model
 import datetime
-
+import ilmoitus_auth
 
 class DataBootsTrapper(webapp2.RequestHandler):
     @staticmethod
@@ -28,6 +28,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         supervisor_one.first_name = "Wim"
         supervisor_one.last_name = "Meredonk"
         supervisor_one.email = "wjm.meredonk1@gmail.com"
+        supervisor_one.password = ilmoitus_auth.hash_secret("123456")
         supervisor_one.employee_number = 1
         supervisor_one.department = department_it.key
         supervisor_one.supervisor = None
@@ -38,6 +39,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         supervisor_two.first_name = "Muhammed"
         supervisor_two.last_name = "Hasdim"
         supervisor_two.email = "muhammad_hasdim@gmail.com"
+        supervisor_two.password = ilmoitus_auth.hash_secret("123456")
         supervisor_two.employee_number = 4
         supervisor_two.department = department_it.key
         supervisor_two.supervisor = supervisor_one.key
@@ -48,6 +50,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         supervisor_three.first_name = "Wout"
         supervisor_three.last_name = "van Diesen"
         supervisor_three.email = "wout_van_diesen@gmail.com"
+        supervisor_three.password = ilmoitus_auth.hash_secret("123456")
         supervisor_three.employee_number = 7
         supervisor_three.department = department_investment.key
         supervisor_three.supervisor = None
@@ -59,6 +62,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         employee_one.first_name = "Piet"
         employee_one.last_name = "Hein"
         employee_one.email = "developers.42IN11EWa@gmail.com"
+        employee_one.password = ilmoitus_auth.hash_secret("123456")
         employee_one.employee_number = 2
         employee_one.department = department_it.key
         employee_one.supervisor = supervisor_two.key
@@ -69,6 +73,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         employee_two.first_name = "Axel"
         employee_two.last_name = "Klein"
         employee_two.email = "axel_klein@gmail.com"
+        employee_two.password = ilmoitus_auth.hash_secret("123456")
         employee_two.employee_number = 3
         employee_two.department = department_it.key
         employee_two.supervisor = supervisor_one.key
@@ -79,6 +84,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         employee_three.first_name = "Rik"
         employee_three.last_name = "van de Griendt"
         employee_three.email = "rikvdgriendt@gmail.com"
+        employee_three.password = ilmoitus_auth.hash_secret("123456")
         employee_three.employee_number = 5
         employee_three.department = department_it.key
         employee_three.supervisor = supervisor_two.key
@@ -90,6 +96,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         employee_five.first_name = "Laura"
         employee_five.last_name = "Vermeulen"
         employee_five.email = "laura_vermeulen@gmail.com"
+        employee_five.password = ilmoitus_auth.hash_secret("123456")
         employee_five.employee_number = 9
         employee_five.department = department_human_resources.key
         employee_five.supervisor = supervisor_three.key
@@ -100,6 +107,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         employee_six.first_name = "Arjen"
         employee_six.last_name = "Drugov"
         employee_six.email = "a.drugovicj_drugov@gmail.com"
+        employee_six.password = ilmoitus_auth.hash_secret("123456")
         employee_six.employee_number = 9
         employee_six.department = department_human_resources.key
         employee_six.supervisor = supervisor_three.key
