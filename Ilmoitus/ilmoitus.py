@@ -238,7 +238,7 @@ class CurrentUserDetailsHandler(BaseRequestHandler):
             if current_user is not None:
                 response_module.give_response(self, current_user.get_object_json_data())
             else:
-                give_error_response(self, 404, "De ingelogde gebruiker niet in het systeem gevonden!",
+                give_error_response(self, 404, "De ingelogde gebruiker is niet in het systeem gevonden!",
                                     "current_user is None")
         else:
             give_error_response(self, 401, "De huidige user details kunnen niet opgehaald worden omdat u daar niet de "
