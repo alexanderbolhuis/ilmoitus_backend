@@ -151,25 +151,25 @@ class DataBootsTrapper(webapp2.RequestHandler):
         #Declaration lines for declaration one
         #TODO: OPTIONAL!! change receipt data from string to datetime property if we decide to switch to datetime
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.receipt_date = str(datetime.datetime.now() - datetime.timedelta(days=7))
+        line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 28
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
 
         line_two = ilmoitus_model.DeclarationLine()
-        line_two.receipt_date = str(datetime.datetime.now() - datetime.timedelta(days=6))
+        line_two.receipt_date = datetime.datetime.now() - datetime.timedelta(days=6)
         line_two.cost = 14
         line_two.declaration_sub_type = subtype_one.key
         line_two.put()
 
         line_three = ilmoitus_model.DeclarationLine()
-        line_three.receipt_date = str(datetime.datetime.now() - datetime.timedelta(days=6))
+        line_three.receipt_date = datetime.datetime.now() - datetime.timedelta(days=6)
         line_three.cost = 8
         line_three.declaration_sub_type = subtype_six.key
         line_three.put()
 
         line_four = ilmoitus_model.DeclarationLine()
-        line_four.receipt_date = str(datetime.datetime.now() - datetime.timedelta(days=2))
+        line_four.receipt_date = datetime.datetime.now() - datetime.timedelta(days=2)
         line_four.cost = 876
         line_four.declaration_sub_type = subtype_four.key
         line_four.put()
