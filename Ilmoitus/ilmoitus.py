@@ -360,6 +360,7 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
                                            "zijn gevonden die aan u zijn geassocieerd.",
                                 "query_result is empty")
 
+
 class AddNewDeclarationHandler(BaseRequestHandler):
     def post(self):
         # Check if logged in
@@ -448,7 +449,7 @@ class AddNewDeclarationHandler(BaseRequestHandler):
             sub_type = ilmoitus_model.DeclarationSubType.get_by_id(int(line["declaration_sub_type"]))
             if sub_type is None:
                give_error_response(self, 400, "De declaratie_sub_type bestaat niet.",
-                                "The declaration_sub_type is unknown.")
+                                   "The declaration_sub_type is unknown.")
 
         # TODO check attachments keys
 
@@ -493,6 +494,46 @@ class AddNewDeclarationHandler(BaseRequestHandler):
         response_module.give_response(self, combined_dict)
 
 
+class SpecificDeclarationHandler(BaseRequestHandler):
+    def get(self, declaration_id):
+        person_data = ilmoitus_auth.get_current_person(self)
+        current_user = person_data["person_value"]
+
+        if current_user is None:
+            give_error_response(self, 401, "There is no user logged in", None, 401)
+
+        # checks if declaration_id is of type int
+        if str.isdigit(declaration_id):
+
+            key = current_user.key
+            result = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
+
+            if result is None:
+                give_error_response(self, 404, "Kan de opgevraagde declaratie niet vinden",
+                                    "Declaration id can only be of the type integer and cannot be None", 404)
+
+            if result.created_by == key:
+                response_module.give_response(self, result.get_object_json_data())
+
+            elif current_user.class_name == 'supervisor':
+                if key in result.assigned_to:
+                    response_module.give_response(self, result.get_object_json_data())
+                else:
+                    give_error_response(self, 401,
+                                        "Deze declratie is niet aan jouw toegewezen", None, 401)
+
+            elif current_user.class_name == 'human_resources' and result.class_name == \
+                    'supervisor_approved_declaration' and result.submitted_to_human_resources_by is not None:
+                response_module.give_response(self, result.get_object_json_data())
+            else:
+                give_error_response(self, 401,
+                                    "Je hebt niet de juiste rechten op deze declratie te openen", None, 401)
+        # if declaration_id not is int
+        else:
+            give_error_response(self, 400, "Kan de opgevraagde declaratie niet vinden",
+                                "Declaration id can only be of the type integer and cannot be None", 400)
+
+
 class ApproveByHumanResources(BaseRequestHandler):
     def put(self):
         person_data = ilmoitus_auth.get_current_person(self, "human_resources")
@@ -530,7 +571,8 @@ class ApproveByHumanResources(BaseRequestHandler):
                 give_error_response(self, 500, "Kan de declaratie niet goedkeuren omdat er is geen data is opgegeven.",
                                     "Request body is None.")
         else:
-            give_error_response(self, 401, "Kan de declaratie niet goedkeuren omdat u niet de juiste permissies heeft",
+            #user does not have the appropriate permissions or isn't logged in at all.
+            give_error_response(self, 401, "Geen permissie om een declaratie goed te keuren!",
                                 "current_user is None or not from human_resources")
 
 
@@ -676,6 +718,7 @@ application = webapp.WSGIApplication(
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
+        ('/declaration/(.*)', SpecificDeclarationHandler),
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
         ('/declaration/lock', SetOpenToLockedDeclaration),
         ("/declaration", AddNewDeclarationHandler),

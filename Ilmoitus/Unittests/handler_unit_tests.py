@@ -4,7 +4,6 @@ import sys
 sys.path.append("../")
 import random
 import json
-import datetime
 import ilmoitus_auth
 import ilmoitus as main_application
 import datetime
@@ -1032,6 +1031,233 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
             user_is_logged_in, user_is_admin)
 
 
+class SpecificDeclarationTest(BaseAuthorizationHandler):
+    def test_positive_get_employee_declaration(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SpecificDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+        token = setup_data["token"]
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+
+        logged_in_person.put()
+
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        declaration_valid = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+
+        path = "/declaration/" + str(declaration_valid.key.integer_id())
+        response = self.positive_test_stub_handler(token, path, "get")
+        response_data = json.loads(response.body)
+
+        # check for VALID declaration by logged_in_person
+        self.assertEqual(response_data["created_by"], logged_in_person.key.integer_id())
+        self.assertEqual(response_data["id"], declaration_valid.key.integer_id())
+
+    def test_positive_get_supervisor_declaration(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationHandler)],
+                                                 user_is_logged_in, user_is_admin)
+        token = setup_data["token"]
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+
+        logged_in_person.put()
+
+        employee = PersonDataCreator.create_valid_employee_data()
+
+        # check if supervisor can open an open declaration
+        declaration_open = DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
+        path1 = "/declaration/" + str(declaration_open.key.integer_id())
+
+        response1 = self.positive_test_stub_handler(token, path1, "get")
+        response_data1 = json.loads(response1.body)
+
+        # check for VALID declaration by logged_in_person
+        self.assertEquals(response_data1["assigned_to"][0], logged_in_person.key.integer_id())
+        self.assertEquals(response_data1["id"], declaration_open.key.integer_id())
+        self.assertEquals(response_data1["class_name"], "open_declaration")
+
+         # check if supervisor can open an locked declaration
+        declaration_lock = DeclarationsDataCreator.create_valid_locked_declaration(employee, logged_in_person)
+        path2 = "/declaration/" + str(declaration_lock.key.integer_id())
+
+        response2 = self.positive_test_stub_handler(token, path2, "get")
+        response_data2 = json.loads(response2.body)
+
+        # check for VALID declaration by logged_in_person
+        self.assertEquals(response_data2["assigned_to"][0], logged_in_person.key.integer_id())
+        self.assertEquals(response_data2["id"], declaration_lock.key.integer_id())
+        self.assertEquals(response_data2["class_name"], "locked_declaration")
+
+    def test_positive_get_hr_declaration(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationHandler)],
+                                                 user_is_logged_in, user_is_admin)
+        token = setup_data["token"]
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "human_resources"
+        logged_in_person.put()
+
+        employee = PersonDataCreator.create_valid_employee_data()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        declaration_valid = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(employee, supervisor)
+
+        path = "/declaration/" + str(declaration_valid.key.integer_id())
+
+        response = self.positive_test_stub_handler(token, path, "get")
+        response_data = json.loads(response.body)
+
+        # check for VALID declaration by logged_in_person
+        self.assertEquals(response_data["submitted_to_human_resources_by"], supervisor.key.integer_id())
+        self.assertEquals(response_data["id"], declaration_valid.key.integer_id())
+        self.assertEquals(response_data["class_name"], "supervisor_approved_declaration")
+
+    def test_negative_get_employee_declaration_by_other_employee(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SpecificDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+        token = setup_data["token"]
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+
+        logged_in_person.put()
+
+        employee = PersonDataCreator.create_valid_employee_data()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        # checks if other login employee can get the declaration
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
+        path = "/declaration/" + str(declaration.key.integer_id())
+        self.negative_test_stub_handler(token, path, "get", 401)
+
+    def test_negative_get_supervisor_declaration_not_assigned_to_login_supervisor(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationHandler)],
+                                                 user_is_logged_in, user_is_admin)
+        token = setup_data["token"]
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "supervisor"
+
+        logged_in_person.put()
+
+        employee = PersonDataCreator.create_valid_employee_data()
+        other_supervisor = PersonDataCreator.create_valid_supervisor()
+
+        # checks if supervisor can see an declaration assigned to an other supervisor
+        open_declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, other_supervisor)
+        path = "/declaration/" + str(open_declaration.key.integer_id())
+        self.negative_test_stub_handler(token, path, "get", 401)
+
+        # checks if an supervisor can see an declaration assigned to an other supervisor
+        open_declaration = \
+            DeclarationsDataCreator.create_valid_open_declaration(employee, other_supervisor)
+        path = "/declaration/" + str(open_declaration.key.integer_id())
+        self.negative_test_stub_handler(token, path, "get", 401)
+
+    def test_negative_get_hr_declaration_open_declaration(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationHandler)],
+                                                 user_is_logged_in, user_is_admin)
+        token = setup_data["token"]
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "human_resources"
+        logged_in_person.put()
+
+        employee = PersonDataCreator.create_valid_employee_data()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        # checks if hr can see an open declaration
+        open_declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
+        path = "/declaration/" + str(open_declaration.key.integer_id())
+        self.negative_test_stub_handler(token, path, "get", 401)
+
+    def test_negative_declaration_not_found(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SpecificDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+        token = setup_data["token"]
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+
+        logged_in_person.put()
+
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        declaration_id = declaration.key.integer_id()
+        declaration.key.delete()
+
+        path = "/declaration/" + str(declaration_id)
+
+        self.negative_test_stub_handler(token, path, "get", 404)
+
+    def test_negative_declaration_sent_text_as_id(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SpecificDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+        token = setup_data["token"]
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+
+        logged_in_person.put()
+
+        path = "/declaration/test"
+
+        self.negative_test_stub_handler(token, path, "get", 400)
+
+    def test_negative_declaration_no_user_logging(self):
+        user_is_logged_in = False
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SpecificDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+        token = setup_data["token"]
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+
+        logged_in_person.put()
+
+        path = "/declaration/test"
+
+        self.negative_test_stub_handler(token, path, "get", 401)
+
+
 class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
     def test_add_new_declartion_one_item_postive(self):
         user_is_logged_in = True
@@ -1285,6 +1511,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         declaration.key.delete()
         self.negative_test_stub_handler(token, path, "post", 400, combined_dict)
 
+
 # TODO: Make put_json working
 class SetOpenToLockedDeclarationTest(BaseAuthorizationHandler):
     def test_negative_not_logged_in(self):
@@ -1482,4 +1709,3 @@ class DeclarationCountAndTotalAmountTest(BaseAuthorizationHandler):
 
         getpath = "/employees/total_declarations/" + str(99999)
         self.negative_test_stub_handler(token, getpath, "get", 404)
-
