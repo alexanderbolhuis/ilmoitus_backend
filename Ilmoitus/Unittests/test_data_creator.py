@@ -31,6 +31,9 @@ class PersonDataCreator():
         supervisor = PersonDataCreator.create_valid_supervisor(None, employee_number + 1)
 
         employee.class_name = "employee"
+        employee.first_name = "Stan"
+        employee.last_name = "Marsh"
+        employee.email = "s.marsh@gmail.com"
         employee.supervisor = supervisor.key
         employee.department = department.key
         employee.employee_number = employee_number
