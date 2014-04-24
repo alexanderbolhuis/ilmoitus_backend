@@ -3,7 +3,7 @@ import ilmoitus_model
 import random
 from datetime import datetime, date
 import  decimal
-
+import ilmoitus_auth
 
 class PersonDataCreator():
     def __init__(self):
@@ -16,6 +16,8 @@ class PersonDataCreator():
         person.first_name = "Rogier"
         person.last_name = "Boleij"
         person.email = "r.boleij" + str(email_added_id) + "@gmail.com"
+        person.password = ilmoitus_auth.hash_secret("123456")
+        person.employee_number = 12345
         person.wants_email_notifications = bool(random.randint(0, 1))
         person.wants_phone_notifications = not bool(person.wants_email_notifications)
 
@@ -32,6 +34,8 @@ class PersonDataCreator():
         employee.supervisor = supervisor.key
         employee.department = department.key
         employee.employee_number = employee_number
+        employee.password = ilmoitus_auth.hash_secret("123456")
+        employee.employee_number = 123456
         employee.put()
         return employee
 
@@ -43,6 +47,9 @@ class PersonDataCreator():
         if supervisors_supervisor is not None:
             supervisor.supervisor = supervisors_supervisor.key
         supervisor.employee_number = employee_number
+        supervisor.max_declaration_price = -1
+        supervisor.password = ilmoitus_auth.hash_secret("123456")
+        supervisor.employee_number = 1234567
         supervisor.put()
         return supervisor
 
@@ -50,10 +57,12 @@ class PersonDataCreator():
     def create_valid_human_resource(human_resources_human_resource=None, employee_number=0):
         human_resource = ilmoitus_model.Person()
         human_resource.class_name = "human_resources"
+        human_resource.password = ilmoitus_auth.hash_secret("123456")
         human_resource.department = DepartmentDataCreator.create_valid_department().key
         if human_resources_human_resource is not None:
             human_resource.human_resource = human_resources_human_resource.key
         human_resource.employee_number = employee_number
+        human_resource.employee_number = 12345678
         human_resource.put()
         return human_resource
 
@@ -77,14 +86,15 @@ class DeclarationsDataCreator():
     @staticmethod
     def create_valid_declaration_lines(declaration, amount_of_lines):
         declaration_type = DeclarationsDataCreator.create_valid_declaration_type()
-        subtype = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(declaration_type)
+        subtype = declaration_type.sub_types[0]
 
         lines = []
 
         for i in range(0, amount_of_lines):
             line = ilmoitus_model.DeclarationLine()
-            line.declaration_sub_type = subtype.key
-            line.cost = decimal.Decimal(random.randrange(10000))/100
+            line.declaration_sub_type = subtype
+            line.receipt_date = datetime.now()
+            line.cost = random.randint(0, 100)  # TODO make float
             line.put()
 
             lines.append(line)
@@ -155,6 +165,7 @@ class DeclarationsDataCreator():
         locked_declaration.put()
         return locked_declaration
 
+    @staticmethod
     def create_valid_human_resources_approved_declaration(employee, supervisor):
         employee_key = employee.key
 
