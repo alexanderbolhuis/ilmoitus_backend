@@ -417,6 +417,9 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
         self.assertTrue("supervisor_comment" in response_data.keys())
         self.assertEqual(response_data["supervisor_comment"], supervisors_comment)
 
+        messages = self.mail_stub.get_sent_messages()
+        self.assertEqual(1, len(messages))
+
     def test_positive_put_two(self):
         user_is_logged_in = True
         user_is_admin = '0'
@@ -464,52 +467,8 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
         self.assertTrue("supervisor_comment" in response_data.keys())
         self.assertEqual(response_data["supervisor_comment"], supervisors_comment)
 
-    def test_positive_put_three(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
-        setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
-        person = setup_data["random_person"]
-        person.class_name = "supervisor"
-        token = setup_data["token"]
-        person.put()
-
-        supervisor = person
-        employee = PersonDataCreator.create_valid_employee_data()
-        locked_declaration = DeclarationsDataCreator.create_valid_locked_declaration(
-            employee,
-            supervisor)
-        supervisors_comment = "Ziet er goed uit maar let wel op item nummer 3!"
-        #Add a comment as well
-        locked_declaration.supervisor_comment = supervisors_comment
-        locked_declaration.items_total_price = 150
-        supervisor.max_declaration_price = 200
-        locked_declaration.put()
-        supervisor.put()
-        locked_declaration_data = locked_declaration.get_object_as_data_dict()
-        locked_declaration_data_json_string = json.dumps(locked_declaration_data)
-
-        response = self.positive_test_stub_handler(token, path, "put", data_dict=locked_declaration_data_json_string)
-
-        response_data = json.loads(response.body)
-
-        self.assertTrue("id" in response_data.keys())
-        self.assertEqual(locked_declaration_data["id"], response_data["id"])
-
-        self.assertTrue("class_name" in response_data.keys())
-        self.assertEqual(response_data["class_name"], "supervisor_approved_declaration")
-
-        self.assertTrue("submitted_to_human_resources_by" in response_data.keys())
-        self.assertEqual(response_data["submitted_to_human_resources_by"], supervisor.key.integer_id())
-
-        self.assertTrue("supervisor_approved_at" in response_data.keys())
-        # exact date-time is untestable: it's accurate in milliseconds.
-
-        self.assertTrue("supervisor_comment" in response_data.keys())
-        self.assertEqual(response_data["supervisor_comment"], supervisors_comment)
+        messages = self.mail_stub.get_sent_messages()
+        self.assertEqual(1, len(messages))
 
     def test_negative_put_one(self):
         user_is_logged_in = True
@@ -540,6 +499,7 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
         locked_declaration_data_json_string = json.dumps(locked_declaration_data)
 
         self.negative_test_stub_handler(token, path, "put", 401, data_dict=locked_declaration_data_json_string)
+
 
     def test_negative_put_none(self):
         user_is_logged_in = True
@@ -986,21 +946,59 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
         person_supervisor = PersonDataCreator.create_valid_supervisor()
         person_employee = PersonDataCreator.create_valid_employee_data()
 
-        declaration_one = DeclarationsDataCreator.create_valid_open_declaration(person_employee, person_supervisor)
         declaration_two = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person_employee, person_supervisor)
-        declaration_three = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person_employee, person_supervisor)
 
-        ''''
-        data_one = dict(declaration_id = declaration_one.key.integer_id())
+        '''
+        data = dict(declaration_id = declaration_two.key.integer_id())
+        response = self.positive_test_stub_handler(path, 'put_json', data_dict=data)
+        response_data = json.loads(response.body)
+        self.assertEqual(response_data["class_name"], 'human_resources_declined_declaration')
+        self.assertEqual(response_data["human_resources_declined_by"], logged_in_person.key.integer_id())
+        self.assertEqual(response_data["human_resources_declined_by"], logged_in_person.key.integer_id())
+        self.assertNotEqual(response_data["human_resources_declined_at"], None)
+
+        messages = self.mail_stub.get_sent_messages()
+        self.assertEqual(1, len(messages))
+        '''
+
+    '''
+    def test_negative_decline_open_declaration_by_human_resources(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = '/declaration/declined_by_hr'
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        token = setup_data["token"]
+        logged_in_person.class_name = "human_resources"
+        logged_in_person.put()
+
+        person_supervisor = PersonDataCreator.create_valid_supervisor()
+        person_employee = PersonDataCreator.create_valid_employee_data()
+
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(person_employee, person_supervisor)
+
+        data_one = dict(declaration_id = declaration.key.integer_id())
+
         self.negative_test_stub_handler(token, path, 'put_json', 500, data_one)
+    '''
 
-        data_two = dict(declaration_id = declaration_two.key.integer_id())
-        self.positive_test_stub_handler(token, path, 'put_json', data_dict=data_two)
-        self.assertEqual(declaration_two.class_name, 'human_resources_declined_declaration')
-        self.assertEqual(declaration_two.human_resources_declined_by, logged_in_person.key)
-        self.assertNotEqual(declaration_two.human_resources_declined_at, None)
-        self.assertEqual(declaration_three.class_name, 'supervisor_approved_declaration')
+    def test_negative_put_is_none(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = '/declaration/declined_by_hr'
 
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "human_resources"
+        logged_in_person.put()
+        '''
         self.negative_test_stub_handler(token, path, 'put_json', 500, data_dict=None)
         '''
 
@@ -1259,7 +1257,7 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
 
 
 class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
-    def test_add_new_declartion_one_item_postive(self):
+    def test_add_new_declaration_one_item_positive(self):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/declaration"
@@ -1331,7 +1329,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
                       "Full error message:\n"
                       + str(error))
 
-    def test_add_new_declartion_more_items_postive(self):
+    def test_add_new_declaration_more_items_positive(self):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/declaration"

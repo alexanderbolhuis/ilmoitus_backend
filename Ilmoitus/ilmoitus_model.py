@@ -127,7 +127,8 @@ class Declaration(ndb.Model):
                                                             "submitted_to_human_resources_by", "supervisor_approved_at",
                                                             "supervisor_approved_by", "sent_to_human_resources_at",
                                                             "declined_by", "supervisor_comment",
-                                                            "human_resources_comment", "human_resources_declined_at"],
+                                                            "human_resources_comment", "human_resources_declined_at",
+                                                            "human_resources_declined_by"],
 
                    "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                             "items_total_price", "items_count", "locked_at",

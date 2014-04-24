@@ -38,6 +38,18 @@ def create_ending_of_the_body():
     return "With kind regards,\n\nIlmoitus team"
 
 
+def send_message_declaration_status_changed(request_handler, declaration):
+    person = ilmoitus_model.Person.get_by_id(declaration.created_by.integer_id())
+    to = person.email
+    body = create_body(person.last_name,
+                       "We send you this email to inform you that the status of your declaration (submitted on " +
+                       declaration.created_at.strftime('%Y-%m-%d %H:%M') +
+                       "). Has changed to \"" + declaration.readable_state() + "\".\n\n" + create_ending_of_the_body()
+                       + "\n")
+
+    send_email_to_user(request_handler, default_sender, to, "The status or your declaration has changed.", body)
+
+
 def send_mail_declaration_approved(request_handler, declaration):
     person_to = ilmoitus_model.Person.get_by_id(declaration.created_by.integer_id())
 
@@ -46,6 +58,7 @@ def send_mail_declaration_approved(request_handler, declaration):
            str(declaration.will_be_payed_out_on) + "\n")
 
     send_email_to_user(request_handler, default_sender, person_to.email, "Your declaration is approved", body)
+
 
 
 def create_body(name, middle_body):
