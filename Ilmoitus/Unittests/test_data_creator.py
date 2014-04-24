@@ -3,7 +3,7 @@ import ilmoitus_model
 import random
 from datetime import datetime, date
 import  decimal
-
+import ilmoitus_auth
 
 class PersonDataCreator():
     def __init__(self):
@@ -16,6 +16,8 @@ class PersonDataCreator():
         person.first_name = "Rogier"
         person.last_name = "Boleij"
         person.email = "r.boleij" + str(email_added_id) + "@gmail.com"
+        person.password = ilmoitus_auth.hash_secret("123456")
+        person.employee_number = 12345
         person.wants_email_notifications = bool(random.randint(0, 1))
         person.wants_phone_notifications = not bool(person.wants_email_notifications)
 
@@ -35,6 +37,8 @@ class PersonDataCreator():
         employee.supervisor = supervisor.key
         employee.department = department.key
         employee.employee_number = employee_number
+        employee.password = ilmoitus_auth.hash_secret("123456")
+        employee.employee_number = 123456
         employee.put()
         return employee
 
@@ -46,6 +50,9 @@ class PersonDataCreator():
         if supervisors_supervisor is not None:
             supervisor.supervisor = supervisors_supervisor.key
         supervisor.employee_number = employee_number
+        supervisor.max_declaration_price = -1
+        supervisor.password = ilmoitus_auth.hash_secret("123456")
+        supervisor.employee_number = 1234567
         supervisor.put()
         return supervisor
 
@@ -53,10 +60,12 @@ class PersonDataCreator():
     def create_valid_human_resource(human_resources_human_resource=None, employee_number=0):
         human_resource = ilmoitus_model.Person()
         human_resource.class_name = "human_resources"
+        human_resource.password = ilmoitus_auth.hash_secret("123456")
         human_resource.department = DepartmentDataCreator.create_valid_department().key
         if human_resources_human_resource is not None:
             human_resource.human_resource = human_resources_human_resource.key
         human_resource.employee_number = employee_number
+        human_resource.employee_number = 12345678
         human_resource.put()
         return human_resource
 

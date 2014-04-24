@@ -50,5 +50,16 @@ def send_message_declaration_status_changed(request_handler, declaration):
     send_email_to_user(request_handler, default_sender, to, "The status or your declaration has changed.", body)
 
 
+def send_mail_declaration_approved(request_handler, declaration):
+    person_to = ilmoitus_model.Person.get_by_id(declaration.created_by.integer_id())
+
+    body = create_body(person_to.last_name, "We send this email because your submitted declaration (submitted on " + \
+           declaration.created_at.strftime('%Y-%m-%d %H:%M') + " is completely approved and it will be payed out on: "+\
+           str(declaration.will_be_payed_out_on) + "\n")
+
+    send_email_to_user(request_handler, default_sender, person_to.email, "Your declaration is approved", body)
+
+
+
 def create_body(name, middle_body):
     return create_begin_of_the_body(name) + middle_body + create_ending_of_the_body()

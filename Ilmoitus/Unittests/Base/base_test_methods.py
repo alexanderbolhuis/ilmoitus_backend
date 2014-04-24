@@ -4,8 +4,8 @@ import webapp2
 import json
 import webtest
 from google.appengine.ext import testbed
+import traceback
 
-import ilmoitus as main_application
 
 
 class BaseTestClass(TestCase):
@@ -154,7 +154,7 @@ class BaseTestClass(TestCase):
             for e in filter(None, invalid_data_error.error_list):
                 print e.msg
 
-    def positive_test_stub_handler(self, path, request_type, response_body_should_be_defined=True,
+    def positive_test_stub_handler(self, token, path, request_type, response_body_should_be_defined=True,
                                    expected_content_type='application/json', body_data_should_have_results=True,
                                    data_dict=None):
         """
@@ -208,18 +208,23 @@ class BaseTestClass(TestCase):
 
         #Send the request that is stored in request_reference with the path parameter and optionally,
         # the json_data parameter
+        self.testapp.authorization = token
+
         try:
             if data_dict is None:
-                response = request_reference(path)
+                response = request_reference(path, dict(), dict(Authorization=str(token)))
             else:
-                response = request_reference(path, data_dict)
+                response = request_reference(path, data_dict, {"Authorization": str(token)})
+                #response = request_reference(path, data_dict)
         except webtest.AppError as appError:
+            traceback.print_exc()
             self.fail("Failed to send a request to the testapp. Expected a valid response, but got an exception:"
                       "\n\tError Type:" + str(type(appError).__name__) +
                       "\n\tError Message:" +
                       "\n\t\t" + str(appError.message))
         except Exception:
-            self.fail("Error while trying to send the request to the testapp. Are you sure that the given request-type "
+            traceback.print_exc()
+            self.fail("Error while trying to send the request to the testapp. Are you sure that the given request-type " + str(request_reference) +
                       "is a valid http request method (i.e. GET, POST, PUT or DELETE)?")
 
         #Execute the basic tests
@@ -241,7 +246,7 @@ class BaseTestClass(TestCase):
 
         return response
 
-    def negative_test_stub_handler(self, path, request_type, expected_error_code, data_dict=None):
+    def negative_test_stub_handler(self, token, path, request_type, expected_error_code, data_dict=None):
         """
         This method serves as a base stub for all negative request handler unit tests. It will get
         the response from the testapp on the given URL path and the given request type, or fail
@@ -283,6 +288,7 @@ class BaseTestClass(TestCase):
             lowercase_request_type = request_type.lower()
             request_reference = getattr(self.testapp, lowercase_request_type)
         except AttributeError:
+            traceback.print_exc()
             self.fail("No valid method found for the request_type of '" + str(request_type) +
                       "'.\nrequest_type must be a string that indicates what type of request should be " +
                       "sent to the testapp (i.e. 'get', 'post' etc.).")
@@ -292,9 +298,9 @@ class BaseTestClass(TestCase):
         # the json_data parameter
         try:
             if data_dict is None:
-                response = request_reference(path)
+                response = request_reference(path, dict(), dict(Authorization=str(token)))
             else:
-                response = request_reference(path, data_dict)
+                response = request_reference(path, data_dict, dict(Authorization=str(token)))
         except webtest.AppError as appError:
             #We want this to happen! See if the appError variable is properly initialized.
             self.assertIsNotNone(appError)
@@ -304,8 +310,9 @@ class BaseTestClass(TestCase):
             print "Succesfully detected an error on path: '" + path + "':"
             print "\t" + appError.message
         except Exception:
-            self.fail("Error while trying to send the request to the testapp. Are you sure that the given request-type"
-                      "is a valid http request method (i.e. GET, POST, PUT or DELETE)?")
+            traceback.print_exc()
+            self.fail("Error while trying to send the request to the testapp. Are you sure that the given request-type " + lowercase_request_type +
+                      " is a valid http request method (i.e. GET, POST, PUT or DELETE)?")
         if response is not None:
             self.fail("Failed to detect an error with the path '" + path + "'.")
 
