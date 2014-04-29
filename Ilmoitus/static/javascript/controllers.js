@@ -19,11 +19,11 @@ ilmoitusApp.controller('loginController', function($scope, $state) {
 					$state.go('template.declarations');
 				}
 				else {
-					alert("Naam en wachtwoord combinatie is incorrect.");
+					showMessage("Naam en wachtwoord combinatie is incorrect.");
 				}
 			});
 		} else {
-			alert("Vul alstublieft uw gebruikersnaam en wachtwoord beiden in.");
+			showMessage("Vul alstublieft uw gebruikersnaam en wachtwoord beiden in.");
 		}
 		
 	}
