@@ -781,7 +781,6 @@ class CurrentUserSupervisorsHandlerTest(BaseAuthorizationHandler):
 
         response = self.positive_test_stub_handler(token, path, "get")
         response_data = json.loads(response.body)
-        print response_data
 
         for i in response_data:
             try:
@@ -888,11 +887,10 @@ class ApproveDeclarationByHumanResourcesTest(BaseAuthorizationHandler):
 
         declaration = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person, supervisor)
 
-        ''''
+
         #test approving a supervisor approved declaration
-<<<<<<< HEAD
-        post_data = dict(id=declaration.key.integer_id(), pay_date="2014-04-02T00:00:00.000Z")
-        response = self.positive_test_stub_handler(token, path, "put_json", data_dict=post_data)
+        post_data = json.dumps(dict(id=declaration.key.integer_id(), pay_date="2014-04-02T00:00:00.000Z"))
+        response = self.positive_test_stub_handler(token, path, "put", data_dict=post_data)
         response_data = json.loads(response.body)
         self.assertEqual(response_data["class_name"], "human_resources_approved_declaration")
         self.assertEqual(response_data["human_resources_approved_by"], logged_in_person.key.integer_id())
@@ -914,6 +912,7 @@ def test_negative_approve_open_declaration(self):
                                                  user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
+        token = setup_data["token"]
         logged_in_person.class_name = "human_resources"
         logged_in_person.put()
 
@@ -923,8 +922,8 @@ def test_negative_approve_open_declaration(self):
 
         #test approving an open declaration. (should not be possible)
         post_data = dict(id=declaration.key.integer_id(), pay_date="2014-04-02T00:00:00.000Z")
-        self.negative_test_stub_handler(path, "put_json", 500, data_dict=post_data)
-        '''
+        self.negative_test_stub_handler(token, path, "put", 500, data_dict=post_data)
+
 
         
 class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationHandler):
@@ -948,9 +947,8 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
 
         declaration_two = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(person_employee, person_supervisor)
 
-        '''
-        data = dict(declaration_id = declaration_two.key.integer_id())
-        response = self.positive_test_stub_handler(path, 'put_json', data_dict=data)
+        data = json.dumps(dict(declaration_id=declaration_two.key.integer_id()))
+        response = self.positive_test_stub_handler(token, path, 'put', data_dict=data)
         response_data = json.loads(response.body)
         self.assertEqual(response_data["class_name"], 'human_resources_declined_declaration')
         self.assertEqual(response_data["human_resources_declined_by"], logged_in_person.key.integer_id())
@@ -959,9 +957,9 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
 
         messages = self.mail_stub.get_sent_messages()
         self.assertEqual(1, len(messages))
-        '''
 
-    '''
+
+
     def test_negative_decline_open_declaration_by_human_resources(self):
         user_is_logged_in = True
         user_is_admin = '0'
@@ -981,10 +979,9 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
 
         declaration = DeclarationsDataCreator.create_valid_open_declaration(person_employee, person_supervisor)
 
-        data_one = dict(declaration_id = declaration.key.integer_id())
+        data_one = json.dumps(dict(declaration_id=declaration.key.integer_id()))
 
-        self.negative_test_stub_handler(token, path, 'put_json', 500, data_one)
-    '''
+        self.negative_test_stub_handler(token, path, 'put', 500, data_one)
 
     def test_negative_put_is_none(self):
         user_is_logged_in = True
@@ -996,11 +993,11 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
             user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
+        token = setup_data["token"]
         logged_in_person.class_name = "human_resources"
         logged_in_person.put()
-        '''
-        self.negative_test_stub_handler(token, path, 'put_json', 500, data_dict=None)
-        '''
+
+        self.negative_test_stub_handler(token, path, 'put', 500, data_dict=None)
 
     def test_negative_decline_no_permission(self):
         user_is_logged_in = True
@@ -1420,6 +1417,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
                                                  user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
+        token = setup_data["token"]
         logged_in_person.class_name = "employee"
         logged_in_person.put()
 
@@ -1439,7 +1437,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
 
         items_total_price = lines[0]["cost"]
 
-        response = self.positive_test_stub_handler(path, "post", data_dict=combined_dict)
+        response = self.positive_test_stub_handler(token, path, "post", data_dict=combined_dict)
 
         response_data = json.loads(response.body)
 
@@ -1578,7 +1576,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
 
         declaration.key.delete()
 
-        self.negative_test_stub_handler(path, "post", 400, combined_dict)
+        self.negative_test_stub_handler(token, path, "post", 400, combined_dict)
 
     def test_add_new_declaration_negative_wrong_attachment(self):
         user_is_logged_in = True
@@ -1589,6 +1587,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
                                                  user_is_logged_in, user_is_admin)
 
         logged_in_person = setup_data["random_person"]
+        token = setup_data["token"]
         logged_in_person.class_name = "employee"
         logged_in_person.put()
 
