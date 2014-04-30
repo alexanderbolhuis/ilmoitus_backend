@@ -7,14 +7,11 @@ import datetime
 import dateutil.parser
 import data_bootstrapper
 import logging
-import data_bootstrapper
-import dateutil.parser
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from error_response_module import give_error_response
 import mail_module
 import ilmoitus_auth
-
 
 
 class BaseRequestHandler(webapp.RequestHandler):
