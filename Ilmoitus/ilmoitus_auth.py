@@ -4,7 +4,6 @@ import ilmoitus_model
 import hashlib
 import random
 import time
-import unittest
 
 
 def get_current_person(request_handler, class_name=None):
