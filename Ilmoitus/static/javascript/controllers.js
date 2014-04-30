@@ -1,15 +1,45 @@
 ilmoitusApp.controller('loginController', function($scope, $state) {
 	//Login button. Check for correct credentials.
 	$scope.loginBtnClick = function() {
-		$state.go('template.declarations');
+		if($scope.username && $scope.password) {
+			var jsonData = {"email": $scope.username, "password": $scope.password}
+
+			var request = $.ajax({
+				type: "POST",
+				url: "/auth/login",
+				data: jsonData,
+				error: function(jqXHR, textStatus, errorThrown){
+					console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+				}
+			});
+
+			request.done(function(data){
+				if(data.token){
+					sessionStorage.token = data.token;
+					$state.go('template.declarations');
+				}
+				else {
+					showMessage("Naam en wachtwoord combinatie is incorrect.");
+				}
+			});
+		} else {
+			showMessage("Vul alstublieft uw gebruikersnaam en wachtwoord beiden in.");
+		}
+		
 	}
 });
 
 ilmoitusApp.controller('templateController', function($scope, $state) {
 	
+	//Check if user is logged in. If not, redirect to login page. 
+	if(!sessionStorage.token) {
+		$state.go('login');
+	}
+
 	//Get current user details
 	var request = $.ajax({
 		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
 		url: "/current_user/details",
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
@@ -42,14 +72,43 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 
 ilmoitusApp.controller('declarationsController', function($scope, $state, $http) {
 	$scope.navBtnSelect("declarationsBtn");
-	$http.get('/declarations/employee').then(function(res){
-		$scope.declarationList = res.data;
-		for(var i = 0 ; i < $scope.declarationList.length ; i++){
-			$scope.declarationList[i].totalprice = 90;
-			$scope.declarationList[i].itemCount = 3;
+	
+	var request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: "/declarations/employee",
+		error: function(jqXHR, textStatus, errorThrown){
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 		}
-	}, function(err) { 
-		console.error(err);
+	});
+
+	request.done(function(data){
+		$scope.declarationList = data;
+		for(var i = 0 ; i < $scope.declarationList.length ; i++){
+			switch($scope.declarationList[i].class_name){
+				case "supervisor_declined_declaration":
+					$scope.declarationList[i].info = $scope.declarationList[i].supervisor_comment;
+					break;
+				case "human_resources_declined_declaration":
+					$scope.declarationList[i].info = $scope.declarationList[i].human_resources_comment;
+					break;
+				case "human_resources_approved_declaration":
+					$scope.declarationList[i].info = "Word uitbetaald op: "+$scope.declarationList[i].will_be_payed_out_on;
+					break;
+				default:
+					$scope.declarationList[i].info = "";
+			}
+			//turn created_at dates to actual javascript dates for comparison and string convertion.
+			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
+		}
+
+		//sort the array on creation date
+		$scope.declarationList.sort(function(a, b) {
+		    a = a.created_at;
+		    b = b.created_at;
+		    return a>b ? -1 : a<b ? 1 : 0;
+		});
+		$scope.$apply();
 	});
 		
 	//Select declaration
@@ -101,6 +160,7 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	//Get declaration details
 	var request = $.ajax({
 		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
 		url: "/declaration/"+$scope.declarationId,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
@@ -115,6 +175,7 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 		var supervisorKey = data.assigned_to[data.assigned_to.length-1];
 		var request2 = $.ajax({
 			type: "GET",
+			headers: {"Authorization": sessionStorage.token},
 			url: "/persons/"+supervisorKey,
 			error: function(jqXHR, textStatus, errorThrown){
 				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );

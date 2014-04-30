@@ -19,17 +19,20 @@ class Person(ndb.Model):
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
     email = ndb.StringProperty()
+    password = ndb.StringProperty()
+    token = ndb.StringProperty()
     employee_number = ndb.IntegerProperty()
     department = ndb.KeyProperty(kind=Department)
     supervisor = ndb.KeyProperty(kind="Person")
+    max_declaration_price = ndb.IntegerProperty()
 
     all_custom_properties = ["first_name", "last_name", "email", "employee_number", "department",
-                             "supervisor"]
+                             "supervisor", "max_declaration_price"]
     permissions = {"user": ["first_name", "last_name", "email", "class_name"],
                    "employee": ["first_name", "last_name", "email", "employee_number", "department",
                                 "supervisor", "class_name"],
                    "supervisor": ["first_name", "last_name", "email", "employee_number", "department",
-                                  "supervisor", "class_name"],
+                                  "supervisor", "class_name", "max_declaration_price"],
                    "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
                                        "supervisor"]}
 
@@ -124,7 +127,8 @@ class Declaration(ndb.Model):
                                                             "submitted_to_human_resources_by", "supervisor_approved_at",
                                                             "supervisor_approved_by", "sent_to_human_resources_at",
                                                             "declined_by", "supervisor_comment",
-                                                            "human_resources_comment", "human_resources_declined_at"],
+                                                            "human_resources_comment", "human_resources_declined_at",
+                                                            "human_resources_declined_by"],
 
                    "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                             "items_total_price", "items_count", "locked_at",
