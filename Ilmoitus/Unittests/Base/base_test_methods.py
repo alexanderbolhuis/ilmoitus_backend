@@ -206,10 +206,6 @@ class BaseTestClass(TestCase):
                       "'.\nrequest_type must be a string that indicates what type of request should be " +
                       "sent to the testapp (i.e. 'get', 'post' etc.).")
 
-        #Send the request that is stored in request_reference with the path parameter and optionally,
-        # the json_data parameter
-        self.testapp.authorization = token
-
         try:
             if data_dict is None:
                 response = request_reference(path, dict(), dict(Authorization=str(token)))
