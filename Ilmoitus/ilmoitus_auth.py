@@ -3,6 +3,7 @@ __author__ = 'Robin'
 import ilmoitus_model
 import hashlib
 import random
+import time
 
 
 def get_current_person(request_handler, class_name=None):
@@ -59,8 +60,10 @@ def authencate(email, password):
             query_result.token = hash_secret(raw_token);
             query_result.put()
 
+            time.sleep(1)
             return {"passed": True, "person_value": query_result, "token": (query_result.email + ' ' + raw_token)}
 
+    time.sleep(1)
     return {"passed": False }
 
 
