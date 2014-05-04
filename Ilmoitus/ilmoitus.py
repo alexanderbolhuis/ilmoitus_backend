@@ -22,6 +22,11 @@ class BaseRequestHandler(webapp.RequestHandler):
     Wrapper class that will allow all other handler classes to make easily read what the
     limit and/or offset is for a request
     """
+    def options(self):
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+        self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE'
+
     def get_header(self, key):
         header = self.request.get(key, default_value=None)
         return header
