@@ -238,12 +238,12 @@ class DeclarationLine(ndb.Model):
 
 class Attachment(ndb.Model):
     declaration = ndb.KeyProperty(kind=Declaration)
-    blob = ndb.BlobKeyProperty(required=True)
+    name = ndb.StringProperty()
+    file = ndb.TextProperty()
 
     def get_object_as_data_dict(self):
-        return {'id': self.key.integer_id(), 'declaration': self.declaration.integer_id(),
-                'blob': self.blob}
-        #TODO make it work, this can't be tested yet because we can't simulate adding something to the blobstore
+        return dict({'id': self.key.integer_id(), 'declaration': self.declaration.integer_id(),
+                     'name': self.name, 'file': self.file})
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
