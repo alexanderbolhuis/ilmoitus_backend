@@ -2,11 +2,9 @@
     <div>
         <table>
             <tr><td>Leidinggevende:</td><td>
-                <select>
-                    <option value="100000">Jakob de Rotte</option>
-                </select>
+                <select ng-model="declaration.assigned_to" ng-options="n.employee_number as (n.last_name + ', ' + n.first_name) for n in supervisorList"></select>
             </td></tr>
-            <tr><td>Personeelsnr</td><td>9303835</td></tr>
+            <tr><td>Personeelsnr</td><td>{{declaration.assigned_to}}</td></tr>
         </table>
     </div>
 
@@ -15,7 +13,7 @@
     <div>
         <div class="floatContainer">
             <div class="DeclarationTableTitle"><h3>Declaratie items:</h3></div>
-            <div class="TotalDeclarationPrice"> Totaal declaratiebedrag: &euro; 150,- </div>
+            <div class="TotalDeclarationPrice"> Totaal declaratiebedrag: &euro; {{declarationamount}},- </div>
         </div>
         <div>
             <table id="DeclarationTable" class="styledTable">
@@ -30,21 +28,17 @@
                     </tr>
         		</thead>
         		<tbody>
-        			<tr>
-                    	<td><input name="declarationdate" class="datepicker" type="text" onchange="if($(this).closest('tr').is(':last-child')){ addTableRow('DeclarationTable'); }" /></td>
+        			<tr ng-repeat="item in declaration.lines">
+                    	<td><input class="datepicker" type="date" ng-model="item.receipt_date" ng:change="addRow();" /></td>
                         <td>
-                        	<select>
-                            	<option>Buitenland</option>
-                            </select>
+                        	<select ng-model="item.declaration_type" ng-options="type.id as type.name for type in declaration_types" ng:change="loadSubList($index);"></select>
                         </td>
                         <td>
-                        	<select>
-                            	<option>Reiskosten</option>
-                            </select>
+                        	<select ng-model="item.declaration_sub_type" ng-options="type.id as type.name for type in declaration_sub_types[$index]"></select>
                         </td>
-                        <td>&euro; <input class="DeclarationPriceinput" name="declarationprice" type="text" /></td>
-                        <td><input name="declarationcomment" type="text" /></td>
-                        <td><input class="DeclarationDelete" name="declarationcomment" type="button" value="X" onclick="removeTableRow('DeclarationTable', $(this).closest('tr').index());" /></td>
+                        <td>&euro; <input class="DeclarationPriceinput" type="text" ng-model="item.cost" ng:change="calcTotal();" /></td>
+                        <td><input type="text" ng-model="item.comment" /></td>
+                        <td><input class="DeclarationDelete" type="button" value="X" ng:click="removeRow($index);" /></td>
                     </tr>
         		</tbody>
         	</table>
@@ -56,18 +50,14 @@
     <div class="floatContainer">
         <div class="DeclarationCommentsDiv">
             <h3>Opmerkingen:</h3>
-            <textarea></textarea>
+            <textarea ng-model="declaration.comment"></textarea>
         </div>
         <div class="DeclarationEvidenceDiv">
             <h3>Bewijsstukken:</h3>
-            <select size="4">
-                <option>bon1.jpg</option>
-                <option>bon2.jpg</option>
-                <option>pdf1.pdf</option>
-            </select><br/>
-            <input type="button" value="Verwijder bewijsstuk" />
-            <input type="button" value="Nieuw bewijsstuk" />
+            <select size="4" ng-model="selectedattachment" ng-options="n.id as n.name for n in declaration.attachments"></select><br/>
+            <input type="button" value="Verwijder bewijsstuk" ng:click="removeAttachment();" />
+            <input type="button" value="Nieuw bewijsstuk" ng:click="addAttachment();" />
         </div>
-        <input class="DeclarationSendButton" type="button" value="Verzenden" />
+        <input class="DeclarationSendButton" type="button" value="Verzenden" ng:click="postDeclaration();" />
     </div>
 </div>

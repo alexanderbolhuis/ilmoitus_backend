@@ -1,12 +1,18 @@
+var baseurl = 'http://127.0.0.1:8080';
+
 ilmoitusApp.controller('loginController', function($scope, $state) {
 	//Login button. Check for correct credentials.
+	$scope.username = 'developers.42IN11EWa@gmail.com';
+	$scope.password = '123456';
+	
 	$scope.loginBtnClick = function() {
 		if($scope.username && $scope.password) {
 			var jsonData = {"email": $scope.username, "password": $scope.password}
 
 			var request = $.ajax({
 				type: "POST",
-				url: "/auth/login",
+				url: baseurl + "/auth/login",
+				crossDomain: true,
 				data: jsonData,
 				error: function(jqXHR, textStatus, errorThrown){
 					console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
@@ -40,7 +46,8 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: "/current_user/details",
+		url: baseurl + "/current_user/details",
+		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 		}
@@ -76,7 +83,8 @@ ilmoitusApp.controller('declarationsController', function($scope, $state, $http)
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: "/declarations/employee",
+		url: baseurl + "/declarations/employee",
+		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 		}
@@ -136,7 +144,108 @@ ilmoitusApp.controller('declarationsController', function($scope, $state, $http)
 ilmoitusApp.controller('newDeclarationController', function($scope) {
 	$scope.navBtnSelect("newDeclarationBtn");
 	$(".datepicker").datepicker();
+	
+	//Declaration fields
+	$scope.declaration = { lines:[{}] };
+	$scope.selectedattachment = null;
+	$scope.declarationamount = 0;
+	
+	//Declaration type fields
+	$scope.declaration_types = [];
+	$scope.declaration_sub_types = [];
+	
+	//Preload supervisors
+	var request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/supervisors/",
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+	request.done(function(data){
+		$scope.supervisorList = data;
+		if(data.length > 0){
+			$scope.declaration.assigned_to = data[0].employee_number;
+		}
+		$scope.$apply();
+	});
+	
+	//Preload declarations
+	//Backend missing :(
+	var request = $.ajax({
+		
+	});
+	
+	$scope.postDeclaration = function() {
+		var request = $.ajax({
+			type: "POST",
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/declaration",
+			crossDomain: true,
+			data: JSON.stringify($scope.declaration),
+			error: function(jqXHR, textStatus, errorThrown){
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			}
+		});
+		request.done(function(data){
+			//TODO: check succes
+			$state.go('template.declarations');
+		});
+	}
+	
+	//Add new row
+	$scope.addRow = function(){
+		if($scope.declaration.lines[$scope.declaration.lines.length-1].receipt_date){ 
+			$scope.declaration.lines.push({}); 
+		}	
+	}
+	
+	//Remove row
+	$scope.removeRow = function(row){
+		if($scope.declaration.lines[row].receipt_date && $scope.declaration.lines.length > 1){
+			$scope.declaration.lines.splice(row, 1);
+		}else{
+			$scope.declaration.lines[row] = {};
+		}
+			
+		$scope.calcTotal();
+	}
+	
+	//Load sub list when delclartion type has been selected
+	$scope.loadSubList = function(row){
+		
+	}
+	
+	//Calculate total declaration amount each change
+	$scope.calcTotal = function(){
+		$scope.declarationamount = 0;
+		
+		for(var i = 0; i < $scope.declaration.lines.length; i++){
+			if($scope.declaration.lines[i].cost && $scope.declaration.lines[i].cost > 0){
+				$scope.declarationamount += Number($scope.declaration.lines[i].cost);
+			}
+		}	
+	}
+	
+	//Remove attachment
+	$scope.removeAttachment = function(){
+		if($scope.selectedattachment){
+			var index = $scope.declaration.attachments.indexOf($scope.selectedattachment);
+			if(index >= 0){ $scope.declaration.attachments.splice(index, 1); }
+			
+			$scope.selectedattachment = $scope.declaration.attachments.length > 0 ? $scope.declaration.attachments[0] : null;
+		}
+	}
+	
+	//New attachment
+	$scope.addAttachment = function(){
+		
+	}
+	
 });
+
 
 ilmoitusApp.controller('declarationsSubmittedController', function($scope) {
 	$scope.navBtnSelect("sendedDeclarationsBtn");
@@ -161,7 +270,8 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: "/declaration/"+$scope.declarationId,
+		url: baseurl + "/declaration/"+$scope.declarationId,
+		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 		}
@@ -176,7 +286,8 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 		var request2 = $.ajax({
 			type: "GET",
 			headers: {"Authorization": sessionStorage.token},
-			url: "/persons/"+supervisorKey,
+			url: baseurl + "/persons/"+supervisorKey,
+			crossDomain: true,
 			error: function(jqXHR, textStatus, errorThrown){
 				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 			}

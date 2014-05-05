@@ -31,6 +31,7 @@ def respond_with_object_collection_by_class(request_handler, class_reference, li
     else:
         give_response(request_handler, None)
 
+
 def respond_with_existing_model_object_collection(request_handler, collection):
     request_handler.response.headers['Access-Control-Allow-Origin'] = '*'
     if len(collection) > 0:
