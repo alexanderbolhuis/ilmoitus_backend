@@ -1276,6 +1276,29 @@ class GetAttachmentTest(BaseAuthorizationHandler):
         self.assertEqual(response_data["declaration"], declaration.key.integer_id())
         self.assertEqual(response_data["file"], attachments[0].file)
 
+    def test_get_attachment_negative_wrong_id(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/attachment/(.*)"
+
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificAttachmentHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        token = setup_data["token"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        attachments = DeclarationsDataCreator.create_valid_declaration_attachments(declaration, 2)
+
+        path = "/attachment/9999999999"
+        response = self.negative_test_stub_handler(token, path, "get", 404)
+
+        path = "/attachment/asdf"
+        response = self.negative_test_stub_handler(token, path, "get", 400)
+
 
 class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
     def test_add_new_declaration_one_item_positive(self):

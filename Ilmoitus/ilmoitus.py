@@ -402,8 +402,6 @@ class AddNewDeclarationHandler(BaseRequestHandler):
             give_error_response(self, 400, "Er zijn geen declaratieitems opgegeven om aan te maken.",
                                     "Request body was None.")
 
-        # TODO get attachments from body
-
         # Check if declaration has owner and assigned to values (mandatory)
         try:
             created_by = declaration_data["created_by"]
@@ -451,8 +449,8 @@ class AddNewDeclarationHandler(BaseRequestHandler):
         for line in declarationlines_data:
             sub_type = ilmoitus_model.DeclarationSubType.get_by_id(int(line["declaration_sub_type"]))
             if sub_type is None:
-               give_error_response(self, 400, "De declaratie_sub_type bestaat niet.",
-                                   "The declaration_sub_type is unknown.")
+                give_error_response(self, 400, "De declaratie_sub_type bestaat niet.",
+                                    "The declaration_sub_type is unknown.")
 
         if "attachments" in post_data:
             try:
@@ -583,7 +581,14 @@ class SpecificAttachmentHandler(BaseRequestHandler):
                                            "de juiste permissies heeft.",
                                 "current_user is None")
 
-        attachment = ilmoitus_model.Attachment.get_by_id(long(attachment_id))
+        if str.isdigit(attachment_id):
+            attachment = ilmoitus_model.Attachment.get_by_id(long(attachment_id))
+            if attachment is None:
+                    give_error_response(self, 404, "Kan de opgevraagde bijlage niet vinden.",
+                                        "attachment id does not exist in the database.", 404)
+        else:
+            give_error_response(self, 400, "Kan de opgevraagde bijlage niet vinden.",
+                                "attachment id can only be of the type integer.", 404)
 
         response_module.give_response(self, attachment.get_object_json_data())
 
@@ -774,7 +779,7 @@ application = webapp.WSGIApplication(
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
         ('/declaration/(.*)', SpecificDeclarationHandler),
-        ('/attachments/(.*)', SpecificAttachmentHandler),
+        ('/attachment/(.*)', SpecificAttachmentHandler),
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
         ('/declaration/lock', SetOpenToLockedDeclaration),
         ("/declaration", AddNewDeclarationHandler),
