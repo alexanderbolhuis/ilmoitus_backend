@@ -19,17 +19,20 @@ class Person(ndb.Model):
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
     email = ndb.StringProperty()
+    password = ndb.StringProperty()
+    token = ndb.StringProperty()
     employee_number = ndb.IntegerProperty()
     department = ndb.KeyProperty(kind=Department)
     supervisor = ndb.KeyProperty(kind="Person")
+    max_declaration_price = ndb.IntegerProperty()
 
     all_custom_properties = ["first_name", "last_name", "email", "employee_number", "department",
-                             "supervisor"]
+                             "supervisor", "max_declaration_price"]
     permissions = {"user": ["first_name", "last_name", "email", "class_name"],
                    "employee": ["first_name", "last_name", "email", "employee_number", "department",
                                 "supervisor", "class_name"],
                    "supervisor": ["first_name", "last_name", "email", "employee_number", "department",
-                                  "supervisor", "class_name"],
+                                  "supervisor", "class_name", "max_declaration_price"],
                    "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
                                        "supervisor"]}
 
@@ -67,7 +70,10 @@ class Declaration(ndb.Model):
     created_at = ndb.DateTimeProperty(auto_now_add=True)
     created_by = ndb.KeyProperty(kind=Person)
     assigned_to = ndb.KeyProperty(kind=Person, repeated=True)
+    lines = ndb.KeyProperty(kind="DeclarationLine", repeated=True)
     comment = ndb.StringProperty()
+    items_count = ndb.IntegerProperty()
+    items_total_price = ndb.IntegerProperty()
     supervisor_comment = ndb.StringProperty()
     human_resources_comment = ndb.StringProperty()
     declined_by = ndb.KeyProperty(kind=Person)
@@ -95,42 +101,44 @@ class Declaration(ndb.Model):
     }
 
     # this property is used to check the permissions against
-    all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "supervisor_comment",
-                             "human_resources_comment", "declined_by", "submitted_to_human_resources_by", "locked_at",
+    all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "items_total_price", "items_count"
+                             "supervisor_comment", "human_resources_comment", "declined_by",
+                             "submitted_to_human_resources_by", "locked_at", "sent_to_human_resources_at",
+                             "supervisor_declined_at", "supervisor_approved_at", "human_resources_approved_at",
+                             "human_resources_declined_at", "will_be_payed_out_on", "human_resources_approved_by",
+                             "lines"]
 
-                             "sent_to_human_resources_at", "supervisor_declined_at", "supervisor_approved_at",
-                             "human_resources_approved_at", "human_resources_declined_at", "will_be_payed_out_on",
-                             "human_resources_approved_by"]
+    permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment", "items_total_price",
+                                        "items_count", "lines"],
 
-    permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment"],
-
-                   "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "locked_at",
-
-                                          "supervisor_comment"],
+                   "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "items_total_price",
+                                          "items_count", "locked_at", "supervisor_comment", "lines"],
 
                    "supervisor_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
-                                                       "locked_at", "declined_by", "supervisor_declined_at",
-                                                       "supervisor_comment"],
+                                                       "items_total_price", "items_count", "locked_at", "declined_by",
+                                                       "supervisor_declined_at", "supervisor_comment", "lines"],
 
                    "supervisor_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
-                                                       "locked_at", "submitted_to_human_resources_by",
-                                                       "supervisor_approved_at", "supervisor_approved_by",
-                                                       "sent_to_human_resources_at", "supervisor_comment"],
+                                                       "items_total_price", "items_count", "locked_at",
+                                                       "submitted_to_human_resources_by", "supervisor_approved_at",
+                                                       "supervisor_approved_by", "sent_to_human_resources_at",
+                                                       "supervisor_comment", "lines"],
 
                    "human_resources_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
-                                                            "locked_at", "submitted_to_human_resources_by",
-                                                            "supervisor_approved_at", "supervisor_approved_by",
-                                                            "sent_to_human_resources_at", "declined_by",
-                                                            "supervisor_comment", "human_resources_comment",
-                                                            "human_resources_declined_at"],
+                                                            "items_total_price", "items_count", "locked_at",
+                                                            "submitted_to_human_resources_by", "supervisor_approved_at",
+                                                            "supervisor_approved_by", "sent_to_human_resources_at",
+                                                            "declined_by", "supervisor_comment",
+                                                            "human_resources_comment", "human_resources_declined_at",
+                                                            "human_resources_declined_by", "lines"],
 
                    "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
-                                                            "locked_at", "submitted_to_human_resources_by",
-                                                            "supervisor_approved_at", "supervisor_approved_by",
-                                                            "sent_to_human_resources_at", "supervisor_comment",
-                                                            "will_be_payed_out_on", "human_resources_comment",
-                                                            "human_resources_approved_by",
-                                                            "human_resources_approved_at"]}
+                                                            "items_total_price", "items_count", "locked_at",
+                                                            "submitted_to_human_resources_by", "supervisor_approved_at",
+                                                            "supervisor_approved_by", "sent_to_human_resources_at",
+                                                            "supervisor_comment", "will_be_payed_out_on",
+                                                            "human_resources_comment", "human_resources_approved_by",
+                                                            "human_resources_approved_at", "lines"]}
 
     def get_object_as_data_dict(self):
         return dict({'id': self.key.integer_id(),
@@ -188,10 +196,14 @@ class Declaration(ndb.Model):
 # DeclarationSubType Model class
 class DeclarationSubType(ndb.Model):
     name = ndb.StringProperty()
+    declarationType = ndb.StringProperty()
     max_cost = ndb.IntegerProperty()  # Optional
 
+    all_custom_properties = ['name', 'max_cost', 'declarationType']
+
     def get_object_as_data_dict(self):
-        return {'id': self.key.integer_id(), 'name': self.name, 'max_cost': self.max_cost}
+        return dict({'id': self.key.integer_id()}.items() + property_not_none_key_value_pair(self,
+                                                                               self.all_custom_properties).items())
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -202,9 +214,10 @@ class DeclarationType(ndb.Model):
     name = ndb.StringProperty()
     sub_types = ndb.KeyProperty(kind=DeclarationSubType, repeated=True)
 
-    def get_object_as_data_dict(self):
-        return {'name': self.name, 'sub_types': json.dumps(map(lambda key: key.integer_id(), self.sub_types))}
+    all_custom_properties = ['name', 'sub_types']
 
+    def get_object_as_data_dict(self):
+        return property_not_none_key_value_pair(self, self.all_custom_properties)
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -212,16 +225,15 @@ class DeclarationType(ndb.Model):
 
 # DeclarationLine Model class
 class DeclarationLine(ndb.Model):
-    declaration = ndb.KeyProperty(kind=Declaration)
-    receipt_date = ndb.StringProperty()  # DateProperty?
+    receipt_date = ndb.DateTimeProperty()
     cost = ndb.IntegerProperty()
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
+    all_custom_properties = ['receipt_date', 'cost', 'declaration_sub_type']
+
     def get_object_as_data_dict(self):
-        return {'declaration': self.declaration.integer_id(),
-                'receipt_date': self.receipt_date,
-                'cost': self.cost,
-                'declaration_sub_type': self.declaration_sub_type.integer_id()}
+        return dict({'id': self.key.integer_id()}.items() +
+        property_not_none_key_value_pair(self, self.all_custom_properties).items())
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -229,36 +241,41 @@ class DeclarationLine(ndb.Model):
 
 class Attachment(ndb.Model):
     declaration = ndb.KeyProperty(kind=Declaration)
-    blob = ndb.BlobKeyProperty(required=True)
+    name = ndb.StringProperty()
+    file = ndb.TextProperty()
 
     def get_object_as_data_dict(self):
-        return {'id': self.key.integer_id(), 'declaration': self.declaration.integer_id(),
-                'blob': self.blob}
-        #TODO make it work, this can't be tested yet because we can't simulate adding something to the blobstore
-
+        return dict({'id': self.key.integer_id(), 'declaration': self.declaration.integer_id(),
+                     'name': self.name, 'file': self.file})
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
 
 
 def property_not_none_key_value_pair_with_permissions(class_reference):
-    return_data = {}
     if class_reference is not None and class_reference.permissions is not None:
         permissions = class_reference.permissions[class_reference.class_name]
-        if permissions is not None:
-            for prop in permissions:
+        return property_not_none_key_value_pair(class_reference, permissions)
+
+
+def property_not_none_key_value_pair(class_reference, prop_list):
+        return_data = {}
+        if prop_list is not None:
+            for prop in prop_list:
                 value = getattr(class_reference, prop)
                 if value is not None:
                     try:
-                        if (isinstance(value, collections.MutableSequence)):
+                        if isinstance(value, collections.MutableSequence):
                             temp = list()
                             for key in value:
-                                temp.append(key.integer_id())
+                                try:
+                                    temp.append(key.integer_id())
+                                except AttributeError:
+                                    continue
                             value = temp
                         else:
                             value = value.integer_id()
                     except AttributeError:
                         value = str(value)
                     return_data = dict(return_data.items() + {prop: value}.items())
-
-    return return_data
+        return return_data

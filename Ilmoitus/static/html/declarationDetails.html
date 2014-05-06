@@ -1,0 +1,56 @@
+<div>
+    <div>
+        <table>
+            <tr><td>Leidinggevende:</td><td>{{supervisor}}</td></tr>
+            <tr><td>Personeelsnr:</td><td>{{supervisorId}}</td></tr>
+        </table>
+    </div>
+
+    <br/>
+
+    <div>
+        <div class="floatContainer">
+            <div class="DeclarationTableTitle"><h3>Declaratie items:</h3></div>
+            <div class="TotalDeclarationPrice"> Totaal declaratiebedrag: &euro; {{totalPrice}} </div>
+        </div>
+        <div>
+            <table class="styledTable">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Declaratiesoort</th>
+                        <th>Onderdeel declaratiesoort</th>
+                        <th>Bedrag</th>
+                        <th>Opmerking</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="line in itemList">
+                        <td>{{line.date}}</td>
+                        <td>{{line.sort}}</td>
+                        <td>{{line.subsort}}</td>
+                        <td>&euro; {{line.price}}</td>
+                        <td>{{line.comment}}</td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+    </div>
+
+    <br/><br/><br/>
+
+    <div class="floatContainer">
+        <div class="DeclarationCommentsDiv">
+            <h3>Opmerkingen:</h3>
+            <textarea readonly>{{comments}}</textarea>
+        </div>
+        <div class="DeclarationEvidenceDiv">
+            <h3>Bewijsstukken:</h3>
+            <select size="4">
+                <option>bon1.jpg</option>
+                <option>bon2.jpg</option>
+                <option>pdf1.pdf</option>
+            </select>
+        </div>
+    </div>
+</div>

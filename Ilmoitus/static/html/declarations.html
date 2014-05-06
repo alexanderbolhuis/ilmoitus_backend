@@ -1,0 +1,30 @@
+<div>
+	<div class="DeclarationFloatContainer">
+		<h2 style="float:left;">Mijn declaraties:</h2>
+		<div style="float:right;">
+			<input type="button" value="Declaratie annuleren" ng-disabled="currentdeclaration.state != 'Open';" ng-click="deleteDeclarationDetailsBtn();" />
+			<input type="button" value="Declaratie tonen" ng-disabled="!currentdeclaration;" ng-click="openDeclarationDetailsBtn();" />
+		</div>
+	</div>
+	</br>
+	<table id="declarationTable" class="styledTable">
+		<thead>
+			<th>Ingediend op</th>
+			<th>Aantal declaratie items</th>
+			<th>Declaratie bedrag</th>
+			<th>Status</th>
+			<th>Info (reden van afkeuring of uitkeringsdatum)</th>
+		</thead>
+		<tbody>
+			<tr ng-repeat="declaration in declarationList" ng-dblclick="openDeclarationDetails(declaration.id);" id="{{ declaration.id }}" 
+                ng-class="{selected:currentdeclaration.id==declaration.id}" ng-click="selectDeclaration(declaration);">
+                
+				<td>{{ declaration.created_at.toLocaleDateString() }}</td>
+				<td>{{ declaration.items_count }}</td>
+				<td>&euro; {{ declaration.items_total_price }}</td>
+				<td>{{ declaration.state }}</td>
+				<td>{{ declaration.info }}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>

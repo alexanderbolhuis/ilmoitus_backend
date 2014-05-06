@@ -1,0 +1,58 @@
+<div>
+	<div class="DeclarationFloatContainer">
+		<h2>Declaratie historie:</h2>
+		<br/>
+    	<table>
+    		<tr><td>Zoeken:</td><td colspan="3"><input type="text" placeholder="Naam" /> <input type="button" value="Zoeken"/></td></tr>
+            <tr><td>Van:</td><td><input name="declarationdate" type="date"/></td>
+            <td>Tot:</td><td><input name="declarationdate" type="date"/></td></tr>
+        </table>
+		<div style="float : right;">
+			<input type="button" value="Declaratie tonen" ng-click="openDeclarationDetails(5)" />
+		</div>
+	</div>
+	<table id="declarationTable" class="styledTable">
+		<thead>
+			<th>Ingediend op</th>
+			<th>Aanvrager</th>
+			<th>Afdeling</th>
+			<th>Aantal items</th>
+			<th>Declaratiebedrag</th>
+			<th>Status</th>
+		</thead>
+		<tbody>
+			<tr id="0">
+				<td>26-12-2012</td>
+				<td>Jan de Kooij</td>
+				<td>ICT</td>
+				<td>4</td>
+				<td>&euro; 180,-</td>
+				<td>Goedgekeurd</td>
+			</tr>
+			<tr id="1">
+				<td>23-12-2012</td>
+				<td>Jan de Kooij</td>
+				<td>ICT</td>
+				<td>5</td>
+				<td>&euro; 190,-</td>
+				<td>Afgekeurd</td>
+			</tr>
+			<tr id="2">
+				<td>15-11-2012</td>
+				<td>Jeffrey Ruiter</td>
+				<td>Secretariaat</td>
+				<td>4</td>
+				<td>&euro; 54,-</td>
+				<td>Goedgekeurd</td>
+			</tr>
+			<tr id="3">
+				<td>03-11-2012</td>
+				<td>Willem van Hanegem</td>
+				<td>Beveiliging</td>
+				<td>3</td>
+				<td>&euro; 49,99</td>
+				<td>Goedgekeurd</td>
+			</tr>
+		</tbody>
+	</table>
+</div>

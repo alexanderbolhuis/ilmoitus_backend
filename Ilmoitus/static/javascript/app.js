@@ -1,0 +1,1 @@
+var ilmoitusApp = angular.module('ilmoitusApp', ['ui.router']);
