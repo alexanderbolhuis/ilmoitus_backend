@@ -364,7 +364,6 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
                                 "query_result is empty")
 
 
-
 class AddNewDeclarationHandler(BaseRequestHandler):
     def post(self):
         # Check if logged in
@@ -459,16 +458,16 @@ class AddNewDeclarationHandler(BaseRequestHandler):
             try:
                 for attachment_data in post_data["attachments"]:
                     attachment_data["name"]
-                    attachment_data["base64"]
+                    attachment_data["file"]
             except KeyError:
                 give_error_response(self, 400, "Kan geen declaratie toevoegen. De opgestuurde bijlage gegevens "
                                                "kloppen niet.",
                                     "The body misses keys at an attachment.")
 
             for attachment_data in post_data["attachments"]:
-                data = attachment_data["base64"].split(":")[0]
-                mime = attachment_data["base64"].split(":")[1].split(";")[0]
-                base = attachment_data["base64"].split(":")[1].split(";")[1].split(",")[0]
+                data = attachment_data["file"].split(":")[0]
+                mime = attachment_data["file"].split(":")[1].split(";")[0]
+                base = attachment_data["file"].split(":")[1].split(";")[1].split(",")[0]
 
                 if data != "data" or base != "base64":
                     give_error_response(self, 400, "Kan geen declaratie toevoegen. De opgestuurde bijlage gegevens "
@@ -517,7 +516,7 @@ class AddNewDeclarationHandler(BaseRequestHandler):
                     attachment = ilmoitus_model.Attachment()
                     attachment.declaration = declaration.key
                     attachment.name = attachment_data["name"]
-                    attachment.file = attachment_data["base64"]
+                    attachment.file = attachment_data["file"]
                     attachment.put()
                     posted_attachments.append(attachment.get_object_as_data_dict())
             except Exception:
@@ -572,6 +571,21 @@ class SpecificDeclarationHandler(BaseRequestHandler):
         else:
             give_error_response(self, 400, "Kan de opgevraagde declaratie niet vinden",
                                 "Declaration id can only be of the type integer and cannot be None", 400)
+
+
+class SpecificAttachmentHandler(BaseRequestHandler):
+    def get(self, attachment_id):
+        person_data = ilmoitus_auth.get_current_person(self)
+        current_user = person_data["person_value"]
+
+        if current_user is None:
+            give_error_response(self, 401, "De bijlagen kunnen niet worden opgehaald omdat u niet "
+                                           "de juiste permissies heeft.",
+                                "current_user is None")
+
+        attachment = ilmoitus_model.Attachment.get_by_id(long(attachment_id))
+
+        response_module.give_response(self, attachment.get_object_json_data())
 
 
 class ApproveByHumanResources(BaseRequestHandler):
@@ -760,6 +774,7 @@ application = webapp.WSGIApplication(
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
         ('/declaration/(.*)', SpecificDeclarationHandler),
+        ('/attachments/(.*)', SpecificAttachmentHandler),
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
         ('/declaration/lock', SetOpenToLockedDeclaration),
         ("/declaration", AddNewDeclarationHandler),
