@@ -1253,6 +1253,61 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         self.negative_test_stub_handler(token, path, "get", 401)
 
 
+#TODO: Possibly remove. Lines are already sent with the specific declaration details handler.
+class GetDeclarationLinesTest(BaseAuthorizationHandler):
+    def test_get_lines_positive(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/lines/(.*)"
+
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationLinesHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        token = setup_data["token"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        lines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 4)
+
+        path = "/declaration/lines/"+str(declaration.key.integer_id())
+        response = self.positive_test_stub_handler(token, path, "get")
+        response_data = json.loads(response.body)
+
+        self.assertEqual(len(response_data), 4)
+        self.assertEqual(response_data[0]["id"], lines[0].key.integer_id())
+        self.assertEqual(response_data[0]["cost"], str(lines[0].cost))
+        self.assertEqual(response_data[0]["declaration_sub_type"], lines[0].declaration_sub_type.integer_id())
+        self.assertEqual(response_data[2]["id"], lines[2].key.integer_id())
+        self.assertEqual(response_data[2]["cost"], str(lines[2].cost))
+        self.assertEqual(response_data[2]["declaration_sub_type"], lines[2].declaration_sub_type.integer_id())
+
+    def test_get_lines_negative_wrong_id(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/lines/(.*)"
+
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationLinesHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        token = setup_data["token"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        lines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 4)
+
+        path = "/declaration/lines/9999999999"
+        response = self.negative_test_stub_handler(token, path, "get", 404)
+
+        path = "/declaration/lines/asdf"
+        response = self.negative_test_stub_handler(token, path, "get", 400)
+
+
 class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
     def test_add_new_declaration_one_item_positive(self):
         user_is_logged_in = True

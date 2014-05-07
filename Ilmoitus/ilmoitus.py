@@ -364,7 +364,6 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
                                 "query_result is empty")
 
 
-
 class AddNewDeclarationHandler(BaseRequestHandler):
     def post(self):
         # Check if logged in
@@ -574,6 +573,36 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                                 "Declaration id can only be of the type integer and cannot be None", 400)
 
 
+#TODO: Possibly remove. Lines are already sent with the specific declaration details handler.
+class SpecificDeclarationLinesHandler(BaseRequestHandler):
+    def get(self, declaration_id):
+        person_data = ilmoitus_auth.get_current_person(self)
+        current_user = person_data["person_value"]
+
+        if current_user is None:
+            give_error_response(self, 401, "De declaratie regels kunnen niet worden opgehaald omdat u niet "
+                                           "de juiste permissies heeft.",
+                                "current_user is None")
+
+        if str.isdigit(declaration_id):
+            # Does declaration exist
+            declaration = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
+            if declaration is None:
+                give_error_response(self, 404, "Kan geen declaratie regels ophalen. De opgegeven declaratie bestaat niet",
+                                    "declaration_id not found")
+
+            declarationline_query = ilmoitus_model.DeclarationLine.query(ilmoitus_model.DeclarationLine.declaration == declaration.key)
+            query_result = declarationline_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+            if len(query_result) == 0:
+                give_error_response(self, 404, "De declaratie heeft geen regels.",
+                                    "No lines with the specified declaration_id in the database.", 404)
+        else:
+            give_error_response(self, 400, "Kan geen declaratie regels ophalen.",
+                                "declaration id can only be of the type integer.", 404)
+
+        response_module.respond_with_existing_model_object_collection(self, query_result)
+
+
 class ApproveByHumanResources(BaseRequestHandler):
     def put(self):
         person_data = ilmoitus_auth.get_current_person(self, "human_resources")
@@ -760,6 +789,7 @@ application = webapp.WSGIApplication(
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
         ('/declaration/(.*)', SpecificDeclarationHandler),
+        ('/declaration/lines/(.*)', SpecificDeclarationLinesHandler),
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
         ('/declaration/lock', SetOpenToLockedDeclaration),
         ("/declaration", AddNewDeclarationHandler),
