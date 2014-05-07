@@ -571,13 +571,47 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                                 "Declaration id can only be of the type integer and cannot be None", 400)
 
 
+class SpecificDeclarationAttachmentsHandler(BaseRequestHandler):
+    def get(self, declaration_id):
+        person_data = ilmoitus_auth.get_current_person(self)
+        current_user = person_data["person_value"]
+
+        if current_user is None:
+            give_error_response(self, 401, "De bijlagen kunnen niet worden opgehaald omdat u niet "
+                                           "de juiste permissies heeft.",
+                                "current_user is None")
+
+        if str.isdigit(declaration_id):
+            # Does declaration exist
+            declaration = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
+            if declaration is None:
+                give_error_response(self, 404, "Kan geen bijlagen ophalen. De opgegeven declaratie bestaat niet",
+                                    "declaration_id not found")
+
+            query = ilmoitus_model.Attachment.query(ilmoitus_model.Attachment.declaration == declaration.key)
+            attachments = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+            if attachments is None:
+                    give_error_response(self, 404, "De declaratie heeft geen bijlagen.",
+                                        "No attachments with the specified declaration_id in the database.", 404)
+        else:
+            give_error_response(self, 400, "Kan geen bijlagen ophalen.",
+                                "attachment id can only be of the type integer.", 404)
+
+        post_data = []
+        for attachment in attachments:
+            item = {"id": attachment.key.integer_id(), "name": attachment.name}
+            post_data.append(item)
+
+        response_module.give_response(self, json.dumps(post_data))
+
+
 class SpecificAttachmentHandler(BaseRequestHandler):
     def get(self, attachment_id):
         person_data = ilmoitus_auth.get_current_person(self)
         current_user = person_data["person_value"]
 
         if current_user is None:
-            give_error_response(self, 401, "De bijlagen kunnen niet worden opgehaald omdat u niet "
+            give_error_response(self, 401, "De bijlage kan niet worden opgehaald omdat u niet "
                                            "de juiste permissies heeft.",
                                 "current_user is None")
 
@@ -779,6 +813,7 @@ application = webapp.WSGIApplication(
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
         ('/declaration/(.*)', SpecificDeclarationHandler),
+        ('/declaration/attachments/(.*)', SpecificDeclarationAttachmentsHandler),
         ('/attachment/(.*)', SpecificAttachmentHandler),
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
         ('/declaration/lock', SetOpenToLockedDeclaration),

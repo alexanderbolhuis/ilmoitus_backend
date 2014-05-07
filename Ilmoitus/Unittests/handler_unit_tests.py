@@ -1250,6 +1250,57 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         self.negative_test_stub_handler(token, path, "get", 401)
 
 
+class GetDeclarationAttachmentsTest(BaseAuthorizationHandler):
+    def test_get_attachments_positive(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/attachments/(.*)"
+
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationAttachmentsHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        token = setup_data["token"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        attachments = DeclarationsDataCreator.create_valid_declaration_attachments(declaration, 2)
+
+        path = "/declaration/attachments/"+str(declaration.key.integer_id())
+        response = self.positive_test_stub_handler(token, path, "get")
+
+        response_data = json.loads(response.body)
+        self.assertEqual(response_data[0]["id"], attachments[0].key.integer_id())
+        self.assertEqual(response_data[0]["name"], attachments[0].name)
+        self.assertEqual(response_data[1]["id"], attachments[1].key.integer_id())
+        self.assertEqual(response_data[1]["name"], attachments[1].name)
+
+    def test_get_attachments_negative_wrong_id(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/attachments/(.*)"
+
+        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationAttachmentsHandler)],
+                                                 user_is_logged_in, user_is_admin)
+
+        logged_in_person = setup_data["random_person"]
+        token = setup_data["token"]
+        logged_in_person.class_name = "employee"
+        logged_in_person.put()
+        supervisor = PersonDataCreator.create_valid_supervisor()
+
+        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        attachments = DeclarationsDataCreator.create_valid_declaration_attachments(declaration, 2)
+
+        path = "/declaration/attachments/9999999999"
+        response = self.negative_test_stub_handler(token, path, "get", 404)
+
+        path = "/declaration/attachments/asdf"
+        response = self.negative_test_stub_handler(token, path, "get", 400)
+
+
 class GetAttachmentTest(BaseAuthorizationHandler):
     def test_get_attachment_positive(self):
         user_is_logged_in = True
