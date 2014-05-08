@@ -312,12 +312,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
 
-        #declaration attachments for declaration six
-        attachment_one = ilmoitus_model.Attachment()
-        attachment_one.declaration = declaration_six.key
-        attachment_one.name = "bon.jpg"
-        attachment_one.file = attachment_image_base64
-        attachment_one.put()
+        #no attachments for declaration six
 
         declaration_seven = ilmoitus_model.Declaration()
         declaration_seven.class_name = "supervisor_approved_declaration"
