@@ -595,7 +595,7 @@ class SpecificDeclarationAttachmentsHandler(BaseRequestHandler):
                                         "No attachments with the specified declaration_id in the database.", 404)
         else:
             give_error_response(self, 400, "Kan geen bijlagen ophalen.",
-                                "attachment id can only be of the type integer.", 404)
+                                "declaration id can only be of the type integer.", 404)
 
         post_data = []
         for attachment in attachments:
