@@ -230,7 +230,8 @@ class DeclarationLine(ndb.Model):
     all_custom_properties = ['declaration', 'receipt_date', 'cost', 'declaration_sub_type']
 
     def get_object_as_data_dict(self):
-        return property_not_none_key_value_pair(self, self.all_custom_properties)
+        return dict({'id': self.key.integer_id()}.items() +
+                    property_not_none_key_value_pair(self, self.all_custom_properties).items())
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
