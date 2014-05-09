@@ -124,31 +124,32 @@ class DeclarationsDataCreator():
         return attachments
 
     @staticmethod
-    def create_valid_declaration_type():
+    def create_valid_declaration_type(name="reiskosten", filled=True):
         declaration_type = ilmoitus_model.DeclarationType()
-        declaration_type.name = "reiskosten"
-        sub_type1 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost()
-        sub_type2 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost()
-        declaration_type.sub_types = [sub_type1.key, sub_type2.key]
+        declaration_type.name = name
+        if filled:
+            sub_type1 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost()
+            sub_type2 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost()
+            declaration_type.sub_types = [sub_type1.key, sub_type2.key]
 
         declaration_type.put()
 
         return declaration_type
 
     @staticmethod
-    def create_valid_declaration_sub_type_without_max_cost():
+    def create_valid_declaration_sub_type_without_max_cost(name="tanken"):
         sub_type = ilmoitus_model.DeclarationSubType()
-        sub_type.name = "tanken"
+        sub_type.name = name
 
         sub_type.put()
 
         return sub_type
 
     @staticmethod
-    def create_valid_declaration_sub_type_with_max_cost():
+    def create_valid_declaration_sub_type_with_max_cost(name="openbaar vervoer", cost=101):
         sub_type = ilmoitus_model.DeclarationSubType()
-        sub_type.name = "openbaar vervoer"
-        sub_type.max_cost = 101
+        sub_type.name = name
+        sub_type.max_cost = cost
 
         sub_type.put()
 
