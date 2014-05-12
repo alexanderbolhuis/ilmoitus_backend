@@ -202,8 +202,7 @@ class DeclarationSubType(ndb.Model):
     all_custom_properties = ['name', 'max_cost', 'declarationType']
 
     def get_object_as_data_dict(self):
-        return dict({'id': self.key.integer_id()}.items() + property_not_none_key_value_pair(self,
-                                                                               self.all_custom_properties).items())
+        return dict({'id': self.key.integer_id()}.items() + property_not_none_key_value_pair(self, self.all_custom_properties).items())
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -217,7 +216,7 @@ class DeclarationType(ndb.Model):
     all_custom_properties = ['name', 'sub_types']
 
     def get_object_as_data_dict(self):
-        return property_not_none_key_value_pair(self, self.all_custom_properties)
+        return dict({'id': self.key.integer_id()}.items() + property_not_none_key_value_pair(self, self.all_custom_properties).items())
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -232,8 +231,7 @@ class DeclarationLine(ndb.Model):
     all_custom_properties = ['receipt_date', 'cost', 'declaration_sub_type']
 
     def get_object_as_data_dict(self):
-        return dict({'id': self.key.integer_id()}.items() +
-        property_not_none_key_value_pair(self, self.all_custom_properties).items())
+        return dict({'id': self.key.integer_id()}.items() + property_not_none_key_value_pair(self, self.all_custom_properties).items())
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())

@@ -19,7 +19,7 @@ class BaseRequestHandler(webapp.RequestHandler):
     Wrapper class that will allow all other handler classes to make easily read what the
     limit and/or offset is for a request
     """
-    def options(self):
+    def options(self, optionalkey=None):
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
         self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE'
@@ -397,31 +397,19 @@ class AddNewDeclarationHandler(BaseRequestHandler):
         # Check if body contains declarationlines
         declarationlines_data = None
         try:
-            declarationlines_data = post_data["lines"]
+            declarationlines_data = declaration_data["lines"]
         except ValueError:
             give_error_response(self, 400, "Er zijn geen declaratieitems opgegeven om aan te maken.",
                                     "Request body was None.")
 
         # Check if declaration has owner and assigned to values (mandatory)
         try:
-            created_by = declaration_data["created_by"]
-            assigned_to = declaration_data["assigned_to"][0]
+            created_by = created_by = current_person_data["person_value"]
+            assigned_to = declaration_data["assigned_to"]
         except Exception:
             give_error_response(self, 400, "De opgegeven data mist waardes voor een declaratie.",
                                 "The body misses keys.")
 
-        # Check if created_by is a valid user
-        try:
-            created_by = ilmoitus_model.Person.get_by_id(int(created_by))
-        except Exception:
-            give_error_response(self, 400, "De maker is niet bekent in het systeem.",
-                                "The owner is unknown.")
-
-        # Check if created_by is logged_in
-        logged_in_person = ilmoitus_auth.get_current_person(self)
-        if created_by.key != logged_in_person["person_value"].key:
-            give_error_response(self, 400, "De maker is niet ingelogd in het systeem.",
-                                "The owner is not logged in.")
 
         # Check if assigned_to is a valid user
         try:
@@ -584,13 +572,12 @@ class AllDeclarationTypesHandler(BaseRequestHandler):
                                 "Add some DeclarationTypes to the data store")
 
 
-class DeclarationSubTypeHandlerForDeclarationId(BaseRequestHandler):
+class AllDeclarationTypeSubTypeHandler(BaseRequestHandler):
     def get(self, declaration_type_id):
         safe_id = 0
         try:
             safe_id = long(declaration_type_id)
         except ValueError:
-            #TODO: give proper error response here
             give_error_response(self, 500, "the given id isn't an int (" + str(declaration_type_id) + ")")
 
         item = ilmoitus_model.DeclarationType.get_by_id(safe_id)
@@ -864,7 +851,7 @@ application = webapp.WSGIApplication(
         ('/declaration/declined_by_hr', SupervisorDeclarationToHrDeclinedDeclarationHandler),
         ('/supervisors/', CurrentUserSupervisors),
         ('/declarationtypes', AllDeclarationTypesHandler),
-        ('/declarationsubtypes/(.*)', DeclarationSubTypeHandlerForDeclarationId),
+        ('/declarationsubtypes/(.*)', AllDeclarationTypeSubTypeHandler),
         ('/declarationsubtypes/', AllDeclarationSubTypesHandler),
         ('/declarations/employee', AllDeclarationsForEmployeeHandler),
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),

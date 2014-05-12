@@ -19,6 +19,7 @@ def give_error_response(request_handler, status_code, user_message, developer_me
                      "error_code": error_code,
                      "more_info": more_info}
 
+    request_handler.response.headers['Access-Control-Allow-Origin'] = '*'
     request_handler.response.headers['Content-Type'] = "application/json"
     request_handler.response.body = json.dumps(response_data)
 

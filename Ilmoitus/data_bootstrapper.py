@@ -129,10 +129,10 @@ class DataBootsTrapper(webapp2.RequestHandler):
         subtype_four = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfskosten buitenland")
         subtype_four.put()
 
-        subtype_five = ilmoitus_model.DeclarationSubType(name="Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)")
+        subtype_five = ilmoitus_model.DeclarationSubType(name="Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", max_cost=15)
         subtype_five.put()
 
-        subtype_six = ilmoitus_model.DeclarationSubType(name="Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)")
+        subtype_six = ilmoitus_model.DeclarationSubType(name="Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", max_cost=15)
         subtype_six.put()
 
         type_one = ilmoitus_model.DeclarationType()
