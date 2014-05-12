@@ -166,6 +166,18 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 		return null;
 	}
 	
+	$scope.getSupervisorByID = function(id){
+		if($scope.supervisorList){
+			for(var i = 0; i < $scope.supervisorList.length; i++){
+				if($scope.supervisorList[i].id == id){
+					return $scope.supervisorList[i];
+				}
+			}
+		}
+		
+		return null;
+	}
+	
 	//Preload supervisors
 	var request = $.ajax({
 		type: "GET",

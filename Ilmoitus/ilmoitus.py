@@ -404,7 +404,7 @@ class AddNewDeclarationHandler(BaseRequestHandler):
 
         # Check if declaration has owner and assigned to values (mandatory)
         try:
-            created_by = created_by = current_person_data["person_value"]
+            created_by = current_person_data["person_value"]
             assigned_to = declaration_data["assigned_to"]
         except Exception:
             give_error_response(self, 400, "De opgegeven data mist waardes voor een declaratie.",
