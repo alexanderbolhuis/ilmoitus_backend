@@ -630,8 +630,6 @@ class SpecificAttachmentHandler(BaseRequestHandler):
         self.response.headers['Content-Type'] = mime
         self.response.write(base64.b64decode(base64_string))
 
-        #response_module.give_response(self, attachment.get_object_json_data())
-
 
 class ApproveByHumanResources(BaseRequestHandler):
     def put(self):
