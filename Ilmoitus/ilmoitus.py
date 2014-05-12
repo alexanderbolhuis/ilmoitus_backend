@@ -364,7 +364,6 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
                                 "query_result is empty")
 
 
-
 class AddNewDeclarationHandler(BaseRequestHandler):
     def post(self):
         # Check if logged in
@@ -402,8 +401,6 @@ class AddNewDeclarationHandler(BaseRequestHandler):
         except ValueError:
             give_error_response(self, 400, "Er zijn geen declaratieitems opgegeven om aan te maken.",
                                     "Request body was None.")
-
-        # TODO get attachments from body
 
         # Check if declaration has owner and assigned to values (mandatory)
         try:
@@ -452,23 +449,23 @@ class AddNewDeclarationHandler(BaseRequestHandler):
         for line in declarationlines_data:
             sub_type = ilmoitus_model.DeclarationSubType.get_by_id(int(line["declaration_sub_type"]))
             if sub_type is None:
-               give_error_response(self, 400, "De declaratie_sub_type bestaat niet.",
-                                   "The declaration_sub_type is unknown.")
+                give_error_response(self, 400, "De declaratie_sub_type bestaat niet.",
+                                    "The declaration_sub_type is unknown.")
 
         if "attachments" in post_data:
             try:
                 for attachment_data in post_data["attachments"]:
                     attachment_data["name"]
-                    attachment_data["base64"]
+                    attachment_data["file"]
             except KeyError:
                 give_error_response(self, 400, "Kan geen declaratie toevoegen. De opgestuurde bijlage gegevens "
                                                "kloppen niet.",
                                     "The body misses keys at an attachment.")
 
             for attachment_data in post_data["attachments"]:
-                data = attachment_data["base64"].split(":")[0]
-                mime = attachment_data["base64"].split(":")[1].split(";")[0]
-                base = attachment_data["base64"].split(":")[1].split(";")[1].split(",")[0]
+                data = attachment_data["file"].split(":")[0]
+                mime = attachment_data["file"].split(":")[1].split(";")[0]
+                base = attachment_data["file"].split(":")[1].split(";")[1].split(",")[0]
 
                 if data != "data" or base != "base64":
                     give_error_response(self, 400, "Kan geen declaratie toevoegen. De opgestuurde bijlage gegevens "
@@ -493,7 +490,6 @@ class AddNewDeclarationHandler(BaseRequestHandler):
         # Post declarationlines
         for line in declarationlines_data:
             newline = ilmoitus_model.DeclarationLine()
-            newline.declaration = declaration.key
 
             try:
                 newline.cost = int(line["cost"])
@@ -508,6 +504,7 @@ class AddNewDeclarationHandler(BaseRequestHandler):
             newline.put()
             posted_lines.append(newline)
 
+        declaration.lines = map(lambda line: line.key, posted_lines)
         declaration.put()
 
         posted_attachments = []
@@ -517,7 +514,7 @@ class AddNewDeclarationHandler(BaseRequestHandler):
                     attachment = ilmoitus_model.Attachment()
                     attachment.declaration = declaration.key
                     attachment.name = attachment_data["name"]
-                    attachment.file = attachment_data["base64"]
+                    attachment.file = attachment_data["file"]
                     attachment.put()
                     posted_attachments.append(attachment.get_object_as_data_dict())
             except Exception:
@@ -589,6 +586,116 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                                 "Declaration id can only be of the type integer and cannot be None", 400)
 
 
+class AllDeclarationTypesHandler(BaseRequestHandler):
+    def get(self):
+        query = ilmoitus_model.DeclarationType.query()
+        query_result = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+
+        if len(query_result) != 0:
+            response_module.give_response(self, json.dumps(
+                map(lambda declaration_type: declaration_type.get_object_as_data_dict(), query_result)))
+        else:
+            give_error_response(self, 404, "There are no DeclarationTypes",
+                                "Add some DeclarationTypes to the data store")
+
+
+class DeclarationSubTypeHandlerForDeclarationId(BaseRequestHandler):
+    def get(self, declaration_type_id):
+        safe_id = 0
+        try:
+            safe_id = long(declaration_type_id)
+        except ValueError:
+            #TODO: give proper error response here
+            give_error_response(self, 500, "the given id isn't an int (" + str(declaration_type_id) + ")")
+
+        item = ilmoitus_model.DeclarationType.get_by_id(safe_id)
+
+        if item is None:
+            give_error_response(self, 404, "there is no declarationType with that id")
+
+        if len(item.sub_types) is 0:
+            give_error_response(self, 404, "there are no DeclarationSubTypes associated to this DeclarationType")
+
+        query = ilmoitus_model.DeclarationSubType.query(ilmoitus_model.DeclarationSubType.key.IN(item.sub_types))
+        sub_types = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+            #[res for res in query.fetch() if res.key in item.sub_types]
+
+        if len(sub_types) is 0:
+            give_error_response(self, 404, "there are no DeclarationSubTypes associated to this DeclarationType")
+
+        response_module.give_response(self, json.dumps(map(lambda sub_type: sub_type.get_object_as_data_dict(),
+                                                           sub_types)))
+
+
+class AllDeclarationSubTypesHandler(BaseRequestHandler):
+    def get(self):
+        query = ilmoitus_model.DeclarationSubType.query()
+
+        query_result = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+
+        if query_result is None:
+            give_error_response(self, 404, "there are no DeclarationSubTypes",
+                                "insert some DeclarationSubTypes in the datastore")
+        else:
+            response_module.respond_with_existing_model_object_collection(self, query_result)
+
+
+class SpecificDeclarationAttachmentsHandler(BaseRequestHandler):
+    def get(self, declaration_id):
+        person_data = ilmoitus_auth.get_current_person(self)
+        current_user = person_data["person_value"]
+
+        if current_user is None:
+            give_error_response(self, 401, "De bijlagen kunnen niet worden opgehaald omdat u niet "
+                                           "de juiste permissies heeft.",
+                                "current_user is None")
+
+        if str.isdigit(declaration_id):
+            # Does declaration exist
+            declaration = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
+            if declaration is None:
+                give_error_response(self, 404, "Kan geen bijlagen ophalen. De opgegeven declaratie bestaat niet",
+                                    "declaration_id not found")
+
+            query = ilmoitus_model.Attachment.query(ilmoitus_model.Attachment.declaration == declaration.key)
+            attachments = query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+            if attachments is None:
+                    give_error_response(self, 404, "De declaratie heeft geen bijlagen.",
+                                        "No attachments with the specified declaration_id in the database.", 404)
+        else:
+            give_error_response(self, 400, "Kan geen bijlagen ophalen.",
+                                "declaration id can only be of the type integer.", 404)
+
+        post_data = []
+        for attachment in attachments:
+            item = {"id": attachment.key.integer_id(), "name": attachment.name}
+            post_data.append(item)
+
+        response_module.give_response(self, json.dumps(post_data))
+
+
+class SpecificAttachmentHandler(BaseRequestHandler):
+    def get(self, attachment_id):
+        person_data = ilmoitus_auth.get_current_person(self)
+        current_user = person_data["person_value"]
+
+        if current_user is None:
+            give_error_response(self, 401, "De bijlage kan niet worden opgehaald omdat u niet "
+                                           "de juiste permissies heeft.",
+                                "current_user is None")
+
+        if str.isdigit(attachment_id):
+            attachment = ilmoitus_model.Attachment.get_by_id(long(attachment_id))
+            if attachment is None:
+                    give_error_response(self, 404, "Kan de opgevraagde bijlage niet vinden.",
+                                        "attachment id does not exist in the database.", 404)
+        else:
+            give_error_response(self, 400, "Kan de opgevraagde bijlage niet vinden.",
+                                "attachment id can only be of the type integer.", 404)
+
+        response_module.give_response(self, attachment.get_object_json_data())
+
+
 class ApproveByHumanResources(BaseRequestHandler):
     def put(self):
         person_data = ilmoitus_auth.get_current_person(self, "human_resources")
@@ -642,6 +749,7 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
                     try:
                         data = json.loads(self.request.body)
                     except ValueError:
+
                         give_error_response(self, 500, "Kan de declaratie niet afkeuren omdat er ongeldige data "
                                                        "is verstuurd",
                                             "Invalid json data; Invalid format", more_info=str(self.request.body))
@@ -770,11 +878,16 @@ application = webapp.WSGIApplication(
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
         ('/declaration/declined_by_hr', SupervisorDeclarationToHrDeclinedDeclarationHandler),
         ('/supervisors/', CurrentUserSupervisors),
+        ('/declarationtypes', AllDeclarationTypesHandler),
+        ('/declarationsubtypes/(.*)', DeclarationSubTypeHandlerForDeclarationId),
+        ('/declarationsubtypes/', AllDeclarationSubTypesHandler),
         ('/declarations/employee', AllDeclarationsForEmployeeHandler),
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
         ('/declaration/(.*)', SpecificDeclarationHandler),
+        ('/declaration/attachments/(.*)', SpecificDeclarationAttachmentsHandler),
+        ('/attachment/(.*)', SpecificAttachmentHandler),
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),
         ('/declaration/lock', SetOpenToLockedDeclaration),
         ("/declaration", AddNewDeclarationHandler),
