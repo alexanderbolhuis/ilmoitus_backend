@@ -70,6 +70,7 @@ class Declaration(ndb.Model):
     created_at = ndb.DateTimeProperty(auto_now_add=True)
     created_by = ndb.KeyProperty(kind=Person)
     assigned_to = ndb.KeyProperty(kind=Person, repeated=True)
+    lines = ndb.KeyProperty(kind="DeclarationLine", repeated=True)
     comment = ndb.StringProperty()
     items_count = ndb.IntegerProperty()
     items_total_price = ndb.IntegerProperty()
@@ -104,23 +105,24 @@ class Declaration(ndb.Model):
                              "supervisor_comment", "human_resources_comment", "declined_by",
                              "submitted_to_human_resources_by", "locked_at", "sent_to_human_resources_at",
                              "supervisor_declined_at", "supervisor_approved_at", "human_resources_approved_at",
-                             "human_resources_declined_at", "will_be_payed_out_on", "human_resources_approved_by"]
+                             "human_resources_declined_at", "will_be_payed_out_on", "human_resources_approved_by",
+                             "lines"]
 
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment", "items_total_price",
-                                        "items_count"],
+                                        "items_count", "lines"],
 
                    "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "items_total_price",
-                                          "items_count", "locked_at", "supervisor_comment"],
+                                          "items_count", "locked_at", "supervisor_comment", "lines"],
 
                    "supervisor_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                        "items_total_price", "items_count", "locked_at", "declined_by",
-                                                       "supervisor_declined_at", "supervisor_comment"],
+                                                       "supervisor_declined_at", "supervisor_comment", "lines"],
 
                    "supervisor_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                        "items_total_price", "items_count", "locked_at",
                                                        "submitted_to_human_resources_by", "supervisor_approved_at",
                                                        "supervisor_approved_by", "sent_to_human_resources_at",
-                                                       "supervisor_comment"],
+                                                       "supervisor_comment", "lines"],
 
                    "human_resources_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                             "items_total_price", "items_count", "locked_at",
@@ -128,7 +130,7 @@ class Declaration(ndb.Model):
                                                             "supervisor_approved_by", "sent_to_human_resources_at",
                                                             "declined_by", "supervisor_comment",
                                                             "human_resources_comment", "human_resources_declined_at",
-                                                            "human_resources_declined_by"],
+                                                            "human_resources_declined_by", "lines"],
 
                    "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                             "items_total_price", "items_count", "locked_at",
@@ -136,7 +138,7 @@ class Declaration(ndb.Model):
                                                             "supervisor_approved_by", "sent_to_human_resources_at",
                                                             "supervisor_comment", "will_be_payed_out_on",
                                                             "human_resources_comment", "human_resources_approved_by",
-                                                            "human_resources_approved_at"]}
+                                                            "human_resources_approved_at", "lines"]}
 
     def get_object_as_data_dict(self):
         return dict({'id': self.key.integer_id(),
@@ -194,13 +196,14 @@ class Declaration(ndb.Model):
 # DeclarationSubType Model class
 class DeclarationSubType(ndb.Model):
     name = ndb.StringProperty()
+    declarationType = ndb.StringProperty()
     max_cost = ndb.IntegerProperty()  # Optional
 
-    all_custom_properties = ['name', 'max_cost']
+    all_custom_properties = ['name', 'max_cost', 'declarationType']
 
     def get_object_as_data_dict(self):
-        return {'id': self.key.integer_id() + property_not_none_key_value_pair(self,
-                                                                               self.all_custom_properties).items()}
+        return dict({'id': self.key.integer_id()}.items() + property_not_none_key_value_pair(self,
+                                                                               self.all_custom_properties).items())
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -222,12 +225,11 @@ class DeclarationType(ndb.Model):
 
 # DeclarationLine Model class
 class DeclarationLine(ndb.Model):
-    declaration = ndb.KeyProperty(kind=Declaration)
     receipt_date = ndb.DateTimeProperty()
     cost = ndb.IntegerProperty()
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
 
-    all_custom_properties = ['declaration', 'receipt_date', 'cost', 'declaration_sub_type']
+    all_custom_properties = ['receipt_date', 'cost', 'declaration_sub_type']
 
     def get_object_as_data_dict(self):
         return dict({'id': self.key.integer_id()}.items() +
