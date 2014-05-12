@@ -549,8 +549,11 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                 give_error_response(self, 404, "Kan de opgevraagde declaratie niet vinden",
                                     "Declaration id can only be of the type integer and cannot be None", 404)
 
-            declarationline_query = ilmoitus_model.DeclarationLine.query(ilmoitus_model.DeclarationLine.declaration == result.key)
-            declarationline_query_result = declarationline_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+            if len(result.lines) == 0:
+                declarationline_query_result = []
+            else:
+                declarationline_query = ilmoitus_model.DeclarationLine.query(ilmoitus_model.DeclarationLine.key.IN(result.lines))
+                declarationline_query_result = declarationline_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
             attachments_query = ilmoitus_model.Attachment.query(ilmoitus_model.Attachment.declaration == result.key)
             attachments_query_result = attachments_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
