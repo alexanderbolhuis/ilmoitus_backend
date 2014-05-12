@@ -141,7 +141,7 @@ ilmoitusApp.controller('declarationsController', function($scope, $state, $http)
   	}
 });
 
-ilmoitusApp.controller('newDeclarationController', function($scope) {
+ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	$scope.navBtnSelect("newDeclarationBtn");
 	$(".datepicker").datepicker();
 	
@@ -153,6 +153,18 @@ ilmoitusApp.controller('newDeclarationController', function($scope) {
 	//Declaration type fields
 	$scope.declaration_types = [];
 	$scope.declaration_sub_types = [];
+	
+	var getSubtypeByID = function(row, id){
+		if($scope.declaration_sub_types[row]){
+			for(var i = 0; i < $scope.declaration_sub_types[row].length; i++){
+				if($scope.declaration_sub_types[row][i].id == id){
+					return $scope.declaration_sub_types[row][i];
+				}
+			}
+		}
+		
+		return null;
+	}
 	
 	//Preload supervisors
 	var request = $.ajax({
@@ -167,24 +179,44 @@ ilmoitusApp.controller('newDeclarationController', function($scope) {
 	request.done(function(data){
 		$scope.supervisorList = data;
 		if(data.length > 0){
-			$scope.declaration.assigned_to = data[0].employee_number;
+			$scope.declaration.assigned_to = data[0].id;
 		}
 		$scope.$apply();
 	});
 	
-	//Preload declarations
-	//Backend missing :(
+	//Preload declaration types
 	var request = $.ajax({
-		
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/declarationtypes",
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+	request.done(function(data){
+		$scope.declaration_types = data;
+		$scope.declaration_types.unshift({ id:0, name:"<selecteer>" });
+		$scope.declaration.lines[0].declaration_type = $scope.declaration_types[0].id;
+		$scope.$apply();
 	});
 	
+	
 	$scope.postDeclaration = function() {
+		var declaration = $scope.declaration;
+		for(var i = 0; i < declaration.lines.length; i++){
+			if(!declaration.lines[i].declaration_sub_type || declaration.lines[i].declaration_sub_type <= 0){
+				declaration.lines.splice(i, 1);	
+			}
+		}
+		console.log(JSON.stringify({ 'declaration':declaration }));
+		
 		var request = $.ajax({
 			type: "POST",
 			headers: {"Authorization": sessionStorage.token},
 			url: baseurl + "/declaration",
 			crossDomain: true,
-			data: JSON.stringify($scope.declaration),
+			data: JSON.stringify({ 'declaration':declaration }),
 			error: function(jqXHR, textStatus, errorThrown){
 				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 			}
@@ -213,9 +245,42 @@ ilmoitusApp.controller('newDeclarationController', function($scope) {
 		$scope.calcTotal();
 	}
 	
-	//Load sub list when delclartion type has been selected
+	//Load sub list when declaration type has been selected
 	$scope.loadSubList = function(row){
+		if($scope.declaration.lines[row].declaration_type == 0){
+			$scope.declaration_sub_types[row] = [{ id:0, name:"<selecteer>" }];
+			$scope.declaration.lines[row].declaration_sub_type = $scope.declaration_sub_types[row][0].id;
+			return;
+		}
 		
+		var request = $.ajax({
+			type: "GET",
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/declarationsubtypes/" + $scope.declaration.lines[row].declaration_type,
+			crossDomain: true,
+			error: function(jqXHR, textStatus, errorThrown){
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			}
+		});
+		request.done(function(data){
+			$scope.declaration_sub_types[row] = data;
+			$scope.declaration_sub_types[row].unshift({ id:0, name:"<selecteer>" });
+			$scope.declaration.lines[row].declaration_sub_type = $scope.declaration_sub_types[row][0].id;
+			$scope.$apply();
+			
+			$scope.checkPrice(row);
+		});
+	}
+	
+	//Check if the price is valid
+	$scope.checkPrice = function(row){
+		var cost = Number($scope.declaration.lines[row].cost);
+		var subtype = getSubtypeByID(row, $scope.declaration.lines[row].declaration_sub_type);
+		var maxcost = subtype != null && subtype.max_cost ? subtype.max_cost : 0;
+
+		$scope.declaration.lines[row].approvecosts = isFinite(cost) && (maxcost <= 0 || cost < maxcost);
+		
+		$scope.calcTotal();
 	}
 	
 	//Calculate total declaration amount each change

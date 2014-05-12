@@ -2,7 +2,7 @@
     <div>
         <table>
             <tr><td>Leidinggevende:</td><td>
-                <select ng-model="declaration.assigned_to" ng-options="n.employee_number as (n.last_name + ', ' + n.first_name) for n in supervisorList"></select>
+                <select ng-model="declaration.assigned_to" ng-options="n.id as (n.last_name + ', ' + n.first_name) for n in supervisorList"></select>
             </td></tr>
             <tr><td>Personeelsnr</td><td>{{declaration.assigned_to}}</td></tr>
         </table>
@@ -34,9 +34,9 @@
                         	<select ng-model="item.declaration_type" ng-options="type.id as type.name for type in declaration_types" ng:change="loadSubList($index);"></select>
                         </td>
                         <td>
-                        	<select ng-model="item.declaration_sub_type" ng-options="type.id as type.name for type in declaration_sub_types[$index]"></select>
+                        	<select ng-model="item.declaration_sub_type" ng-options="type.id as type.name for type in declaration_sub_types[$index]" ng:change="checkPrice($index);"></select>
                         </td>
-                        <td>&euro; <input class="DeclarationPriceinput" type="text" ng-model="item.cost" ng:change="calcTotal();" /></td>
+                        <td>&euro; <input class="DeclarationPriceinput" type="text" maxlength="4" ng-model="item.cost" ng-class="{FieldError: !item.approvecosts}" ng:change="checkPrice($index);" /></td>
                         <td><input type="text" ng-model="item.comment" /></td>
                         <td><input class="DeclarationDelete" type="button" value="X" ng:click="removeRow($index);" /></td>
                     </tr>
