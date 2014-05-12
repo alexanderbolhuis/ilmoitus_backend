@@ -625,7 +625,7 @@ class AllDeclarationSubTypesHandler(BaseRequestHandler):
             response_module.respond_with_existing_model_object_collection(self, query_result)
 
 
-#TODO: Possibly remove. Lines are already sent with the specific declaration details handler.
+#Don't use this handler when retrieving all declaration info. Use getSpecificDeclaration instead!
 class SpecificDeclarationLinesHandler(BaseRequestHandler):
     def get(self, declaration_id):
         person_data = ilmoitus_auth.get_current_person(self)
@@ -642,19 +642,22 @@ class SpecificDeclarationLinesHandler(BaseRequestHandler):
             if declaration is None:
                 give_error_response(self, 404, "Kan geen declaratie regels ophalen. De opgegeven declaratie bestaat niet",
                                     "declaration_id not found")
-
-                declarationline_query = ilmoitus_model.DeclarationLine.query(ilmoitus_model.DeclarationLine.declaration == declaration.key)
+            print declaration
+            if len(declaration.lines) != 0:
+                declarationline_query = ilmoitus_model.DeclarationLine.query(ilmoitus_model.DeclarationLine.key.IN(declaration.lines))
                 query_result = declarationline_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
-                if len(query_result) == 0:
-                    give_error_response(self, 404, "De declaratie heeft geen regels.",
-                                        "No lines with the specified declaration_id in the database.", 404)
             else:
-                give_error_response(self, 400, "Kan geen declaratie regels ophalen.",
-                                    "declaration id can only be of the type integer.", 404)
+                give_error_response(self, 404, "De declaratie heeft geen regels.",
+                                    "No lines with the specified declaration_id in the database.", 404)
 
-            response_module.respond_with_existing_model_object_collection(self, query_result)
+        else:
+            give_error_response(self, 400, "Kan geen declaratie regels ophalen.",
+                                "declaration id can only be of the type integer.", 404)
+
+        response_module.respond_with_existing_model_object_collection(self, query_result)
 
 
+#Don't use this handler when retrieving all declaration info. Use getSpecificDeclaration instead!
 class SpecificDeclarationAttachmentsHandler(BaseRequestHandler):
     def get(self, declaration_id):
         person_data = ilmoitus_auth.get_current_person(self)
