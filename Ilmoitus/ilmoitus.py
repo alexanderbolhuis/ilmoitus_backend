@@ -582,7 +582,7 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                 response_module.give_response(self, json.dumps(data_dict))
             else:
                 give_error_response(self, 401,
-                                    "Je hebt niet de juiste rechten op deze declratie te openen", None, 401)
+                                    "Je hebt niet de juiste rechten om deze declratie te openen", None, 401)
         # if declaration_id not is int
         else:
             give_error_response(self, 400, "Kan de opgevraagde declaratie niet vinden",
