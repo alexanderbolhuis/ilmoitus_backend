@@ -1747,7 +1747,6 @@ class GetDeclarationAttachmentsTest(BaseAuthorizationHandler):
         self.negative_test_stub_handler(token, path, "get", 400)
 
 
-#TODO: testen of hij files mee geeft? Hoe?
 class GetAttachmentTest(BaseAuthorizationHandler):
     def test_get_attachment_positive(self):
         user_is_logged_in = True
