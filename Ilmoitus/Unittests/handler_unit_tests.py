@@ -1770,7 +1770,7 @@ class GetAttachmentTest(BaseAuthorizationHandler):
 
         response_data = json.loads(response.body)
         self.assertEqual(response_data["id"], attachments[0].key.integer_id())
-        self.assertEqual(response_data["declaration"], declaration.key.integer_id())
+        self.assertEqual(response_data["name"], attachments[0].name)
         self.assertEqual(response_data["file"], attachments[0].file)
 
     def test_get_attachment_negative_wrong_id(self):
