@@ -642,7 +642,7 @@ class SpecificDeclarationLinesHandler(BaseRequestHandler):
             if declaration is None:
                 give_error_response(self, 404, "Kan geen declaratie regels ophalen. De opgegeven declaratie bestaat niet",
                                     "declaration_id not found")
-            print declaration
+
             if len(declaration.lines) != 0:
                 declarationline_query = ilmoitus_model.DeclarationLine.query(ilmoitus_model.DeclarationLine.key.IN(declaration.lines))
                 query_result = declarationline_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
