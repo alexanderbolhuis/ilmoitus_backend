@@ -1336,14 +1336,22 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
 
         supervisor = PersonDataCreator.create_valid_supervisor()
         declaration_valid = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        lines = DeclarationsDataCreator.create_valid_declaration_lines(declaration_valid, 4)
+        attachments = DeclarationsDataCreator.create_valid_declaration_attachments(declaration_valid, 2)
 
         path = "/declaration/" + str(declaration_valid.key.integer_id())
         response = self.positive_test_stub_handler(token, path, "get")
         response_data = json.loads(response.body)
+        line_data = response_data["lines"]
+        attachment_data = response_data["attachments"]
 
         # check for VALID declaration by logged_in_person
         self.assertEqual(response_data["created_by"], logged_in_person.key.integer_id())
         self.assertEqual(response_data["id"], declaration_valid.key.integer_id())
+        self.assertEqual(len(line_data), 4)
+        self.assertEqual(len(attachment_data), 2)
+        self.assertEqual(line_data[0]["id"], lines[0].key.integer_id())
+        self.assertEqual(attachment_data[0]["id"], attachments[0].key.integer_id())
 
     def test_positive_get_supervisor_declaration(self):
         user_is_logged_in = True
@@ -1362,27 +1370,43 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
 
         # check if supervisor can open an open declaration
         declaration_open = DeclarationsDataCreator.create_valid_open_declaration(employee, logged_in_person)
+        lines1 = DeclarationsDataCreator.create_valid_declaration_lines(declaration_open, 4)
+        attachments1 = DeclarationsDataCreator.create_valid_declaration_attachments(declaration_open, 2)
         path1 = "/declaration/" + str(declaration_open.key.integer_id())
 
         response1 = self.positive_test_stub_handler(token, path1, "get")
         response_data1 = json.loads(response1.body)
+        line_data1 = response_data1["lines"]
+        attachment_data1 = response_data1["attachments"]
 
         # check for VALID declaration by logged_in_person
         self.assertEquals(response_data1["assigned_to"][0], logged_in_person.key.integer_id())
         self.assertEquals(response_data1["id"], declaration_open.key.integer_id())
         self.assertEquals(response_data1["class_name"], "open_declaration")
+        self.assertEqual(len(line_data1), 4)
+        self.assertEqual(len(attachment_data1), 2)
+        self.assertEqual(line_data1[0]["id"], lines1[0].key.integer_id())
+        self.assertEqual(attachment_data1[0]["id"], attachments1[0].key.integer_id())
 
          # check if supervisor can open an locked declaration
         declaration_lock = DeclarationsDataCreator.create_valid_locked_declaration(employee, logged_in_person)
+        lines2 = DeclarationsDataCreator.create_valid_declaration_lines(declaration_lock, 4)
+        attachments2 = DeclarationsDataCreator.create_valid_declaration_attachments(declaration_lock, 2)
         path2 = "/declaration/" + str(declaration_lock.key.integer_id())
 
         response2 = self.positive_test_stub_handler(token, path2, "get")
         response_data2 = json.loads(response2.body)
+        line_data2 = response_data2["lines"]
+        attachment_data2 = response_data2["attachments"]
 
         # check for VALID declaration by logged_in_person
         self.assertEquals(response_data2["assigned_to"][0], logged_in_person.key.integer_id())
         self.assertEquals(response_data2["id"], declaration_lock.key.integer_id())
         self.assertEquals(response_data2["class_name"], "locked_declaration")
+        self.assertEqual(len(line_data2), 4)
+        self.assertEqual(len(attachment_data2), 2)
+        self.assertEqual(line_data2[0]["id"], lines2[0].key.integer_id())
+        self.assertEqual(attachment_data2[0]["id"], attachments2[0].key.integer_id())
 
     def test_positive_get_hr_declaration(self):
         user_is_logged_in = True
@@ -1400,16 +1424,88 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         supervisor = PersonDataCreator.create_valid_supervisor()
 
         declaration_valid = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(employee, supervisor)
+        lines = DeclarationsDataCreator.create_valid_declaration_lines(declaration_valid, 4)
+        attachments = DeclarationsDataCreator.create_valid_declaration_attachments(declaration_valid, 2)
 
         path = "/declaration/" + str(declaration_valid.key.integer_id())
 
         response = self.positive_test_stub_handler(token, path, "get")
         response_data = json.loads(response.body)
+        line_data = response_data["lines"]
+        attachment_data = response_data["attachments"]
 
         # check for VALID declaration by logged_in_person
         self.assertEquals(response_data["submitted_to_human_resources_by"], supervisor.key.integer_id())
         self.assertEquals(response_data["id"], declaration_valid.key.integer_id())
         self.assertEquals(response_data["class_name"], "supervisor_approved_declaration")
+        self.assertEqual(len(line_data), 4)
+        self.assertEqual(len(attachment_data), 2)
+        self.assertEqual(line_data[0]["id"], lines[0].key.integer_id())
+        self.assertEqual(attachment_data[0]["id"], attachments[0].key.integer_id())
+
+    def test_positive_no_lines(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SpecificDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+        token = setup_data["token"]
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+
+        logged_in_person.put()
+
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        declaration_valid = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        attachments = DeclarationsDataCreator.create_valid_declaration_attachments(declaration_valid, 2)
+
+        path = "/declaration/" + str(declaration_valid.key.integer_id())
+        response = self.positive_test_stub_handler(token, path, "get")
+        response_data = json.loads(response.body)
+        line_data = response_data["lines"]
+        attachment_data = response_data["attachments"]
+
+        # check for VALID declaration by logged_in_person
+        self.assertEqual(response_data["created_by"], logged_in_person.key.integer_id())
+        self.assertEqual(response_data["id"], declaration_valid.key.integer_id())
+        self.assertEqual(len(line_data), 0)
+        self.assertEqual(len(attachment_data), 2)
+        self.assertEqual(attachment_data[0]["id"], attachments[0].key.integer_id())
+
+    def test_positive_no_attachments(self):
+        user_is_logged_in = True
+        user_is_admin = '0'
+        path = "/declaration/(.*)"
+
+        setup_data = self.setup_server_with_user(
+            [(path, main_application.SpecificDeclarationHandler)],
+            user_is_logged_in, user_is_admin)
+        token = setup_data["token"]
+
+        logged_in_person = setup_data["random_person"]
+        logged_in_person.class_name = "employee"
+
+        logged_in_person.put()
+
+        supervisor = PersonDataCreator.create_valid_supervisor()
+        declaration_valid = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
+        lines = DeclarationsDataCreator.create_valid_declaration_lines(declaration_valid, 4)
+
+        path = "/declaration/" + str(declaration_valid.key.integer_id())
+        response = self.positive_test_stub_handler(token, path, "get")
+        response_data = json.loads(response.body)
+        line_data = response_data["lines"]
+        attachment_data = response_data["attachments"]
+
+        # check for VALID declaration by logged_in_person
+        self.assertEqual(response_data["created_by"], logged_in_person.key.integer_id())
+        self.assertEqual(response_data["id"], declaration_valid.key.integer_id())
+        self.assertEqual(len(line_data), 4)
+        self.assertEqual(len(attachment_data), 0)
+        self.assertEqual(line_data[0]["id"], lines[0].key.integer_id())
 
     def test_negative_get_employee_declaration_by_other_employee(self):
         user_is_logged_in = True

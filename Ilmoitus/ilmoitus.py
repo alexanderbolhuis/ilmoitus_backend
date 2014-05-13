@@ -549,22 +549,40 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                 give_error_response(self, 404, "Kan de opgevraagde declaratie niet vinden",
                                     "Declaration id can only be of the type integer and cannot be None", 404)
 
+            if len(result.lines) == 0:
+                declarationline_query_result = []
+            else:
+                declarationline_query = ilmoitus_model.DeclarationLine.query(ilmoitus_model.DeclarationLine.key.IN(result.lines))
+                declarationline_query_result = declarationline_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+
+            attachments_query = ilmoitus_model.Attachment.query(ilmoitus_model.Attachment.declaration == result.key)
+            attachments_query_result = attachments_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+
+            attachment_data = []
+            for attachment in attachments_query_result:
+                item = {"id": attachment.key.integer_id(), "name": attachment.name}
+                attachment_data.append(item)
+
+            data_dict = result.get_object_as_data_dict()
+            data_dict["attachments"] = attachment_data
+            data_dict["lines"] = map(lambda declaration_item: declaration_item.get_object_as_data_dict(), declarationline_query_result)
+
             if result.created_by == key:
-                response_module.give_response(self, result.get_object_json_data())
+                response_module.give_response(self, json.dumps(data_dict))
 
             elif current_user.class_name == 'supervisor':
                 if key in result.assigned_to:
-                    response_module.give_response(self, result.get_object_json_data())
+                    response_module.give_response(self, json.dumps(data_dict))
                 else:
                     give_error_response(self, 401,
                                         "Deze declratie is niet aan jouw toegewezen", None, 401)
 
             elif current_user.class_name == 'human_resources' and result.class_name == \
                     'supervisor_approved_declaration' and result.submitted_to_human_resources_by is not None:
-                response_module.give_response(self, result.get_object_json_data())
+                response_module.give_response(self, json.dumps(data_dict))
             else:
                 give_error_response(self, 401,
-                                    "Je hebt niet de juiste rechten op deze declratie te openen", None, 401)
+                                    "Je hebt niet de juiste rechten om deze declratie te openen", None, 401)
         # if declaration_id not is int
         else:
             give_error_response(self, 400, "Kan de opgevraagde declaratie niet vinden",
