@@ -115,10 +115,10 @@ class DeclarationsDataCreator():
 
         for i in range(0, amount_of_attachments):
             attachment = ilmoitus_model.Attachment()
-            attachment.declaration = declaration.key
             attachment.name = "attachment "+str(i)
             attachment.file = files[(i % len(files))]
             attachment.put()
+            declaration.attachments.append(attachment.key)
 
             attachments.append(attachment)
 
