@@ -549,22 +549,40 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                 give_error_response(self, 404, "Kan de opgevraagde declaratie niet vinden",
                                     "Declaration id can only be of the type integer and cannot be None", 404)
 
+            if len(result.lines) == 0:
+                declarationline_query_result = []
+            else:
+                declarationline_query = ilmoitus_model.DeclarationLine.query(ilmoitus_model.DeclarationLine.key.IN(result.lines))
+                declarationline_query_result = declarationline_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+
+            attachments_query = ilmoitus_model.Attachment.query(ilmoitus_model.Attachment.declaration == result.key)
+            attachments_query_result = attachments_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+
+            attachment_data = []
+            for attachment in attachments_query_result:
+                item = {"id": attachment.key.integer_id(), "name": attachment.name}
+                attachment_data.append(item)
+
+            data_dict = result.get_object_as_data_dict()
+            data_dict["attachments"] = attachment_data
+            data_dict["lines"] = map(lambda declaration_item: declaration_item.get_object_as_data_dict(), declarationline_query_result)
+
             if result.created_by == key:
-                response_module.give_response(self, result.get_object_json_data())
+                response_module.give_response(self, json.dumps(data_dict))
 
             elif current_user.class_name == 'supervisor':
                 if key in result.assigned_to:
-                    response_module.give_response(self, result.get_object_json_data())
+                    response_module.give_response(self, json.dumps(data_dict))
                 else:
                     give_error_response(self, 401,
                                         "Deze declratie is niet aan jouw toegewezen", None, 401)
 
             elif current_user.class_name == 'human_resources' and result.class_name == \
                     'supervisor_approved_declaration' and result.submitted_to_human_resources_by is not None:
-                response_module.give_response(self, result.get_object_json_data())
+                response_module.give_response(self, json.dumps(data_dict))
             else:
                 give_error_response(self, 401,
-                                    "Je hebt niet de juiste rechten op deze declratie te openen", None, 401)
+                                    "Je hebt niet de juiste rechten om deze declratie te openen", None, 401)
         # if declaration_id not is int
         else:
             give_error_response(self, 400, "Kan de opgevraagde declaratie niet vinden",
@@ -625,6 +643,39 @@ class AllDeclarationSubTypesHandler(BaseRequestHandler):
             response_module.respond_with_existing_model_object_collection(self, query_result)
 
 
+#Don't use this handler when retrieving all declaration info. Use getSpecificDeclaration instead!
+class SpecificDeclarationLinesHandler(BaseRequestHandler):
+    def get(self, declaration_id):
+        person_data = ilmoitus_auth.get_current_person(self)
+        current_user = person_data["person_value"]
+
+        if current_user is None:
+            give_error_response(self, 401, "De declaratie regels kunnen niet worden opgehaald omdat u niet "
+                                           "de juiste permissies heeft.",
+                                "current_user is None")
+
+        if str.isdigit(declaration_id):
+            # Does declaration exist
+            declaration = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
+            if declaration is None:
+                give_error_response(self, 404, "Kan geen declaratie regels ophalen. De opgegeven declaratie bestaat niet",
+                                    "declaration_id not found")
+
+            if len(declaration.lines) != 0:
+                declarationline_query = ilmoitus_model.DeclarationLine.query(ilmoitus_model.DeclarationLine.key.IN(declaration.lines))
+                query_result = declarationline_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+            else:
+                give_error_response(self, 404, "De declaratie heeft geen regels.",
+                                    "No lines with the specified declaration_id in the database.", 404)
+
+        else:
+            give_error_response(self, 400, "Kan geen declaratie regels ophalen.",
+                                "declaration id can only be of the type integer.", 404)
+
+        response_module.respond_with_existing_model_object_collection(self, query_result)
+
+
+#Don't use this handler when retrieving all declaration info. Use getSpecificDeclaration instead!
 class SpecificDeclarationAttachmentsHandler(BaseRequestHandler):
     def get(self, declaration_id):
         person_data = ilmoitus_auth.get_current_person(self)
@@ -871,6 +922,7 @@ application = webapp.WSGIApplication(
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/declarations/supervisor', AllDeclarationsForSupervisor),
         ('/declaration/(.*)', SpecificDeclarationHandler),
+        ('/declaration/lines/(.*)', SpecificDeclarationLinesHandler),
         ('/declaration/attachments/(.*)', SpecificDeclarationAttachmentsHandler),
         ('/attachment/(.*)', SpecificAttachmentHandler),
         ('/declarations/approve_locked', SetLockedToSupervisorApprovedDeclarationHandler),

@@ -99,6 +99,7 @@ class DeclarationsDataCreator():
             line.receipt_date = datetime.now()
             line.cost = random.randint(0, 100)  # TODO make float
             line.put()
+            declaration.lines.append(line.key)
 
             lines.append(line)
 
