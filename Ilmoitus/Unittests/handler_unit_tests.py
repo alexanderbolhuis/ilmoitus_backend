@@ -1766,12 +1766,10 @@ class GetAttachmentTest(BaseAuthorizationHandler):
         attachments = DeclarationsDataCreator.create_valid_declaration_attachments(declaration, 2)
 
         path = "/attachment/"+str(attachments[0].key.integer_id())
-        response = self.positive_test_stub_handler(token, path, "get")
+        self.positive_test_stub_handler(token, path, "get", expected_content_type="image/jpeg")
 
-        response_data = json.loads(response.body)
-        self.assertEqual(response_data["id"], attachments[0].key.integer_id())
-        self.assertEqual(response_data["name"], attachments[0].name)
-        self.assertEqual(response_data["file"], attachments[0].file)
+        path = "/attachment/"+str(attachments[1].key.integer_id())
+        self.positive_test_stub_handler(token, path, "get", expected_content_type="application/pdf")
 
     def test_get_attachment_negative_wrong_id(self):
         user_is_logged_in = True

@@ -12,6 +12,7 @@ from google.appengine.ext import ndb
 from error_response_module import give_error_response
 import mail_module
 import ilmoitus_auth
+import base64
 
 
 class BaseRequestHandler(webapp.RequestHandler):
@@ -742,7 +743,10 @@ class SpecificAttachmentHandler(BaseRequestHandler):
             give_error_response(self, 400, "Kan de opgevraagde bijlage niet vinden.",
                                 "attachment id can only be of the type integer.")
 
-        response_module.give_response(self, attachment.get_object_json_data())
+        base64_string = attachment.file.split(",")[1]
+        mime = attachment.file.split(":")[1].split(";")[0]
+        self.response.headers['Content-Type'] = mime
+        self.response.write(base64.b64decode(base64_string))
 
 
 class ApproveByHumanResources(BaseRequestHandler):

@@ -233,11 +233,12 @@ class BaseTestClass(TestCase):
         if response_body_should_be_defined:
             self.assertIsNotNone(response.body)
         if body_data_should_have_results:
-            try:
-                body_data = json.loads(response.body)
-            except ValueError:
-                self.fail("Test failed! The response body did not contain valid JSON data.")
-            self.assertTrue(len(body_data) > 0,
+            if expected_content_type == 'application/json':
+                try:
+                    body_data = json.loads(response.body)
+                except ValueError:
+                    self.fail("Test failed! The response body did not contain valid JSON data.")
+            self.assertTrue(len(response.body) > 0,
                             "Test failed! There should be results in the response, but none were found.")
 
         return response
