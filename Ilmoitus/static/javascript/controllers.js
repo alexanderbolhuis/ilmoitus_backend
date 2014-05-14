@@ -377,6 +377,4 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 			$scope.$apply();
 		});
 	});
-
-	$scope.totalPrice = "90,-"
 });
