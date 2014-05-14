@@ -221,7 +221,6 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 				declaration.lines.splice(i, 1);	
 			}
 		}
-		console.log(JSON.stringify({ 'declaration':declaration }));
 		
 		var request = $.ajax({
 			type: "POST",
@@ -357,7 +356,8 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	request.done(function(data){
 		$scope.comments = data.comment;
 		$scope.$apply();
-
+		console.log(data);
+		
 		//Get supervisor name and id
 		var supervisorKey = data.assigned_to[data.assigned_to.length-1];
 		var request2 = $.ajax({
