@@ -354,6 +354,7 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	});
 
 	request.done(function(data){
+		$scope.declaration = data;
 		$scope.comments = data.comment;
 		$scope.$apply();
 		console.log(data);
@@ -378,9 +379,4 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	});
 
 	$scope.totalPrice = "90,-"
-	$scope.itemList =	[
-							{"date": "asdf", "sort": "qwer", "subsort": "zcxv", "price": "20", "comment": "placeholder1"}, 
-							{"date": "fdsa", "sort":  "poiu", "subsort":  "/,m", "price": "30", "comment": "placeholder2"}, 
-							{"date": "123", "sort":  "456", "subsort": "789", "price": "40", "comment": "placeholder3"}
-						];
 });
