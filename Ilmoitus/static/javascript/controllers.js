@@ -1,12 +1,18 @@
+var baseurl = 'http://127.0.0.1:8080';
+
 ilmoitusApp.controller('loginController', function($scope, $state) {
 	//Login button. Check for correct credentials.
+	$scope.username = 'developers.42IN11EWa@gmail.com';
+	$scope.password = '123456';
+	
 	$scope.loginBtnClick = function() {
 		if($scope.username && $scope.password) {
 			var jsonData = {"email": $scope.username, "password": $scope.password}
 
 			var request = $.ajax({
 				type: "POST",
-				url: "/auth/login",
+				url: baseurl + "/auth/login",
+				crossDomain: true,
 				data: jsonData,
 				error: function(jqXHR, textStatus, errorThrown){
 					console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
@@ -40,7 +46,8 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: "/current_user/details",
+		url: baseurl + "/current_user/details",
+		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 		}
@@ -76,7 +83,8 @@ ilmoitusApp.controller('declarationsController', function($scope, $state, $http)
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: "/declarations/employee",
+		url: baseurl + "/declarations/employee",
+		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 		}
@@ -133,10 +141,187 @@ ilmoitusApp.controller('declarationsController', function($scope, $state, $http)
   	}
 });
 
-ilmoitusApp.controller('newDeclarationController', function($scope) {
+ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	$scope.navBtnSelect("newDeclarationBtn");
 	$(".datepicker").datepicker();
+	
+	//Declaration fields
+	$scope.declaration = { lines:[{}] };
+	$scope.selectedattachment = null;
+	$scope.declarationamount = 0;
+	
+	//Declaration type fields
+	$scope.declaration_types = [];
+	$scope.declaration_sub_types = [];
+	
+	var getSubtypeByID = function(row, id){
+		if($scope.declaration_sub_types[row]){
+			for(var i = 0; i < $scope.declaration_sub_types[row].length; i++){
+				if($scope.declaration_sub_types[row][i].id == id){
+					return $scope.declaration_sub_types[row][i];
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	$scope.getSupervisorByID = function(id){
+		if($scope.supervisorList){
+			for(var i = 0; i < $scope.supervisorList.length; i++){
+				if($scope.supervisorList[i].id == id){
+					return $scope.supervisorList[i];
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	//Preload supervisors
+	var request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/supervisors/",
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+	request.done(function(data){
+		$scope.supervisorList = data;
+		if(data.length > 0){
+			$scope.declaration.assigned_to = data[0].id;
+		}
+		$scope.$apply();
+	});
+	
+	//Preload declaration types
+	var request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/declarationtypes",
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+	request.done(function(data){
+		$scope.declaration_types = data;
+		$scope.declaration_types.unshift({ id:0, name:"<selecteer>" });
+		$scope.declaration.lines[0].declaration_type = $scope.declaration_types[0].id;
+		$scope.$apply();
+	});
+	
+	
+	$scope.postDeclaration = function() {
+		var declaration = $scope.declaration;
+		for(var i = 0; i < declaration.lines.length; i++){
+			if(!declaration.lines[i].declaration_sub_type || declaration.lines[i].declaration_sub_type <= 0){
+				declaration.lines.splice(i, 1);	
+			}
+		}
+		
+		var request = $.ajax({
+			type: "POST",
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/declaration",
+			crossDomain: true,
+			data: JSON.stringify({ 'declaration':declaration }),
+			error: function(jqXHR, textStatus, errorThrown){
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			}
+		});
+		request.done(function(data){
+			//TODO: check succes
+			$state.go('template.declarations');
+		});
+	}
+	
+	//Add new row
+	$scope.addRow = function(){
+		if($scope.declaration.lines[$scope.declaration.lines.length-1].receipt_date){ 
+			$scope.declaration.lines.push({}); 
+		}	
+	}
+	
+	//Remove row
+	$scope.removeRow = function(row){
+		if($scope.declaration.lines[row].receipt_date && $scope.declaration.lines.length > 1){
+			$scope.declaration.lines.splice(row, 1);
+		}else{
+			$scope.declaration.lines[row] = {};
+		}
+			
+		$scope.calcTotal();
+	}
+	
+	//Load sub list when declaration type has been selected
+	$scope.loadSubList = function(row){
+		if($scope.declaration.lines[row].declaration_type == 0){
+			$scope.declaration_sub_types[row] = [{ id:0, name:"<selecteer>" }];
+			$scope.declaration.lines[row].declaration_sub_type = $scope.declaration_sub_types[row][0].id;
+			return;
+		}
+		
+		var request = $.ajax({
+			type: "GET",
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/declarationsubtypes/" + $scope.declaration.lines[row].declaration_type,
+			crossDomain: true,
+			error: function(jqXHR, textStatus, errorThrown){
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			}
+		});
+		request.done(function(data){
+			$scope.declaration_sub_types[row] = data;
+			$scope.declaration_sub_types[row].unshift({ id:0, name:"<selecteer>" });
+			$scope.declaration.lines[row].declaration_sub_type = $scope.declaration_sub_types[row][0].id;
+			$scope.$apply();
+			
+			$scope.checkPrice(row);
+		});
+	}
+	
+	//Check if the price is valid
+	$scope.checkPrice = function(row){
+		var cost = Number($scope.declaration.lines[row].cost);
+		var subtype = getSubtypeByID(row, $scope.declaration.lines[row].declaration_sub_type);
+		var maxcost = subtype != null && subtype.max_cost ? subtype.max_cost : 0;
+
+		$scope.declaration.lines[row].approvecosts = isFinite(cost) && (maxcost <= 0 || cost < maxcost);
+		
+		$scope.calcTotal();
+	}
+	
+	//Calculate total declaration amount each change
+	$scope.calcTotal = function(){
+		$scope.declarationamount = 0;
+		
+		for(var i = 0; i < $scope.declaration.lines.length; i++){
+			if($scope.declaration.lines[i].cost && $scope.declaration.lines[i].cost > 0){
+				$scope.declarationamount += Number($scope.declaration.lines[i].cost);
+			}
+		}	
+	}
+	
+	//Remove attachment
+	$scope.removeAttachment = function(){
+		if($scope.selectedattachment){
+			var index = $scope.declaration.attachments.indexOf($scope.selectedattachment);
+			if(index >= 0){ $scope.declaration.attachments.splice(index, 1); }
+			
+			$scope.selectedattachment = $scope.declaration.attachments.length > 0 ? $scope.declaration.attachments[0] : null;
+		}
+	}
+	
+	//New attachment
+	$scope.addAttachment = function(){
+		
+	}
+	
 });
+
 
 ilmoitusApp.controller('declarationsSubmittedController', function($scope) {
 	$scope.navBtnSelect("sendedDeclarationsBtn");
@@ -161,7 +346,8 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: "/declaration/"+$scope.declarationId,
+		url: baseurl + "/declaration/"+$scope.declarationId,
+		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 		}
@@ -170,13 +356,15 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	request.done(function(data){
 		$scope.comments = data.comment;
 		$scope.$apply();
-
+		console.log(data);
+		
 		//Get supervisor name and id
 		var supervisorKey = data.assigned_to[data.assigned_to.length-1];
 		var request2 = $.ajax({
 			type: "GET",
 			headers: {"Authorization": sessionStorage.token},
-			url: "/persons/"+supervisorKey,
+			url: baseurl + "/persons/"+supervisorKey,
+			crossDomain: true,
 			error: function(jqXHR, textStatus, errorThrown){
 				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 			}

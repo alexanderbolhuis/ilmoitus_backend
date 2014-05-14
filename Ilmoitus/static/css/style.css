@@ -317,3 +317,12 @@ header {
 .DeclarationDelete {
     width: 28px;
 }
+
+.FieldError {
+	background-color:#F88;
+}
+
+
+#DeclarationTable select{
+	width:200px !important;	
+}
