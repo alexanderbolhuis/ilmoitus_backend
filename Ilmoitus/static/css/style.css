@@ -322,6 +322,9 @@ header {
 	background-color:#F88;
 }
 
+#DeclarationTable .td{
+	cursor:pointer;	
+}
 
 #DeclarationTable select{
 	width:200px !important;	

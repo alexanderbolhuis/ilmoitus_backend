@@ -555,9 +555,9 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                 item = {"id": attachment.key.integer_id(), "name": attachment.name}
                 attachment_data.append(item)
 
-            data_dict = result.get_object_as_data_dict()
+            data_dict = result.get_object_as_full_data_dict()
             data_dict["attachments"] = attachment_data
-            data_dict["lines"] = map(lambda declaration_item: declaration_item.get_object_as_data_dict(), declarationline_query_result)
+            data_dict["lines"] = map(lambda declaration_item: declaration_item.get_object_as_full_data_dict(), declarationline_query_result)
 
             if result.created_by == key:
                 response_module.give_response(self, json.dumps(data_dict))

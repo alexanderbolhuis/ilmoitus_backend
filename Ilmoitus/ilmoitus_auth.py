@@ -57,7 +57,7 @@ def authencate(email, password):
         if check_secret(password, query_result.password):
             # User passed the test, generate token and save hashed version to database
             raw_token = gen_salt(16);
-            query_result.token = hash_secret(raw_token);
+            query_result.token = hash_secret(raw_token)
             query_result.put()
 
             #TODO: Figure out how not to do this in unittests

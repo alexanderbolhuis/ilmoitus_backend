@@ -116,30 +116,33 @@ class DataBootsTrapper(webapp2.RequestHandler):
         employee_six.supervisor = supervisor_three.key
         employee_six.put()
 
-        #DECLARATION TYPES & SUBTYPES
-        subtype_one = ilmoitus_model.DeclarationSubType(name="Zakelijke lunch/Diner met relaties")
-        subtype_one.put()
-
-        subtype_two = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfskosten (eventueel incl. maaltijd)")
-        subtype_two.put()
-
-        subtype_three = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie")
-        subtype_three.put()
-
-        subtype_four = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfskosten buitenland")
-        subtype_four.put()
-
-        subtype_five = ilmoitus_model.DeclarationSubType(name="Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", max_cost=15)
-        subtype_five.put()
-
-        subtype_six = ilmoitus_model.DeclarationSubType(name="Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", max_cost=15)
-        subtype_six.put()
-
         type_one = ilmoitus_model.DeclarationType()
         type_one.name = "Maaltijd/Consumpties/Verblijf"
+        type_one.put()
+
+        #DECLARATION TYPES & SUBTYPES
+        subtype_one = ilmoitus_model.DeclarationSubType(name="Zakelijke lunch/Diner met relaties", declarationType=type_one.key)
+        subtype_one.put()
+
+        subtype_two = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfskosten (eventueel incl. maaltijd)", declarationType=type_one.key)
+        subtype_two.put()
+
+        subtype_three = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie", declarationType=type_one.key)
+        subtype_three.put()
+
+        subtype_four = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfskosten buitenland", declarationType=type_one.key)
+        subtype_four.put()
+
+        subtype_five = ilmoitus_model.DeclarationSubType(name="Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", max_cost=15, declarationType=type_one.key)
+        subtype_five.put()
+
+        subtype_six = ilmoitus_model.DeclarationSubType(name="Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", max_cost=15, declarationType=type_one.key)
+        subtype_six.put()
+
         type_one.sub_types = [subtype_one.key, subtype_two.key, subtype_three.key, subtype_four.key, subtype_five.key,
                               subtype_six.key]
         type_one.put()
+
 
         #DECLARATIONS
         #for employee one
