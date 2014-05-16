@@ -203,14 +203,10 @@ class Declaration(ndb.Model):
             return default_value
 
 
-#Need this for cross-reference
-class DeclarationType(ndb.Model):
-    pass
-
 # DeclarationSubType Model class
 class DeclarationSubType(ndb.Model):
     name = ndb.StringProperty()
-    declarationType = ndb.KeyProperty(kind=DeclarationType)
+    declarationType = ndb.KeyProperty(kind="DeclarationType")
     max_cost = ndb.IntegerProperty()  # Optional
 
     all_custom_properties = ['name', 'max_cost', 'declarationType']
@@ -225,7 +221,7 @@ class DeclarationSubType(ndb.Model):
 # DeclarationType Model class
 class DeclarationType(ndb.Model):
     name = ndb.StringProperty()
-    sub_types = ndb.KeyProperty(kind=DeclarationSubType, repeated=True)
+    sub_types = ndb.KeyProperty(kind="DeclarationSubType", repeated=True)
 
     all_custom_properties = ['name', 'sub_types']
 
