@@ -46,7 +46,7 @@ class EmployeeHandlerTest(BaseTestClass):
 
 
 class BaseAuthorizationHandler(BaseTestClass):
-    def setup_server_with_user(self, handler_routes, user_is_logged_in, user_is_admin):
+    def setup_server_with_user(self, handler_routes, user_is_logged_in):
         """
             Helper method to set-up all data needed in these unit tests.
 
@@ -113,40 +113,8 @@ class AuthorizationHandlerTest(BaseAuthorizationHandler):
         try:
             self.assertIsNotNone(response_data["person_id"])
             self.assertIsNotNone(response_data["is_logged_in"])
-            self.assertIsNotNone(response_data["is_application_admin"])
 
             self.assertEqual(response_data["person_id"], random_person.key.integer_id())
-            self.assertEqual(response_data["is_logged_in"], user_is_logged_in)
-            self.assertEqual(response_data["is_application_admin"], False)
-        except KeyError as error:
-            self.fail("Test Failed! Expected the key: " + str(
-                error) + " to be present in the response, but it was not found. Found only: " + str(response_data))
-        except ValueError as error:
-            self.fail("Test Failed! There is an invalid value in the response data. "
-                      "This usually happens with parsing wrong input values.\n"
-                      "The values expected for each key are:\n"
-                      "{\"id\" : integer,\n"
-                      "\"is_logged_in\" : boolean,\n"
-                      "\"is_application_admin\" : boolean}\n"
-                      "______________________\n"
-                      "Full error message:\n"
-                      + str(error))
-
-    def test_get_user_status_positive_not_logged_in_admin_unknown(self):
-        user_is_logged_in = False
-        user_is_admin = '1'  # have to set it to something, but doesn't matter since we won't know for sure
-
-        setup_data = self.setup_server_with_user([('/auth', main_application.AuthorizationStatusHandler)],
-                                                 user_is_logged_in, user_is_admin)
-        path = setup_data["path"]
-        token = setup_data["token"]
-
-        response = self.positive_test_stub_handler(token, path, "get")
-        response_data = json.loads(response.body)
-
-        try:
-            self.assertIsNotNone(response_data["is_logged_in"])
-
             self.assertEqual(response_data["is_logged_in"], user_is_logged_in)
         except KeyError as error:
             self.fail("Test Failed! Expected the key: " + str(
@@ -178,11 +146,9 @@ class AuthorizationHandlerTest(BaseAuthorizationHandler):
         try:
             self.assertIsNotNone(response_data["person_id"])
             self.assertIsNotNone(response_data["is_logged_in"])
-            self.assertIsNotNone(response_data["is_application_admin"])
 
             self.assertEqual(response_data["person_id"], (random_person.key.integer_id()))
             self.assertEqual(response_data["is_logged_in"], user_is_logged_in)
-            #self.assertEqual(response_data["is_application_admin"], True)
         except KeyError as error:
             self.fail("Test Failed! Expected the key: " + str(
                 error) + " to be present in the response, but it was not found. Found only: " + str(response_data))

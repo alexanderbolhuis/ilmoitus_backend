@@ -1,6 +1,8 @@
 __author__ = 'Robin'
 
 from error_response_module import give_error_response
+from ilmoitus_model import *
+from response_module import *
 import ilmoitus_model
 import response_module
 import hashlib
@@ -37,7 +39,7 @@ def get_current_person(request_handler):
                 return auth_error(request_handler)
 
             # Query user
-            query_result = ilmoitus_model.Person.get_by_id(auth_id)
+            query_result = Person.get_by_id(auth_id)
 
             if query_result is not None:
                 if query_result.token is not None and check_secret(auth_token, query_result.token):
@@ -102,3 +104,27 @@ def gen_salt(size, letters=string.letters + string.digits):
         chars.append(random.choice(letters))
 
     return "".join(chars)
+
+
+class AuthorizationStatusHandler(BaseRequestHandler):
+    def get(self):
+        result = get_current_person(self)
+
+        if result["user_is_logged_in"]:
+            give_response(self, json.dumps({"person_id": result["person_value"].key.integer_id(), "is_logged_in": True}))
+
+
+class LoginHandler(BaseRequestHandler):
+    def post(self):
+        result = auth(self.request.POST["email"], self.request.POST["password"])
+
+        if result["passed"]:
+            person = result["person_value"]
+            give_response(self, json.dumps({"person_id": person.key.integer_id(), "is_logged_in": True, "token": result["token"]}))
+        else:
+            give_response(self, json.dumps({"is_logged_in": False}))
+
+
+class LogoutHandler(BaseRequestHandler):
+    def get(self):
+        pass
