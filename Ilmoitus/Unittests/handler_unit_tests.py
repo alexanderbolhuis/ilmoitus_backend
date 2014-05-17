@@ -82,7 +82,7 @@ class BaseAuthorizationHandler(BaseTestClass):
                 random_person = person
                 #Now, initialize the person as a user and generate token
                 if user_is_logged_in:
-                    result = ilmoitus_auth.authencate(random_person.email, "123456")
+                    result = ilmoitus_auth.auth(random_person.email, "123456")
                     token = result["token"]
 
             elif i == random_person_index2:

@@ -2,72 +2,18 @@ __author__ = 'Sjors van Lemmen'
 import webapp2 as webapp
 import response_module
 import ilmoitus_model
+from ilmoitus_model import *
 import json
 import datetime
 import dateutil.parser
 import data_bootstrapper
-import logging
+from response_module import BaseRequestHandler
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from error_response_module import give_error_response
 import mail_module
 import ilmoitus_auth
 import base64
-
-
-class BaseRequestHandler(webapp.RequestHandler):
-    """
-    Wrapper class that will allow all other handler classes to make easily read what the
-    limit and/or offset is for a request
-    """
-    def options(self, optionalkey=None):
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-        self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE'
-
-    def get_header(self, key):
-        header = self.request.get(key, default_value=None)
-        return header
-
-    def get_header_limit(self):
-        limit = self.request.get("limit", default_value=20)
-        return limit
-
-    def get_header_offset(self):
-        offset = self.request.get("offset", default_value=0)
-        return offset
-
-    def handle_exception(self, exception, debug):
-        """
-        Overrides function in webapp.RequestHandler.
-
-        This function will catch any HTTP exceptions that can be raised by a .abort() function call within
-        a handler that inherits from the BaseRequestHandler class. When this happens, this function will
-        log the request and if the application is in debug mode, also the exception (basically the complete
-        stack trace).
-
-        Lastly, this function will write the full body of the request and set the status of the response
-        to the code of the exception. It's important to note that the body of the request is used as a
-        response, since it's through this property that any data will be sent back to the user (such as
-        a message indicating what went wrong, status and error codes, etc.). This is also the only real
-        custom functionality that this function provides (the rest is default, but a call to the base method
-        could cause problems in some cases).
-
-        :param exception: The exception that was raised by this handler or any handler that inherits from this handler.
-
-        :param debug: Boolean indicating whether the application is in debug mode or not. Will be automatically
-            detected.
-        """
-        logging.debug(self.request)
-        if debug:
-            logging.exception(exception)
-
-        self.response.write(self.request.body)
-        try:
-            self.response.set_status(exception.code)
-        except AttributeError:
-            #The caught exception was not a HTTPException; we don't know how to handle this so just raise it again
-            raise exception
 
 
 class DefaultHandler(BaseRequestHandler):
@@ -120,96 +66,53 @@ class SpecificEmployeeHandler(BaseRequestHandler):
 
 class AuthorizationStatusHandler(BaseRequestHandler):
     def get(self):
-        """
-         Note on this function: we don't need to check if the user is logged in. If he is not logged in _OR_
-         he doesn't exist in the model, we return the same dictionary. This means that if we were to check on login
-         is True, we still have to check if person value is not None. by directly checking person is not None, we
-         get the same result with less code.
-        """
         result = ilmoitus_auth.get_current_person(self)
 
         if result["user_is_logged_in"]:
-            person = result["person_value"]
-
-            #Create a default data dictionary to limit code duplication
-            response_data = {"person_id": person.key.integer_id(), "is_logged_in": True,
-                             "is_application_admin": users.is_current_user_admin() }
-            response_module.give_response(self, json.dumps(response_data))
-        else:
-            #Person is not known in the application's model
-            response_module.give_response(self, json.dumps({"is_logged_in": False}))
+            response_module.give_response(self, json.dumps({"person_id": result["person_value"].key.integer_id(),
+                                                            "is_logged_in": True}))
 
 
 class LoginHandler(BaseRequestHandler):
     def post(self):
-        result = ilmoitus_auth.authencate(self.request.POST["email"], self.request.POST["password"])
+        result = ilmoitus_auth.auth(self.request.POST["email"], self.request.POST["password"])
 
         if result["passed"]:
             person = result["person_value"]
-
-            response_data = {"person_id": person.key.integer_id(), "is_logged_in": True,
-                             "is_application_admin": users.is_current_user_admin(), "token":result["token"] }
-            response_module.give_response(self, json.dumps(response_data))
+            response_module.give_response(self, json.dumps({"person_id": person.key.integer_id(),
+                                                            "is_logged_in": True,
+                                                            "is_application_admin": users.is_current_user_admin(),
+                                                            "token": result["token"]}))
         else:
             response_module.give_response(self, json.dumps({"is_logged_in": False}))
 
 
 class AllDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
-        #model.Employee as param since this handler handles calls from their POV.
-        person_data = ilmoitus_auth.get_current_person(self, "employee")
-        person = person_data["person_value"]
-
-        if person is not None:
-            declaration_query = ilmoitus_model.Declaration.query(ilmoitus_model.Declaration.created_by == person.key)
-
-            query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
-
-            response_module.respond_with_existing_model_object_collection(self, query_result)
-        else:
-            give_error_response(self, 401, "De declaraties kunnen niet opgehaald worden omdat u niet de juiste"
-                                           " permissies heeft.", "current_user is None")
+        if self.is_logged_in():
+            query = Declaration.query(Declaration.created_by == self.logged_in_person().key)
+            response_module.respond_with_object_collection_with_query(self, query)
 
 
 class SpecificEmployeeDetailsHandler(BaseRequestHandler):
     def get(self, employee_id):
-        response_module.respond_with_object_details_by_id(self,
-                                                          ilmoitus_model.Person,
-                                                          employee_id)
+        if self.is_logged_in():
+            #TODO check if user is allowed to see this data (discussion needed)
+            response_module.respond_with_object_details_by_id(self, Person, employee_id)
 
 
 class AllDeclarationsForSupervisor(BaseRequestHandler):
     def get(self):
-        person_data = ilmoitus_auth.get_current_person(self, "supervisor")
-        person = person_data["person_value"]
-
-        if person is not None and person.class_name == 'supervisor':
-
-            declaration_query = ilmoitus_model.Declaration.query(
-                ilmoitus_model.Declaration.class_name == 'open_declaration',
-                ilmoitus_model.Declaration.assigned_to == person.key)
-            query_result = declaration_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
-
-            response_module.respond_with_existing_model_object_collection(self, query_result)
-        else:
-            give_error_response(self, 401, "De declaraties voor leidinggevenden kunnen niet opgehaald worden omdat u"
-                                           " niet de juiste permissies heeft.", "current_user is None or not a supervisor")
+        if self.is_logged_in():
+            declaration_query = Declaration.query(Declaration.class_name == 'open_declaration',
+                                                  Declaration.assigned_to == self.logged_in_person().key)
+            response_module.respond_with_object_collection_with_query(self, declaration_query)
 
 
 class CurrentUserDetailsHandler(BaseRequestHandler):
     def get(self):
-        current_user_data = ilmoitus_auth.get_current_person(self)
-        user_is_logged_in = current_user_data["user_is_logged_in"]
-        if user_is_logged_in is True:
-            current_user = current_user_data["person_value"]
-            if current_user is not None:
-                response_module.give_response(self, current_user.get_object_json_data())
-            else:
-                give_error_response(self, 404, "De ingelogde gebruiker is niet in het systeem gevonden!",
-                                    "current_user is None")
-        else:
-            give_error_response(self, 401, "De huidige user details kunnen niet opgehaald worden omdat u daar niet de "
-                                           "juiste permissies voor heeft.", "user_is_logged_in is False")
+        if self.is_logged_in():
+            response_module.give_response(self, self.logged_in_person().get_object_json_data())
 
 
 class UserSettingsHandler(BaseRequestHandler):
@@ -231,7 +134,7 @@ class UserSettingsHandler(BaseRequestHandler):
 class SetLockedToSupervisorApprovedDeclarationHandler(BaseRequestHandler):
     def put(self):
         #Only supervisors can perform the actions in this handler: check for that first
-        current_person_data = ilmoitus_auth.get_current_person(self, "supervisor")
+        current_person_data = ilmoitus_auth.get_current_person(self)
         if "user_is_logged_in" not in current_person_data.keys() or \
                 not current_person_data["user_is_logged_in"]:  # if logged in is false
             give_error_response(self, 401, "Kan de declaratie niet goedkeuren. U bent niet ingelogd.",
@@ -320,7 +223,7 @@ class CurrentUserSupervisors(BaseRequestHandler):
 
 class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
     def get(self):
-        person_data = ilmoitus_auth.get_current_person(self, "human_resources")
+        person_data = ilmoitus_auth.get_current_person(self)
         person = person_data["person_value"]
         if person is not None:
             if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
@@ -368,7 +271,7 @@ class CurrentUserAssociatedDeclarations(BaseRequestHandler):
 class AddNewDeclarationHandler(BaseRequestHandler):
     def post(self):
         # Check if logged in
-        current_person_data = ilmoitus_auth.get_current_person(self, "employee")
+        current_person_data = ilmoitus_auth.get_current_person(self)
         if "user_is_logged_in" not in current_person_data.keys() or \
                 not current_person_data["user_is_logged_in"]:
             give_error_response(self, 401,
@@ -738,7 +641,7 @@ class SpecificAttachmentHandler(BaseRequestHandler):
 
 class ApproveByHumanResources(BaseRequestHandler):
     def put(self):
-        person_data = ilmoitus_auth.get_current_person(self, "human_resources")
+        person_data = ilmoitus_auth.get_current_person(self)
         current_user = person_data["person_value"]
 
         if current_user is not None:
@@ -780,7 +683,7 @@ class ApproveByHumanResources(BaseRequestHandler):
 
 class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
     def put(self):
-        person_data = ilmoitus_auth.get_current_person(self, "human_resources")
+        person_data = ilmoitus_auth.get_current_person(self)
         person = person_data["person_value"]
         if person is not None:
             if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
@@ -825,7 +728,7 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandler(BaseRequestHandler):
 
 class SetOpenToLockedDeclaration(BaseRequestHandler):
     def put(self):
-        person_data = ilmoitus_auth.get_current_person(self, "supervisor")
+        person_data = ilmoitus_auth.get_current_person(self)
         current_user = person_data["person_value"]
 
         if current_user is not None:
@@ -863,7 +766,7 @@ class SetOpenToLockedDeclaration(BaseRequestHandler):
 class SpecificEmployeeTotalDeclarationsHandler(BaseRequestHandler):
     def get(self, employee_id):
         # Only supervisors can perform the actions in this handler: check for that first
-        current_person_data = ilmoitus_auth.get_current_person(self, "Supervisor")
+        current_person_data = ilmoitus_auth.get_current_person(self)
         if "user_is_logged_in" not in current_person_data.keys() or \
                 not current_person_data["user_is_logged_in"]:  # if logged in is false
             give_error_response(self, 401,
@@ -910,17 +813,17 @@ application = webapp.WSGIApplication(
         ('/declaration/approve_by_hr', ApproveByHumanResources),
         ('/persons', AllPersonsHandler),
         ('/persons/(.*)', SpecificPersonHandler),
-        ('/user/settings/', UserSettingsHandler),
+        ('/user/settings', UserSettingsHandler),
         ('/employees', AllEmployeesHandler),
         ('/employees/details/(.*)', SpecificEmployeeDetailsHandler),
         ('/employees/total_declarations/(.*)', SpecificEmployeeTotalDeclarationsHandler),
         ('/employees/(.*)', SpecificEmployeeHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
         ('/declaration/declined_by_hr', SupervisorDeclarationToHrDeclinedDeclarationHandler),
-        ('/supervisors/', CurrentUserSupervisors),
+        ('/supervisors', CurrentUserSupervisors),
         ('/declarationtypes', AllDeclarationTypesHandler),
         ('/declarationsubtypes/(.*)', AllDeclarationTypeSubTypeHandler),
-        ('/declarationsubtypes/', AllDeclarationSubTypesHandler),
+        ('/declarationsubtypes', AllDeclarationSubTypesHandler),
         ('/declarations/employee', AllDeclarationsForEmployeeHandler),
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarations),
         ('/current_user/details', CurrentUserDetailsHandler),
