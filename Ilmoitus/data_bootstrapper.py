@@ -158,45 +158,51 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #Declaration lines for declaration one
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.declaration = declaration_one.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 28
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_one.lines.append(line_one.key)
+        declaration_one.put()
 
         line_two = ilmoitus_model.DeclarationLine()
-        line_two.declaration = declaration_one.key
         line_two.receipt_date = datetime.datetime.now() - datetime.timedelta(days=6)
         line_two.cost = 14
         line_two.declaration_sub_type = subtype_one.key
         line_two.put()
+        declaration_one.lines.append(line_two.key)
+        declaration_one.put()
 
         line_three = ilmoitus_model.DeclarationLine()
-        line_three.declaration = declaration_one.key
         line_three.receipt_date = datetime.datetime.now() - datetime.timedelta(days=6)
         line_three.cost = 8
         line_three.declaration_sub_type = subtype_six.key
         line_three.put()
+        declaration_one.lines.append(line_three.key)
+        declaration_one.put()
 
         line_four = ilmoitus_model.DeclarationLine()
-        line_four.declaration = declaration_one.key
         line_four.receipt_date = datetime.datetime.now() - datetime.timedelta(days=2)
         line_four.cost = 876
         line_four.declaration_sub_type = subtype_four.key
         line_four.put()
+        declaration_one.lines.append(line_four.key)
+        declaration_one.put()
 
         #declaration attachments for declaration one
         attachment_one = ilmoitus_model.Attachment()
-        attachment_one.declaration = declaration_one.key
         attachment_one.name = "jpg-file"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
+        declaration_one.attachments.append(attachment_one.key)
+        declaration_one.put()
 
         attachment_two = ilmoitus_model.Attachment()
-        attachment_two.declaration = declaration_one.key
         attachment_two.name = "pdf-file"
         attachment_two.file = attachment_pdf_base64
         attachment_two.put()
+        declaration_one.attachments.append(attachment_two.key)
+        declaration_one.put()
 
         declaration_two = ilmoitus_model.Declaration()
         declaration_two.class_name = "open_declaration"
@@ -210,37 +216,42 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #Declaration lines for declaration two
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.declaration = declaration_two.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 25
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_two.lines.append(line_one.key)
+        declaration_two.put()
 
         line_two = ilmoitus_model.DeclarationLine()
-        line_two.declaration = declaration_two.key
         line_two.receipt_date = datetime.datetime.now() - datetime.timedelta(days=6)
         line_two.cost = 30
         line_two.declaration_sub_type = subtype_six.key
         line_two.put()
+        declaration_two.lines.append(line_two.key)
+        declaration_two.put()
 
         #declaration attachments for declaration two
         attachment_one = ilmoitus_model.Attachment()
-        attachment_one.declaration = declaration_two.key
         attachment_one.name = "bon.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
+        declaration_two.attachments.append(attachment_one.key)
+        declaration_two.put()
 
         attachment_two = ilmoitus_model.Attachment()
-        attachment_two.declaration = declaration_two.key
         attachment_two.name = "declareer.pdf"
         attachment_two.file = attachment_pdf_base64
         attachment_two.put()
+        declaration_two.attachments.append(attachment_two.key)
+        declaration_two.put()
 
         attachment_three = ilmoitus_model.Attachment()
-        attachment_three.declaration = declaration_two.key
         attachment_three.name = "kosten.jpg"
         attachment_three.file = attachment_image_base64
         attachment_three.put()
+        declaration_two.attachments.append(attachment_three.key)
+        declaration_two.put()
 
         declaration_three = ilmoitus_model.Declaration()
         declaration_three.class_name = "locked_declaration"
@@ -256,25 +267,28 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #Declaration lines for declaration three
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.declaration = declaration_three.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 30
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_three.lines.append(line_one.key)
+        declaration_three.put()
 
         line_two = ilmoitus_model.DeclarationLine()
-        line_two.declaration = declaration_three.key
         line_two.receipt_date = datetime.datetime.now() - datetime.timedelta(days=6)
         line_two.cost = 10
         line_two.declaration_sub_type = subtype_six.key
         line_two.put()
+        declaration_three.lines.append(line_two.key)
+        declaration_three.put()
 
         line_three = ilmoitus_model.DeclarationLine()
-        line_three.declaration = declaration_three.key
         line_three.receipt_date = datetime.datetime.now() - datetime.timedelta(days=2)
         line_three.cost = 20
         line_three.declaration_sub_type = subtype_four.key
         line_three.put()
+        declaration_three.lines.append(line_three.key)
+        declaration_three.put()
 
         #declaration attachments for declaration three
         attachment_one = ilmoitus_model.Attachment()
@@ -282,18 +296,22 @@ class DataBootsTrapper(webapp2.RequestHandler):
         attachment_one.name = "bon.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
+        declaration_three.attachments.append(attachment_one.key)
+        declaration_three.put()
 
         attachment_two = ilmoitus_model.Attachment()
-        attachment_two.declaration = declaration_three.key
         attachment_two.name = "declareer.pdf"
         attachment_two.file = attachment_pdf_base64
         attachment_two.put()
+        declaration_three.attachments.append(attachment_two.key)
+        declaration_three.put()
 
         attachment_three = ilmoitus_model.Attachment()
-        attachment_three.declaration = declaration_three.key
         attachment_three.name = "kosten.jpg"
         attachment_three.file = attachment_image_base64
         attachment_three.put()
+        declaration_three.attachments.append(attachment_three.key)
+        declaration_three.put()
 
         declaration_six = ilmoitus_model.Declaration()
         declaration_six.class_name = "locked_declaration"
@@ -309,11 +327,12 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #Declaration lines for declaration six
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.declaration = declaration_six.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 89
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_six.lines.append(line_one.key)
+        declaration_six.put()
 
         #no attachments for declaration six
 
@@ -336,31 +355,35 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #Declaration lines for declaration seven
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.declaration = declaration_seven.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 35
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_seven.lines.append(line_one.key)
+        declaration_seven.put()
 
         line_two = ilmoitus_model.DeclarationLine()
-        line_two.declaration = declaration_seven.key
         line_two.receipt_date = datetime.datetime.now() - datetime.timedelta(days=6)
         line_two.cost = 50
         line_two.declaration_sub_type = subtype_six.key
         line_two.put()
+        declaration_seven.lines.append(line_two.key)
+        declaration_seven.put()
 
         #declaration attachments for declaration seven
         attachment_one = ilmoitus_model.Attachment()
-        attachment_one.declaration = declaration_seven.key
         attachment_one.name = "bon.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
+        declaration_seven.attachments.append(attachment_one.key)
+        declaration_seven.put()
 
         attachment_two = ilmoitus_model.Attachment()
-        attachment_two.declaration = declaration_seven.key
         attachment_two.name = "declareer.pdf"
         attachment_two.file = attachment_pdf_base64
         attachment_two.put()
+        declaration_seven.attachments.append(attachment_two.key)
+        declaration_seven.put()
 
         declaration_eight = ilmoitus_model.Declaration()
         declaration_eight.class_name = "supervisor_approved_declaration"
@@ -381,31 +404,35 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #Declaration lines for declaration eight
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.declaration = declaration_eight.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 15
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_eight.lines.append(line_one.key)
+        declaration_eight.put()
 
         line_two = ilmoitus_model.DeclarationLine()
-        line_two.declaration = declaration_eight.key
         line_two.receipt_date = datetime.datetime.now() - datetime.timedelta(days=6)
         line_two.cost = 5
         line_two.declaration_sub_type = subtype_six.key
         line_two.put()
+        declaration_eight.lines.append(line_two.key)
+        declaration_eight.put()
 
         #declaration attachments for declaration eight
         attachment_one = ilmoitus_model.Attachment()
-        attachment_one.declaration = declaration_eight.key
         attachment_one.name = "bon.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
+        declaration_eight.attachments.append(attachment_one.key)
+        declaration_eight.put()
 
         attachment_two = ilmoitus_model.Attachment()
-        attachment_two.declaration = declaration_eight.key
         attachment_two.name = "kosten.jpg"
         attachment_two.file = attachment_image_base64
         attachment_two.put()
+        declaration_eight.attachments.append(attachment_two.key)
+        declaration_eight.put()
 
         declaration_nine = ilmoitus_model.Declaration()
         declaration_nine.class_name = "human_resources_approved_declaration"
@@ -427,18 +454,20 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #Declaration lines for declaration nine
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.declaration = declaration_nine.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 87
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_nine.lines.append(line_one.key)
+        declaration_nine.put()
 
         #declaration attachments for declaration nine
         attachment_one = ilmoitus_model.Attachment()
-        attachment_one.declaration = declaration_nine.key
         attachment_one.name = "declareer.pdf"
         attachment_one.file = attachment_pdf_base64
         attachment_one.put()
+        declaration_nine.attachments.append(attachment_one.key)
+        declaration_nine.put()
 
         declaration_ten = ilmoitus_model.Declaration()
         declaration_ten.class_name = "human_resources_approved_declaration"
@@ -460,31 +489,35 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #Declaration lines for declaration ten
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.declaration = declaration_ten.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 55
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_ten.lines.append(line_one.key)
+        declaration_ten.put()
 
         line_two = ilmoitus_model.DeclarationLine()
-        line_two.declaration = declaration_ten.key
         line_two.receipt_date = datetime.datetime.now() - datetime.timedelta(days=6)
         line_two.cost = 85
         line_two.declaration_sub_type = subtype_six.key
         line_two.put()
+        declaration_ten.lines.append(line_two.key)
+        declaration_ten.put()
 
         #declaration attachments for declaration ten
         attachment_one = ilmoitus_model.Attachment()
-        attachment_one.declaration = declaration_ten.key
         attachment_one.name = "declareer.pdf"
         attachment_one.file = attachment_pdf_base64
         attachment_one.put()
+        declaration_ten.attachments.append(attachment_one.key)
+        declaration_ten.put()
 
         attachment_two = ilmoitus_model.Attachment()
-        attachment_two.declaration = declaration_ten.key
         attachment_two.name = "kosten.jpg"
         attachment_two.file = attachment_image_base64
         attachment_two.put()
+        declaration_ten.attachments.append(attachment_two.key)
+        declaration_ten.put()
 
         declaration_eleven = ilmoitus_model.Declaration()
         declaration_eleven.class_name = "human_resources_declined_declaration"
@@ -512,6 +545,8 @@ class DataBootsTrapper(webapp2.RequestHandler):
         line_one.cost = 55
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_eleven.lines.append(line_one.key)
+        declaration_eleven.put()
 
         line_two = ilmoitus_model.DeclarationLine()
         line_two.declaration = declaration_eleven.key
@@ -519,19 +554,23 @@ class DataBootsTrapper(webapp2.RequestHandler):
         line_two.cost = 85
         line_two.declaration_sub_type = subtype_six.key
         line_two.put()
+        declaration_eleven.lines.append(line_two.key)
+        declaration_eleven.put()
 
         #declaration attachments for declaration eleven
         attachment_one = ilmoitus_model.Attachment()
-        attachment_one.declaration = declaration_eleven.key
         attachment_one.name = "bon.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
+        declaration_eleven.attachments.append(attachment_one.key)
+        declaration_eleven.put()
 
         attachment_two = ilmoitus_model.Attachment()
-        attachment_two.declaration = declaration_eleven.key
         attachment_two.name = "declareer.pdf"
         attachment_two.file = attachment_pdf_base64
         attachment_two.put()
+        declaration_eleven.attachments.append(attachment_two.key)
+        declaration_eleven.put()
 
         declaration_twelve = ilmoitus_model.Declaration()
         declaration_twelve.class_name = "supervisor_declined_declaration"
@@ -549,25 +588,28 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #Declaration lines for declaration twelve
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.declaration = declaration_twelve.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 27
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_twelve.lines.append(line_one.key)
+        declaration_twelve.put()
 
         line_two = ilmoitus_model.DeclarationLine()
-        line_two.declaration = declaration_twelve.key
         line_two.receipt_date = datetime.datetime.now() - datetime.timedelta(days=6)
         line_two.cost = 20
         line_two.declaration_sub_type = subtype_six.key
         line_two.put()
+        declaration_twelve.lines.append(line_two.key)
+        declaration_twelve.put()
 
         #declaration attachments for declaration twelve
         attachment_one = ilmoitus_model.Attachment()
-        attachment_one.declaration = declaration_twelve.key
         attachment_one.name = "declareer.pdf"
         attachment_one.file = attachment_pdf_base64
         attachment_one.put()
+        declaration_twelve.attachments.append(attachment_one.key)
+        declaration_twelve.put()
 
         declaration_thirteen = ilmoitus_model.Declaration()
         declaration_thirteen.class_name = "human_resources_approved_declaration"
@@ -589,18 +631,20 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #Declaration lines for declaration thirteen
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.declaration = declaration_thirteen.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 45
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_thirteen.lines.append(line_one.key)
+        declaration_thirteen.put()
 
         #declaration attachments for declaration thirteen
         attachment_one = ilmoitus_model.Attachment()
-        attachment_one.declaration = declaration_thirteen.key
         attachment_one.name = "bon.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
+        declaration_thirteen.attachments.append(attachment_one.key)
+        declaration_thirteen.put()
 
         #for employee two
         declaration_four = ilmoitus_model.Declaration()
@@ -614,31 +658,35 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #Declaration lines for declaration four
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.declaration = declaration_four.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 110
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_four.lines.append(line_one.key)
+        declaration_four.put()
 
         line_two = ilmoitus_model.DeclarationLine()
-        line_two.declaration = declaration_four.key
         line_two.receipt_date = datetime.datetime.now() - datetime.timedelta(days=6)
         line_two.cost = 45
         line_two.declaration_sub_type = subtype_six.key
         line_two.put()
+        declaration_four.lines.append(line_two.key)
+        declaration_four.put()
 
         #declaration attachments for declaration four
         attachment_one = ilmoitus_model.Attachment()
-        attachment_one.declaration = declaration_four.key
         attachment_one.name = "bon.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
+        declaration_four.attachments.append(attachment_one.key)
+        declaration_four.put()
 
         attachment_two = ilmoitus_model.Attachment()
-        attachment_two.declaration = declaration_four.key
         attachment_two.name = "declareer.pdf"
         attachment_two.file = attachment_pdf_base64
         attachment_two.put()
+        declaration_four.attachments.append(attachment_two.key)
+        declaration_four.put()
 
         #for employee three
         declaration_five = ilmoitus_model.Declaration()
@@ -654,18 +702,20 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #Declaration lines for declaration five
         line_one = ilmoitus_model.DeclarationLine()
-        line_one.declaration = declaration_five.key
         line_one.receipt_date = datetime.datetime.now() - datetime.timedelta(days=7)
         line_one.cost = 25
         line_one.declaration_sub_type = subtype_one.key
         line_one.put()
+        declaration_five.lines.append(line_one.key)
+        declaration_five.put()
 
         #declaration attachments for declaration five
         attachment_one = ilmoitus_model.Attachment()
-        attachment_one.declaration = declaration_five.key
         attachment_one.name = "kosten.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
+        declaration_five.attachments.append(attachment_one.key)
+        declaration_five.put()
 
 
 class ClearHandler(webapp2.RequestHandler):
