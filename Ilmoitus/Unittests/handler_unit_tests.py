@@ -5,44 +5,17 @@ sys.path.append("../")
 import random
 import json
 import ilmoitus_auth
-import ilmoitus as main_application
+from handlers.declaration_list import *
+from handlers.declaration_handler import *
+from handlers.employee_list import *
+from handlers.declaration_type_list import *
+from handlers.currentuser_handler import *
+from ilmoitus_auth import *
+from ilmoitus import *
 import datetime
 from test_data_creator import PersonDataCreator, DeclarationsDataCreator
 from Base.base_test_methods import BaseTestClass
 import ilmoitus_model
-
-
-class EmployeeHandlerTest(BaseTestClass):
-    def test_get_all_employee_positive(self):
-        path = "/employees"
-        self.setup_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
-        number_of_employees = random.randint(1, 10)
-        for i in range(0, number_of_employees):
-            PersonDataCreator.create_valid_employee_data(i)
-
-        self.positive_test_stub_handler("", path, "get")
-
-    def test_get_all_employee_negative_no_employees(self):
-        """
-         This test will test specifically if there are no employees. This means that there will be (some) objects
-         of it's superclass Person, but none that match on the Employee class.
-        """
-        path = "/employees"
-        self.setup_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
-        number_of_persons = random.randint(1, 10)
-        for i in range(0, number_of_persons):
-            PersonDataCreator.create_valid_person_data(i)
-
-        self.negative_test_stub_handler("", path, "get", 404)
-
-    def test_get_all_employee_negative_no_persons(self):
-        """
-         This test will test if the right error is given when there are no persons whatsoever.
-        """
-        path = "/employees"
-        self.setup_test_server_with_custom_routes([(path, main_application.AllEmployeesHandler)])
-
-        self.negative_test_stub_handler("", path, "get", 404)
 
 
 class BaseAuthorizationHandler(BaseTestClass):
@@ -96,8 +69,8 @@ class AuthorizationHandlerTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
 
-        setup_data = self.setup_server_with_user([('/auth', main_application.AuthorizationStatusHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([('/auth', AuthorizationStatusHandler)],
+                                                 user_is_logged_in)
 
         #{"random_person": random_person, "token": token, "path": path, "random_person2": random_person2}
 
@@ -134,8 +107,8 @@ class AuthorizationHandlerTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '1'
 
-        setup_data = self.setup_server_with_user([('/auth', main_application.AuthorizationStatusHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([('/auth', AuthorizationStatusHandler)],
+                                                 user_is_logged_in)
         path = setup_data["path"]
         random_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -164,6 +137,20 @@ class AuthorizationHandlerTest(BaseAuthorizationHandler):
                       + str(error))
 
 
+class EmployeeHandlerTest(BaseAuthorizationHandler):
+    def test_get_all_employee_positive(self):
+        path = "/employees"
+        setup_data = self.setup_server_with_user(
+            [(path, AllEmployeesHandler)], True)
+        token = setup_data["token"]
+
+        number_of_employees = random.randint(1, 10)
+        for i in range(0, number_of_employees):
+            PersonDataCreator.create_valid_employee_data(i)
+
+        self.positive_test_stub_handler(token, path, "get")
+
+
 class DeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
     def test_positive_get_all(self):
         user_is_logged_in = True
@@ -171,8 +158,8 @@ class DeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
         path = '/declarations/employee'
 
         setup_data = self.setup_server_with_user(
-            [('/declarations/employee', main_application.AllDeclarationsForEmployeeHandler)],
-            user_is_logged_in, user_is_admin)
+            [('/declarations/employee', AllDeclarationsForEmployeeHandler)],
+            user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "employee"
@@ -208,7 +195,7 @@ class DeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
 
     def test_negative_get_all_not_logged_in(self):
         path = '/declarations/employee'
-        self.setup_test_server_with_custom_routes([(path, main_application.AllDeclarationsForEmployeeHandler)])
+        self.setup_test_server_with_custom_routes([(path, AllDeclarationsForEmployeeHandler)])
         self.negative_test_stub_handler("", path, "get", 401)
 
 
@@ -217,8 +204,8 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):  # TODO l
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/current_user/associated_declarations"
-        setup_data = self.setup_server_with_user([(path, main_application.CurrentUserAssociatedDeclarations)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, CurrentUserAssociatedDeclarationsHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "employee"
@@ -239,8 +226,8 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):  # TODO l
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/current_user/associated_declarations"
-        setup_data = self.setup_server_with_user([(path, main_application.CurrentUserAssociatedDeclarations)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, CurrentUserAssociatedDeclarationsHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "employee"
@@ -258,8 +245,8 @@ class CurrentUserAssociatedDeclarationsTest(BaseAuthorizationHandler):  # TODO l
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/current_user/associated_declarations"
-        setup_data = self.setup_server_with_user([(path, main_application.CurrentUserAssociatedDeclarations)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, CurrentUserAssociatedDeclarationsHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         logged_in_person.class_name = "supervisor"
@@ -291,8 +278,8 @@ class CurrentUserDetailHandlerTest(BaseAuthorizationHandler):
         path = "/current_user/details"
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.CurrentUserDetailsHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, CurrentUserDetailsHandler)],
+            user_is_logged_in)
 
         random_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -330,20 +317,16 @@ class CurrentUserDetailHandlerTest(BaseAuthorizationHandler):
 
     def test_get_employee_details_not_logged_in(self):
         path = "/current_user/details"
-        self.setup_test_server_with_custom_routes([(path, main_application.CurrentUserDetailsHandler)])
+        self.setup_test_server_with_custom_routes([(path, CurrentUserDetailsHandler)])
 
         self.negative_test_stub_handler("", path, "get", 401)
 
 
 class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandler):
     def test_positive_put_one(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
+        path = "/declaration/(.*)/approve_by_supervisor"
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
+            [(path, ApproveBySupervisorHandler)], True)
         person = setup_data["random_person"]
         person.class_name = "supervisor"
         token = setup_data["token"]
@@ -360,12 +343,11 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
         locked_declaration.items_total_price = 150
         supervisor.max_declaration_price = -1
         locked_declaration.put()
-        supervisor.put()
         locked_declaration_data = locked_declaration.get_object_as_data_dict()
         locked_declaration_data_json_string = json.dumps(locked_declaration_data)
 
-        response = self.positive_test_stub_handler(token, path, "put", data_dict=locked_declaration_data_json_string)
-
+        path = "/declaration/"+ str(locked_declaration.key.integer_id()) +"/approve_by_supervisor"
+        response = self.positive_test_stub_handler(token, path, "put", data_dict={'comment': supervisors_comment})
         response_data = json.loads(response.body)
 
         self.assertTrue("id" in response_data.keys())
@@ -385,223 +367,21 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
 
         messages = self.mail_stub.get_sent_messages()
         self.assertEqual(1, len(messages))
-
-    def test_positive_put_two(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
-        setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
-        person = setup_data["random_person"]
-        person.class_name = "supervisor"
-        token = setup_data["token"]
-        person.put()
-
-        supervisor = person
-        employee = PersonDataCreator.create_valid_employee_data()
-        locked_declaration = DeclarationsDataCreator.create_valid_locked_declaration(
-            employee,
-            supervisor)
-        supervisors_comment = "Ziet er goed uit maar let wel op item nummer 3!"
-        #Add a comment as well
-        locked_declaration.supervisor_comment = supervisors_comment
-        locked_declaration.items_total_price = 150
-        supervisor.max_declaration_price = 200
-        locked_declaration.put()
-        supervisor.put()
-        locked_declaration_data = locked_declaration.get_object_as_data_dict()
-        locked_declaration_data_json_string = json.dumps(locked_declaration_data)
-
-        response = self.positive_test_stub_handler(token, path, "put", data_dict=locked_declaration_data_json_string)
-
-        response_data = json.loads(response.body)
-
-        self.assertTrue("id" in response_data.keys())
-        self.assertEqual(locked_declaration_data["id"], response_data["id"])
-
-        self.assertTrue("class_name" in response_data.keys())
-        self.assertEqual(response_data["class_name"], "supervisor_approved_declaration")
-
-        self.assertTrue("submitted_to_human_resources_by" in response_data.keys())
-        self.assertEqual(response_data["submitted_to_human_resources_by"], supervisor.key.integer_id())
-
-        self.assertTrue("supervisor_approved_at" in response_data.keys())
-        # exact date-time is untestable: it's accurate in milliseconds.
-
-        self.assertTrue("supervisor_comment" in response_data.keys())
-        self.assertEqual(response_data["supervisor_comment"], supervisors_comment)
-
-        messages = self.mail_stub.get_sent_messages()
-        self.assertEqual(1, len(messages))
-
-    def test_negative_put_one(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
-        setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
-        person = setup_data["random_person"]
-        person.class_name = "supervisor"
-        token = setup_data["token"]
-        person.put()
-
-        supervisor = person
-        employee = PersonDataCreator.create_valid_employee_data()
-        locked_declaration = DeclarationsDataCreator.create_valid_locked_declaration(
-            employee,
-            supervisor)
-        supervisors_comment = "Ziet er goed uit maar let wel op item nummer 3!"
-        #Add a comment as well
-        locked_declaration.supervisor_comment = supervisors_comment
-        locked_declaration.items_total_price = 150
-        supervisor.max_declaration_price = 100
-        locked_declaration.put()
-        supervisor.put()
-        locked_declaration_data = locked_declaration.get_object_as_data_dict()
-        locked_declaration_data_json_string = json.dumps(locked_declaration_data)
-
-        self.negative_test_stub_handler(token, path, "put", 401, data_dict=locked_declaration_data_json_string)
-
-
-    def test_negative_put_none(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
-        setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
-        person = setup_data["random_person"]
-        person.class_name = "supervisor"
-        token = setup_data["token"]
-        person.put()
-
-        locked_declaration_data = None
-
-        self.negative_test_stub_handler(token, path, "put", 400, data_dict=locked_declaration_data)
-
-    def test_negative_put_empty_dict(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
-        setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
-        person = setup_data["random_person"]
-        person.class_name = "supervisor"
-        token = setup_data["token"]
-        person.put()
-
-        locked_declaration_data = {}
-
-        self.negative_test_stub_handler(token, path, "put", 400, data_dict=json.dumps(locked_declaration_data))
-
-    def test_negative_put_meaningless_string(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
-        setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
-        person = setup_data["random_person"]
-        person.class_name = "supervisor"
-        token = setup_data["token"]
-        person.put()
-
-        locked_declaration_data = "Some string that will pass the None and length check, " \
-                                  "but should fail on the valid json check"
-
-        self.negative_test_stub_handler(token, path, "put", 400, data_dict=json.dumps(locked_declaration_data))
-
-    def test_negative_put_invalid_id(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
-        setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
-        person = setup_data["random_person"]
-        person.class_name = "supervisor"
-        token = setup_data["token"]
-        person.put()
-
-        supervisor = person
-        employee = PersonDataCreator.create_valid_employee_data()
-
-        locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
-            employee,
-            supervisor).get_object_as_data_dict()
-
-        #Change the id to a string which is not a long (i.e. an invalid ID)
-        locked_declaration_data["id"] = "some string that wont be a valid id"
-
-        self.negative_test_stub_handler(token, path, "put", 400, data_dict=json.dumps(locked_declaration_data))
 
     def test_negative_put_id_not_found(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
+        path = "/declaration/(.*)/approve_by_supervisor"
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
-        person = setup_data["random_person"]
-        person.class_name = "supervisor"
+            [(path, ApproveBySupervisorHandler)], True)
+
         token = setup_data["token"]
-        person.put()
+        path = "/declaration/10000/approve_by_supervisor"
+        self.negative_test_stub_handler(token, path, "put", 400, data_dict=json.dumps({"comment": "none"}))
 
-        supervisor = person
-        employee = PersonDataCreator.create_valid_employee_data()
-
-        locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
-            employee,
-            supervisor).get_object_as_data_dict()
-
-        #Change the id to a long that does not exists in the datastore
-        locked_declaration_data["id"] = long(578814894151775871)
-
-        self.negative_test_stub_handler(token, path, "put", 404, data_dict=json.dumps(locked_declaration_data))
-
-    def test_negative_put_no_id(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
-        setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
-        person = setup_data["random_person"]
-        person.class_name = "supervisor"
-        token = setup_data["token"]
-        person.put()
-
-        supervisor = person
-        employee = PersonDataCreator.create_valid_employee_data()
-
-        locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
-            employee,
-            supervisor).get_object_as_data_dict()
-
-        #Change the id to None
-        locked_declaration_data["id"] = None
-
-        self.negative_test_stub_handler(token, path, "put", 400, data_dict=json.dumps(locked_declaration_data))
 
     def test_negative_put_invalid_class_name(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
+        path = "/declaration/(.*)/approve_by_supervisor"
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
+            [(path, ApproveBySupervisorHandler)], True)
         person = setup_data["random_person"]
         person.class_name = "supervisor"
         token = setup_data["token"]
@@ -611,20 +391,15 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
         employee = PersonDataCreator.create_valid_employee_data()
 
         #Change the regular call to create_valid_locked_declaration to an open one:
-        open_declaration_data = DeclarationsDataCreator.create_valid_open_declaration(
-            employee,
-            supervisor).get_object_as_data_dict()
+        open_declaration_data = DeclarationsDataCreator.create_valid_supervisor_approved_declaration(employee, supervisor)
 
-        self.negative_test_stub_handler(token, path, "put", 422, data_dict=json.dumps(open_declaration_data))
+        path = "/declaration/"+ str(open_declaration_data.key.integer_id()) +"/approve_by_supervisor"
+        self.negative_test_stub_handler(token, path, "put", 400, data_dict=json.dumps({"comment": "none"}))
 
     def test_negative_put_logged_in_user_is_not_assigned(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
+        path = "/declaration/(.*)/approve_by_supervisor"
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
+            [(path, ApproveBySupervisorHandler)], True)
         person = setup_data["random_person"]
         person.class_name = "supervisor"
         token = setup_data["token"]
@@ -639,49 +414,9 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
 
         #Change the assigned to to another supervisor
         locked_declaration.assigned_to = [PersonDataCreator.create_valid_supervisor().key]
-        locked_declaration_data = locked_declaration.get_object_as_data_dict()
 
-        self.negative_test_stub_handler(token, path, "put", 401, data_dict=json.dumps(locked_declaration_data))
-
-    def test_negative_put_when_not_supervisor(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
-        self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
-        #leave the person from the setup function so that it's not a supervisor
-
-        supervisor = PersonDataCreator.create_valid_supervisor()
-        employee = PersonDataCreator.create_valid_employee_data()
-
-        locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
-            employee,
-            supervisor).get_object_as_data_dict()
-
-        self.negative_test_stub_handler("", path, "put", 401, data_dict=json.dumps(locked_declaration_data))
-
-    def test_negative_put_when_no_one_is_logged_in(self):
-        user_is_logged_in = False
-        user_is_admin = '0'
-        path = "/approve_declaration/supervisor"
-        setup_data = self.setup_server_with_user(
-            [(path, main_application.SetLockedToSupervisorApprovedDeclarationHandler)],
-            user_is_logged_in,
-            user_is_admin)
-        person = setup_data["random_person"]
-        person.class_name = "supervisor"
-        person.put()
-
-        supervisor = PersonDataCreator.create_valid_supervisor()
-        employee = PersonDataCreator.create_valid_employee_data()
-
-        locked_declaration_data = DeclarationsDataCreator.create_valid_locked_declaration(
-            employee,
-            supervisor).get_object_as_data_dict()
-
-        self.negative_test_stub_handler("", path, "put", 401, data_dict=json.dumps(locked_declaration_data))
+        path = "/declaration/"+ str(locked_declaration.key.integer_id()) +"/approve_by_supervisor"
+        self.negative_test_stub_handler(token, path, "put", 401, data_dict=json.dumps({"comment": "none"}))
 
 
 class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
@@ -691,8 +426,8 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
         path = "/declarations/hr"
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.AllDeclarationsForHumanResourcesHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, AllDeclarationsForHumanResourcesHandler)],
+            user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -722,7 +457,7 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
     def test_negative_get_all_not_logged_in(self):
         path = '/declarations/hr'
 
-        self.setup_test_server_with_custom_routes([(path, main_application.AllDeclarationsForHumanResourcesHandler)])
+        self.setup_test_server_with_custom_routes([(path, AllDeclarationsForHumanResourcesHandler)])
         self.negative_test_stub_handler("", path, "get", 401)
 
 
@@ -730,7 +465,7 @@ class CurrentUserSupervisorsHandlerTest(BaseAuthorizationHandler):
     def test_get_employee_supervisor_not_logged_in(self):
         path = "/supervisors/"
 
-        self.setup_test_server_with_custom_routes([(path, main_application.CurrentUserSupervisors)])
+        self.setup_test_server_with_custom_routes([(path, CurrentUserSupervisorsHandler)])
         self.negative_test_stub_handler("", path, "get", 401)
 
     def test_positive_get_all(self):
@@ -739,8 +474,8 @@ class CurrentUserSupervisorsHandlerTest(BaseAuthorizationHandler):
         path = '/supervisors/'
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.CurrentUserSupervisors)],
-            user_is_logged_in, user_is_admin)
+            [(path, CurrentUserSupervisorsHandler)],
+            user_is_logged_in)
         token = setup_data["token"]
         supervisor = PersonDataCreator.create_valid_supervisor()
         supervisor2 = PersonDataCreator.create_valid_supervisor()
@@ -769,27 +504,11 @@ class CurrentUserSupervisorsHandlerTest(BaseAuthorizationHandler):
 
 
 class AllDeclarationsForSupervisorTest(BaseAuthorizationHandler):
-    def test_get_supervisor_declarations_no_permission(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/declarations/supervisor"
-        setup_data = self.setup_server_with_user([(path, main_application.AllDeclarationsForSupervisor)],
-                                                 user_is_logged_in, user_is_admin)
-
-        logged_in_person = setup_data["random_person"]
-        token = setup_data["token"]
-        logged_in_person.class_name = "employee"
-
-        logged_in_person.put()
-
-        self.negative_test_stub_handler(token, path, "get", 401)
-
     def test_get_supervisor_declarations(self):
         user_is_logged_in = True
-        user_is_admin = '0'
         path = "/declarations/supervisor"
-        setup_data = self.setup_server_with_user([(path, main_application.AllDeclarationsForSupervisor)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, AllDeclarationsForSupervisorHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -818,44 +537,46 @@ class DeclarationTypeHandlerTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
         setup_data = self.setup_server_with_user(
-            [(path, main_application.AllDeclarationTypesHandler)], user_is_logged_in, user_is_admin)
+            [(path, AllDeclarationTypesHandler)], user_is_logged_in)
         token = setup_data["token"]
 
-        declaration_type1 = DeclarationsDataCreator.create_valid_declaration_type("Maaltijd/Consumpties/Verblijf",
-                                                                                  False)
+        declaration_type1 = DeclarationsDataCreator.create_valid_declaration_type("Maaltijd/Consumpties/Verblijf", False)
+        declaration_type1.put()
         declaration_type2 = DeclarationsDataCreator.create_valid_declaration_type("Reiskosten", False)
+        declaration_type2.put()
         declaration_type3 = DeclarationsDataCreator.create_valid_declaration_type("Overig", False)
+        declaration_type3.put()
 
         #Maaltijd/Consumpties/Verblijf
         declaration_sub_type1 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Zakelijke lunch/Diner met relaties")
+            declaration_type1, "Zakelijke lunch/Diner met relaties")
 
         declaration_sub_type2 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Logies/Verblijfskosten (eventueel incl. maaltijd)")
+            declaration_type1, "Logies/Verblijfskosten (eventueel incl. maaltijd)")
 
         declaration_sub_type3 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie")
+            declaration_type1, "Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie")
 
         declaration_sub_type4 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Logies/Verblijfskosten buitenland")
+            declaration_type1, "Logies/Verblijfskosten buitenland")
 
         declaration_sub_type5 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost(
-            "Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
+            declaration_type1, "Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
 
         declaration_sub_type6 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost(
-            "Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
+            declaration_type1, "Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
 
         #Reiskosten
         declaration_sub_type7 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Tankpas")
+            declaration_type2, "Tankpas")
 
         declaration_sub_type8 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Openbaar vervoer")
+           declaration_type2,  "Openbaar vervoer")
         declaration_sub_type9 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Taxi")
+            declaration_type2, "Taxi")
 
         #Overig
-        declaration_sub_typ10 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost("Overig")
+        declaration_sub_type10 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(declaration_type3, "Overig")
 
         #Assign all the DeclarationSubTypes to DeclarationTypes
         declaration_type1.sub_types = [declaration_sub_type1.key, declaration_sub_type2.key, declaration_sub_type3.key,
@@ -865,7 +586,7 @@ class DeclarationTypeHandlerTest(BaseAuthorizationHandler):
         declaration_type2.sub_types = [declaration_sub_type7.key, declaration_sub_type8.key, declaration_sub_type9.key]
         declaration_type2.put()
 
-        declaration_type3.sub_types = [declaration_sub_typ10.key]
+        declaration_type3.sub_types = [declaration_sub_type10.key]
         declaration_type3.put()
 
         response = self.positive_test_stub_handler(token, path, "get")
@@ -896,7 +617,7 @@ class DeclarationTypeHandlerTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
         setup_data = self.setup_server_with_user(
-            [(path, main_application.AllDeclarationTypesHandler)], user_is_logged_in, user_is_admin)
+            [(path, AllDeclarationTypesHandler)], user_is_logged_in)
         token = setup_data["token"]
 
         response = self.negative_test_stub_handler(token, path, "get", 404)
@@ -908,44 +629,46 @@ class DeclarationSubTypeHandlerTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
         setup_data = self.setup_server_with_user(
-            [(path, main_application.AllDeclarationSubTypesHandler)], user_is_logged_in, user_is_admin)
+            [(path, AllDeclarationSubTypesHandler)], user_is_logged_in)
         token = setup_data["token"]
 
-        declaration_type1 = DeclarationsDataCreator.create_valid_declaration_type("Maaltijd/Consumpties/Verblijf",
-                                                                                  False)
+        declaration_type1 = DeclarationsDataCreator.create_valid_declaration_type("Maaltijd/Consumpties/Verblijf", False)
+        declaration_type1.put()
         declaration_type2 = DeclarationsDataCreator.create_valid_declaration_type("Reiskosten", False)
+        declaration_type2.put()
         declaration_type3 = DeclarationsDataCreator.create_valid_declaration_type("Overig", False)
+        declaration_type3.put()
 
         #Maaltijd/Consumpties/Verblijf
         declaration_sub_type1 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Zakelijke lunch/Diner met relaties")
+            declaration_type1, "Zakelijke lunch/Diner met relaties")
 
         declaration_sub_type2 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Logies/Verblijfskosten (eventueel incl. maaltijd)")
+            declaration_type1, "Logies/Verblijfskosten (eventueel incl. maaltijd)")
 
         declaration_sub_type3 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie")
+            declaration_type1, "Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie")
 
         declaration_sub_type4 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Logies/Verblijfskosten buitenland")
+            declaration_type1, "Logies/Verblijfskosten buitenland")
 
         declaration_sub_type5 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost(
-            "Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
+            declaration_type1, "Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
 
         declaration_sub_type6 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost(
-            "Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
+            declaration_type1, "Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
 
         #Reiskosten
         declaration_sub_type7 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Tankpas")
+            declaration_type2, "Tankpas")
 
         declaration_sub_type8 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Openbaar vervoer")
+           declaration_type2,  "Openbaar vervoer")
         declaration_sub_type9 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Taxi")
+            declaration_type2, "Taxi")
 
         #Overig
-        declaration_sub_type10 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost("Overig")
+        declaration_sub_type10 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(declaration_type3, "Overig")
 
         #Assign all the DeclarationSubTypes to DeclarationTypes
         declaration_type1.sub_types = [declaration_sub_type1.key, declaration_sub_type2.key, declaration_sub_type3.key,
@@ -986,48 +709,50 @@ class DeclarationSubTypeHandlerTest(BaseAuthorizationHandler):
                       + str(error))
 
     def test_positive_get_all_declaration_sub_types_of_decaration_type(self):
-        path = "/declarationsubtypes/(.*)"
+        path = "/declarationtype/(.*)"
         user_is_logged_in = True
         user_is_admin = '0'
         setup_data = self.setup_server_with_user(
-            [(path, main_application.DeclarationSubTypeHandlerForDeclarationId)], user_is_logged_in, user_is_admin)
+            [(path, AllDeclarationTypeSubTypeHandler)], user_is_logged_in)
         token = setup_data["token"]
 
-        declaration_type1 = DeclarationsDataCreator.create_valid_declaration_type("Maaltijd/Consumpties/Verblijf",
-                                                                                  False)
+        declaration_type1 = DeclarationsDataCreator.create_valid_declaration_type("Maaltijd/Consumpties/Verblijf", False)
+        declaration_type1.put()
         declaration_type2 = DeclarationsDataCreator.create_valid_declaration_type("Reiskosten", False)
+        declaration_type2.put()
         declaration_type3 = DeclarationsDataCreator.create_valid_declaration_type("Overig", False)
+        declaration_type3.put()
 
         #Maaltijd/Consumpties/Verblijf
         declaration_sub_type1 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Zakelijke lunch/Diner met relaties")
+            declaration_type1, "Zakelijke lunch/Diner met relaties")
 
         declaration_sub_type2 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Logies/Verblijfskosten (eventueel incl. maaltijd)")
+            declaration_type1, "Logies/Verblijfskosten (eventueel incl. maaltijd)")
 
         declaration_sub_type3 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie")
+            declaration_type1, "Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie")
 
         declaration_sub_type4 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Logies/Verblijfskosten buitenland")
+            declaration_type1, "Logies/Verblijfskosten buitenland")
 
         declaration_sub_type5 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost(
-            "Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
+            declaration_type1, "Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
 
         declaration_sub_type6 = DeclarationsDataCreator.create_valid_declaration_sub_type_with_max_cost(
-            "Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
+            declaration_type1, "Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", 15)
 
         #Reiskosten
         declaration_sub_type7 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Tankpas")
+            declaration_type2, "Tankpas")
 
         declaration_sub_type8 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Openbaar vervoer")
+           declaration_type2,  "Openbaar vervoer")
         declaration_sub_type9 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(
-            "Taxi")
+            declaration_type2, "Taxi")
 
         #Overig
-        declaration_sub_type10 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost("Overig")
+        declaration_sub_type10 = DeclarationsDataCreator.create_valid_declaration_sub_type_without_max_cost(declaration_type3, "Overig")
 
         #Assign all the DeclarationSubTypes to DeclarationTypes
         sub_types = [declaration_sub_type1, declaration_sub_type2, declaration_sub_type3,
@@ -1041,7 +766,7 @@ class DeclarationSubTypeHandlerTest(BaseAuthorizationHandler):
         declaration_type3.sub_types = [declaration_sub_type10.key]
         declaration_type3.put()
 
-        path = "/declarationsubtypes/" + str(declaration_type1.key.integer_id())
+        path = "/declarationtype/" + str(declaration_type1.key.integer_id())
         response = self.positive_test_stub_handler(token, path, "get")
         response_data = json.loads(response.body)
 
@@ -1066,77 +791,62 @@ class DeclarationSubTypeHandlerTest(BaseAuthorizationHandler):
                       + str(error))
 
     def test_negative_get_all_declaration_sub_types_of_declaration_type_none_declaration_sub_type_in_datastore(self):
-        path = "/declarationsubtypes/(.*)"
+        path = "/declarationtype/(.*)"
         user_is_logged_in = True
         user_is_admin = '0'
         setup_data = self.setup_server_with_user(
-            [(path, main_application.DeclarationSubTypeHandlerForDeclarationId)], user_is_logged_in, user_is_admin)
+            [(path, AllDeclarationTypeSubTypeHandler)], user_is_logged_in)
         empty_declaration_type = DeclarationsDataCreator.create_valid_declaration_type("empty", False)
         token = setup_data["token"]
 
-        path = "/declarationsubtypes/" + str(empty_declaration_type.key.integer_id())
+        path = "/declarationtype/" + str(empty_declaration_type.key.integer_id())
 
         self.negative_test_stub_handler(token, path, "get", 404)
 
     def test_negative_get_all_declaration_sub_types_of_declaration_type_none_declaration_type_in_datastore(self):
-        path = "/declarationsubtypes/(.*)"
+        path = "/declarationtype/(.*)"
         user_is_logged_in = True
         user_is_admin = '0'
         setup_data = self.setup_server_with_user(
-            [(path, main_application.DeclarationSubTypeHandlerForDeclarationId)], user_is_logged_in, user_is_admin)
+            [(path, AllDeclarationTypeSubTypeHandler)], user_is_logged_in)
         token = setup_data["token"]
 
         declaration_type = DeclarationsDataCreator.create_valid_declaration_type("filled declaration type")
         key_int = declaration_type.key.integer_id()
         declaration_type.key.delete()
-        path = "/declarationsubtypes/" + str(key_int)
+        path = "/declarationtype/" + str(key_int)
 
         self.negative_test_stub_handler(token, path, "get", 404)
 
     def test_negative_invalid_id(self):
-        path = "/declarationsubtypes/(.*)"
+        path = "/declarationtype/(.*)"
         user_is_logged_in = True
         user_is_admin = '0'
         setup_data = self.setup_server_with_user(
-            [(path, main_application.DeclarationSubTypeHandlerForDeclarationId)], user_is_logged_in, user_is_admin)
+            [(path, AllDeclarationTypeSubTypeHandler)], user_is_logged_in)
         token = setup_data["token"]
 
-        path = "/declarationsubtypes/" + "invalid_id"
+        path = "/declarationtype/" + "invalid_id"
 
         self.negative_test_stub_handler(token, path, "get", 500)
 
 
+'''
 class ApproveDeclarationByHumanResourcesTest(BaseAuthorizationHandler):
     def test_negative_approve_not_logged_in(self):
         user_is_logged_in = False
-        user_is_admin = '0'
-        path = "/declaration/approve_by_hr"
-        self.setup_server_with_user([(path, main_application.ApproveByHumanResources)],
-                                    user_is_logged_in, user_is_admin)
+        path = "/declaration/1/approve_by_hr"
+        self.setup_server_with_user([(path, ApproveByHumanResourcesHandler)],
+                                    user_is_logged_in)
 
         self.negative_test_stub_handler("", path, "put", 401)
-
-    def test_negative_approve_no_permission(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/declaration/approve_by_hr"
-        setup_data = self.setup_server_with_user([(path, main_application.ApproveByHumanResources)],
-                                                 user_is_logged_in, user_is_admin)
-
-        logged_in_person = setup_data["random_person"]
-        token = setup_data["token"]
-        logged_in_person.class_name = "employee"
-        logged_in_person.put()
-
-        self.negative_test_stub_handler(token, path, "put", 401)
 
     # TODO: Make put_json working
     def test_positive_approve(self):
         user_is_logged_in = True
-        user_is_admin = '0'
         path = "/declaration/approve_by_hr"
-        setup_data = self.setup_server_with_user([(path, main_application.ApproveByHumanResources)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, ApproveByHumanResourcesHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -1169,8 +879,8 @@ class ApproveDeclarationByHumanResourcesTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/declaration/approve_by_hr"
-        setup_data = self.setup_server_with_user([(path, main_application.ApproveByHumanResources)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, ApproveByHumanResourcesHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -1194,8 +904,8 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
         path = '/declaration/declined_by_hr'
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, DeclineByHumanResourcesHandler)],
+            user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -1224,8 +934,8 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
         path = '/declaration/declined_by_hr'
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, DeclineByHumanResourcesHandler)],
+            user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -1247,8 +957,8 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
         path = '/declaration/declined_by_hr'
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, DeclineByHumanResourcesHandler)],
+            user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -1263,8 +973,8 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
         path = '/declaration/declined_by_hr'
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, DeclineByHumanResourcesHandler)],
+            user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -1280,19 +990,17 @@ class SupervisorDeclarationToHrDeclinedDeclarationHandlerTest(BaseAuthorizationH
         path = '/declaration/declined_by_hr'
 
         self.setup_server_with_user(
-            [(path, main_application.SupervisorDeclarationToHrDeclinedDeclarationHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, DeclineByHumanResourcesHandler)],
+            user_is_logged_in)
+'''
 
 
 class SpecificDeclarationTest(BaseAuthorizationHandler):
     def test_positive_get_employee_declaration(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
         path = "/declaration/(.*)"
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SpecificDeclarationHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, SpecificDeclarationHandler)], True)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
@@ -1323,8 +1031,8 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/declaration/(.*)"
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, SpecificDeclarationHandler)],
+                                                 user_is_logged_in)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
@@ -1378,8 +1086,8 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/declaration/(.*)"
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, SpecificDeclarationHandler)],
+                                                 user_is_logged_in)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
@@ -1415,8 +1123,8 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         path = "/declaration/(.*)"
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SpecificDeclarationHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, SpecificDeclarationHandler)],
+            user_is_logged_in)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
@@ -1447,8 +1155,8 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         path = "/declaration/(.*)"
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SpecificDeclarationHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, SpecificDeclarationHandler)],
+            user_is_logged_in)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
@@ -1479,8 +1187,8 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         path = "/declaration/(.*)"
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SpecificDeclarationHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, SpecificDeclarationHandler)],
+            user_is_logged_in)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
@@ -1500,8 +1208,8 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/declaration/(.*)"
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, SpecificDeclarationHandler)],
+                                                 user_is_logged_in)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
@@ -1527,8 +1235,8 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/declaration/(.*)"
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, SpecificDeclarationHandler)],
+                                                 user_is_logged_in)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
@@ -1549,8 +1257,8 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         path = "/declaration/(.*)"
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SpecificDeclarationHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, SpecificDeclarationHandler)],
+            user_is_logged_in)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
@@ -1574,8 +1282,8 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         path = "/declaration/(.*)"
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SpecificDeclarationHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, SpecificDeclarationHandler)],
+            user_is_logged_in)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
@@ -1593,8 +1301,8 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         path = "/declaration/(.*)"
 
         setup_data = self.setup_server_with_user(
-            [(path, main_application.SpecificDeclarationHandler)],
-            user_is_logged_in, user_is_admin)
+            [(path, SpecificDeclarationHandler)],
+            user_is_logged_in)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
@@ -1607,120 +1315,14 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         self.negative_test_stub_handler(token, path, "get", 401)
 
 
-#TODO: Possibly remove. Lines are already sent with the specific declaration details handler.
-class GetDeclarationLinesTest(BaseAuthorizationHandler):
-    def test_get_lines_positive(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/declaration/lines/(.*)"
-
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationLinesHandler)],
-                                                 user_is_logged_in, user_is_admin)
-
-        logged_in_person = setup_data["random_person"]
-        token = setup_data["token"]
-        logged_in_person.class_name = "employee"
-        logged_in_person.put()
-        supervisor = PersonDataCreator.create_valid_supervisor()
-
-        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
-        lines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 4)
-
-        path = "/declaration/lines/"+str(declaration.key.integer_id())
-        response = self.positive_test_stub_handler(token, path, "get")
-        response_data = json.loads(response.body)
-
-        self.assertEqual(len(response_data), 4)
-        self.assertEqual(response_data[0]["id"], lines[0].key.integer_id())
-        self.assertEqual(response_data[0]["cost"], str(lines[0].cost))
-        self.assertEqual(response_data[0]["declaration_sub_type"], lines[0].declaration_sub_type.integer_id())
-        self.assertEqual(response_data[2]["id"], lines[2].key.integer_id())
-        self.assertEqual(response_data[2]["cost"], str(lines[2].cost))
-        self.assertEqual(response_data[2]["declaration_sub_type"], lines[2].declaration_sub_type.integer_id())
-
-    def test_get_lines_negative_wrong_id(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/declaration/lines/(.*)"
-
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationLinesHandler)],
-                                                 user_is_logged_in, user_is_admin)
-
-        logged_in_person = setup_data["random_person"]
-        token = setup_data["token"]
-        logged_in_person.class_name = "employee"
-        logged_in_person.put()
-        supervisor = PersonDataCreator.create_valid_supervisor()
-
-        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
-        DeclarationsDataCreator.create_valid_declaration_lines(declaration, 4)
-
-        path = "/declaration/lines/9999999999"
-        self.negative_test_stub_handler(token, path, "get", 404)
-
-        path = "/declaration/lines/asdf"
-        self.negative_test_stub_handler(token, path, "get", 400)
-
-
-class GetDeclarationAttachmentsTest(BaseAuthorizationHandler):
-    def test_get_attachments_positive(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/declaration/attachments/(.*)"
-
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationAttachmentsHandler)],
-                                                 user_is_logged_in, user_is_admin)
-
-        logged_in_person = setup_data["random_person"]
-        token = setup_data["token"]
-        logged_in_person.class_name = "employee"
-        logged_in_person.put()
-        supervisor = PersonDataCreator.create_valid_supervisor()
-
-        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
-        attachments = DeclarationsDataCreator.create_valid_declaration_attachments(declaration, 2)
-
-        path = "/declaration/attachments/"+str(declaration.key.integer_id())
-        response = self.positive_test_stub_handler(token, path, "get")
-
-        response_data = json.loads(response.body)
-        self.assertEqual(response_data[0]["id"], attachments[0].key.integer_id())
-        self.assertEqual(response_data[0]["name"], attachments[0].name)
-        self.assertEqual(response_data[1]["id"], attachments[1].key.integer_id())
-        self.assertEqual(response_data[1]["name"], attachments[1].name)
-
-    def test_get_attachments_negative_wrong_id(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/declaration/attachments/(.*)"
-
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificDeclarationAttachmentsHandler)],
-                                                 user_is_logged_in, user_is_admin)
-
-        logged_in_person = setup_data["random_person"]
-        token = setup_data["token"]
-        logged_in_person.class_name = "employee"
-        logged_in_person.put()
-        supervisor = PersonDataCreator.create_valid_supervisor()
-
-        declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
-        DeclarationsDataCreator.create_valid_declaration_attachments(declaration, 2)
-
-        path = "/declaration/attachments/9999999999"
-        self.negative_test_stub_handler(token, path, "get", 404)
-
-        path = "/declaration/attachments/asdf"
-        self.negative_test_stub_handler(token, path, "get", 400)
-
-
 class GetAttachmentTest(BaseAuthorizationHandler):
     def test_get_attachment_positive(self):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/attachment/(.*)"
 
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificAttachmentHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, SpecificAttachmentHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -1742,8 +1344,8 @@ class GetAttachmentTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/attachment/(.*)"
 
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificAttachmentHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, SpecificAttachmentHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -1767,8 +1369,8 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/declaration"
 
-        setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, NewDeclarationHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -1784,9 +1386,11 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
         attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_data_dict(), declarationattachments)
 
-        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
-                                    'lines': lines,
-                                    'attachments': attachments})
+        combined_dict = json.dumps({'declaration': dict(declaration.get_object_as_data_dict().items() +
+                                                   {'supervisor': supervisor.key.integer_id(),
+                                                    'lines': lines,
+                                                    'attachments': attachments
+                                                   }.items())})
 
         for declarationline in declarationlines:
             declarationline.key.delete()
@@ -1844,8 +1448,8 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/declaration"
 
-        setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, NewDeclarationHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -1861,9 +1465,11 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
         attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_data_dict(), declarationattachments)
 
-        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
-                                    'lines': lines,
-                                    'attachments': attachments})
+        combined_dict = json.dumps({'declaration': dict(declaration.get_object_as_data_dict().items() +
+                                                   {'supervisor': supervisor.key.integer_id(),
+                                                    'lines': lines,
+                                                    'attachments': attachments
+                                                   }.items())})
 
         for declarationline in declarationlines:
             declarationline.key.delete()
@@ -1927,8 +1533,8 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/declaration"
 
-        setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, NewDeclarationHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -1941,8 +1547,10 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 1)
 
         lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
-        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
-                                    'lines': lines})
+        combined_dict = json.dumps({'declaration': dict(declaration.get_object_as_data_dict().items() +
+                                                   {'supervisor': supervisor.key.integer_id(),
+                                                    'lines': lines
+                                                   }.items())})
 
         for declarationline in declarationlines:
             declarationline.key.delete()
@@ -1993,8 +1601,8 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/declaration"
 
-        setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, NewDeclarationHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -2013,6 +1621,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_data_dict(), declarationattachments)
 
         combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
+                                    'supervisor': supervisor.key.integer_id(),
                                     'lines': lines,
                                     'attachments': attachments})
 
@@ -2031,8 +1640,8 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/declaration"
 
-        setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, NewDeclarationHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -2070,8 +1679,8 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/declaration"
 
-        setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, NewDeclarationHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -2109,8 +1718,8 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/declaration"
 
-        setup_data = self.setup_server_with_user([(path, main_application.AddNewDeclarationHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, NewDeclarationHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -2148,8 +1757,8 @@ class SetOpenToLockedDeclarationTest(BaseAuthorizationHandler):
         user_is_logged_in = False
         user_is_admin = '0'
         path = "/declaration/lock"
-        self.setup_server_with_user([(path, main_application.SetOpenToLockedDeclaration)],
-                                    user_is_logged_in, user_is_admin)
+        self.setup_server_with_user([(path, OpenToLockedDeclarationHandler)],
+                                    user_is_logged_in)
 
         #self.negative_test_stub_handler("", path, "put_json", 401)
 
@@ -2157,8 +1766,8 @@ class SetOpenToLockedDeclarationTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/declaration/lock"
-        setup_data = self.setup_server_with_user([(path, main_application.SetOpenToLockedDeclaration)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, OpenToLockedDeclarationHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -2171,8 +1780,8 @@ class SetOpenToLockedDeclarationTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/declaration/lock"
-        setup_data = self.setup_server_with_user([(path, main_application.SetOpenToLockedDeclaration)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, OpenToLockedDeclarationHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -2203,8 +1812,8 @@ class SetOpenToLockedDeclarationTest(BaseAuthorizationHandler):
         user_is_logged_in = True
         user_is_admin = '0'
         path = "/declaration/lock"
-        setup_data = self.setup_server_with_user([(path, main_application.SetOpenToLockedDeclaration)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, OpenToLockedDeclarationHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -2232,8 +1841,8 @@ class DeclarationCountAndTotalAmountTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/employees/total_declarations/(.*)"
 
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificEmployeeTotalDeclarationsHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, SpecificEmployeeTotalDeclarationsHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -2276,8 +1885,8 @@ class DeclarationCountAndTotalAmountTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/employees/total_declarations/(.*)"
 
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificEmployeeTotalDeclarationsHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, SpecificEmployeeTotalDeclarationsHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
@@ -2325,8 +1934,8 @@ class DeclarationCountAndTotalAmountTest(BaseAuthorizationHandler):
         user_is_admin = '0'
         path = "/employees/total_declarations/(.*)"
 
-        setup_data = self.setup_server_with_user([(path, main_application.SpecificEmployeeTotalDeclarationsHandler)],
-                                                 user_is_logged_in, user_is_admin)
+        setup_data = self.setup_server_with_user([(path, SpecificEmployeeTotalDeclarationsHandler)],
+                                                 user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]

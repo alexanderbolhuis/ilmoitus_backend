@@ -2,67 +2,75 @@ __author__ = 'RobinB'
 
 from ilmoitus_auth import *
 from response_module import *
+from mail_module import *
 import datetime
 import mail_module
 import dateutil.parser
 
 
-def declaration_exists(handler, declaration_id):
-    if Declaration.get_by_id(declaration_id) is not None:
-        return True
-    else:
-        give_error_response(handler, 400, "Declaratie niet gevonden.",
-                                          "Declaration is None")
-        return False
+def find_declaration(handler, declaration_id):
+    safe_id = 0
+    try:
+        safe_id = long(declaration_id)
+    except ValueError:
+        give_error_response(handler, 400, "the given id isn't an int (" + str(declaration_id) + ")")
 
+    declaration = Declaration.get_by_id(safe_id)
+    if declaration is None:
+        give_error_response(handler, 400, "Declaratie ["+str(safe_id)+"] niet gevonden.",
+                                          "Declaration is None")
+
+    return declaration
 
 def is_declaration_creator(handler, declaration, employee):
-    if declaration.created_by is employee:
-        return True
-    else:
-        give_error_response(handler, 400, "Declaratie kan niet worden aangepast.",
+    if declaration.created_by is not employee:
+        give_error_response(handler, 401, "Declaratie kan niet worden aangepast.",
                                           "User is not the owner")
-        return False
+
+
+def is_declaration_assigned(handler, declaration, current_person):
+    if current_person.key is not declaration.get_last_assigned_to():
+        give_error_response(handler, 401, "Kan de declaratie niet goedkeuren. Deze declaratie is niet aan u toegewezen",
+                                          "current_person_object's id was not in the declaration_object's asigned_to list.")
+
+
+def is_declaration_price_allowed_supervisor(handler, declaration, current_person):
+    if current_person.max_declaration_price < declaration.items_total_price and current_person.max_declaration_price != -1:
+        give_error_response(handler, 401, "De huidige persoon mag deze declaratie niet goedkeuren. Bedrag te hoog.",
+                            "Total item costs is: " + str(current_person.items_total_price) + " and the max amount is: "
+                            + str(current_person.max_declaration_price) + " .")
 
 
 def is_declaration_state(handler, declaration, class_name):
-    if declaration.class_name is class_name:
-        return True
-    else:
+    if declaration.class_name != class_name:
         give_error_response(handler, 400, "Declaratie heeft niet de jusite status voor deze actie.",
-                                          "Exspected state: " + class_name + " Received state: " + declaration.class_name)
-        return False
+                                          "Expected state: " + class_name + " Received state: " + declaration.class_name)
+
+
+def has_post(handler, post):
+    if handler.request.POST[post] is None:
+        give_error_response(handler, 400, "Geen " + has_post + " ontvangen.", has_post + " is None")
 
 
 def is_declaration_states(handler, declaration, class_names):
     found = False
     for class_name in class_names:
-        found |= declaration.class_name is class_name
+        found |= declaration.class_name == class_name
 
-    if found:
-        return True
-    else:
+    if not found:
         give_error_response(handler, 400, "Declaratie heeft niet de jusite status voor deze actie.",
-                                          "Exspected state: " + class_name + " Received state: " + declaration.class_name)
-        return False
+                                          "Expected state: " + str(class_names) + " Received state: " + declaration.class_name)
 
 
-class OpenToLockedDeclarationResourcesHandler(BaseRequestHandler):
+class OpenToLockedDeclarationHandler(BaseRequestHandler):
     def put(self, declaration_id):
-        if not self.is_logged_in():
-            return
+        #Checks (break when fails)
+        self.is_logged_in()
+        declaration = find_declaration(self, declaration_id)
+        is_declaration_creator(self, declaration, self.logged_in_person())
+        is_declaration_state(self, declaration, "open_declaration")
 
-        if not declaration_exists(self, declaration_id):
-            return
-
-        declaration = Declaration.get_by_id(declaration_id)
-
-        if not is_declaration_creator(self, declaration, self.logged_in_person()):
-            return
-
-        if not is_declaration_state(self, declaration, "open_declaration"):
-            return
-
+        #Action
         declaration.locked_at = datetime.datetime.now()
         declaration.put()
         response_module.give_response(self, declaration.get_object_json_data())
@@ -70,50 +78,50 @@ class OpenToLockedDeclarationResourcesHandler(BaseRequestHandler):
 
 class ForwardDeclarationHandler(BaseRequestHandler):
     def put(self, declaration_id):
-        if not self.is_logged_in():
-            return
-
-        if not declaration_exists(self, declaration_id):
-            return
-
-        declaration = Declaration.get_by_id(declaration_id)
+        #Checks (break when fails)
+        self.is_logged_in()
+        declaration = find_declaration(self, declaration_id)
 
 
 class DeclineBySupervisorHandler(BaseRequestHandler):
     def put(self, declaration_id):
-        if not self.is_logged_in():
-            return
+        #Checks (break when fails)
+        self.is_logged_in()
+        declaration = find_declaration(self, declaration_id)
+        is_declaration_states(self, declaration, {"locked_declaration", "open_declaration"})
 
-        if not declaration_exists(self, declaration_id):
-            return
+        current_person = self.logged_in_person()
 
-        declaration = Declaration.get_by_id(declaration_id)
+        #Checks (break when fails)
+        has_post(self, "comment")
+        is_declaration_assigned(self, declaration, current_person)
+        is_declaration_price_allowed_supervisor(self, declaration, current_person)
+
+        #Action
+        declaration.class_name = "supervisor_declined_declaration"
+        declaration.submitted_to_human_resources_by = current_person.key
+        declaration.supervisor_approved_at = datetime.datetime.now()
+        declaration.supervisor_comment = str(self.request.POST["comment"])
+        declaration.put()
+
+        send_message_declaration_status_changed(self, declaration)
+        give_response(self, json.dumps(declaration.get_object_as_data_dict()))
 
 
 class ApproveBySupervisorHandler(BaseRequestHandler):
     def put(self, declaration_id):
-        if not self.is_logged_in():
-            return
-
-        if not declaration_exists(self, declaration_id):
-            return
-
-        declaration = Declaration.get_by_id(declaration_id)
-        if not is_declaration_states(self, declaration, {"locked_declaration", "open_declaration"}):
-            return
-
+        #Checks (break when fails)
+        self.is_logged_in()
+        declaration = find_declaration(self, declaration_id)
+        is_declaration_states(self, declaration, {"locked_declaration", "open_declaration"})
 
         current_person = self.logged_in_person()
 
-        if current_person.key not in declaration.assigned_to:
-            give_error_response(self, 401, "Kan de declaratie niet goedkeuren. Deze declaratie is niet aan u toegewezen",
-                                            "current_person_object's id was not in the declaration_object's asigned_to list.")
+        #Checks (break when fails)
+        is_declaration_assigned(self, declaration, current_person)
+        is_declaration_price_allowed_supervisor(self, declaration, current_person)
 
-        if current_person.max_declaration_price < declaration.items_total_price and current_person.max_declaration_price != -1:
-            give_error_response(self, 401, "De huidige persoon mag deze declaratie niet goedkeuren. Bedrag te hoog.",
-                                           "Total item costs is: " + str(current_person.items_total_price) + " and the max amount is: "
-                                           + str(current_person.max_declaration_price) + " .")
-
+        #Action
         declaration.class_name = "supervisor_approved_declaration"
         declaration.submitted_to_human_resources_by = current_person.key
         declaration.supervisor_approved_at = datetime.datetime.now()
@@ -213,65 +221,12 @@ class ApproveByHumanResourcesHandler(BaseRequestHandler):
                                 "current_user is None or not from human_resources")
 
 
-class SpecificDeclarationHandler(BaseRequestHandler):
-    def get(self, declaration_id):
-        if self.is_logged_in() and str.isdigit(declaration_id):
-            result = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
-
-            if result is None:
-                give_error_response(self, 404, "Kan de opgevraagde declaratie niet vinden",
-                                    "Declaration id can only be of the type integer and cannot be None", 404)
-
-            if len(result.lines) == 0:
-                declarationline_query_result = []
-            else:
-                declarationline_query = ilmoitus_model.DeclarationLine.query(ilmoitus_model.DeclarationLine.key.IN(result.lines))
-                declarationline_query_result = declarationline_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
-
-            if len(result.attachments) == 0:
-                attachments_query_result = []
-            else:
-                attachments_query = ilmoitus_model.Attachment.query(ilmoitus_model.Attachment.key.IN(result.attachments))
-                attachments_query_result = attachments_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
-
-            attachment_data = []
-            for attachment in attachments_query_result:
-                item = {"id": attachment.key.integer_id(), "name": attachment.name}
-                attachment_data.append(item)
-
-            data_dict = result.get_object_as_full_data_dict()
-            data_dict["attachments"] = attachment_data
-            data_dict["lines"] = map(lambda declaration_item: declaration_item.get_object_as_full_data_dict(), declarationline_query_result)
-
-            current_user = self.logged_in_person()
-            key = current_user.key
-
-            if result.created_by == key:
-                response_module.give_response(self, json.dumps(data_dict))
-
-            elif current_user.class_name == 'supervisor':
-                if key in result.assigned_to:
-                    response_module.give_response(self, json.dumps(data_dict))
-                else:
-                    give_error_response(self, 401,
-                                        "Deze declratie is niet aan jouw toegewezen", None, 401)
-
-            elif current_user.class_name == 'human_resources' and result.class_name == \
-                    'supervisor_approved_declaration' and result.submitted_to_human_resources_by is not None:
-                response_module.give_response(self, json.dumps(data_dict))
-            else:
-                give_error_response(self, 401,
-                                    "Je hebt niet de juiste rechten om deze declratie te openen", None, 401)
-        # if declaration_id not is int
-        else:
-            give_error_response(self, 400, "Kan de opgevraagde declaratie niet vinden",
-                                "Declaration id can only be of the type integer and cannot be None", 400)
-
-
 class NewDeclarationHandler(BaseRequestHandler):
     def post(self):
         # Check if logged in
         current_person_data = ilmoitus_auth.get_current_person(self)
+        created_by = current_person_data["person_value"]
+
         if "user_is_logged_in" not in current_person_data.keys() or \
                 not current_person_data["user_is_logged_in"]:
             give_error_response(self, 401,
@@ -308,8 +263,7 @@ class NewDeclarationHandler(BaseRequestHandler):
 
         # Check if declaration has owner and assigned to values (mandatory)
         try:
-            created_by = current_person_data["person_value"]
-            assigned_to = declaration_data["assigned_to"]
+            assigned_to = declaration_data["supervisor"]
         except Exception:
             give_error_response(self, 400, "De opgegeven data mist waardes voor een declaratie.",
                                 "The body misses keys.")
@@ -317,7 +271,7 @@ class NewDeclarationHandler(BaseRequestHandler):
 
         # Check if assigned_to is a valid user
         try:
-            assigned_to = ilmoitus_model.Person.get_by_id(int(assigned_to))
+            assigned_to = Person.get_by_id(int(assigned_to))
         except Exception:
             give_error_response(self, 400, "De supervisor is niet bekent in het systeem.",
                                 "The supervisor is unknown.")
@@ -344,9 +298,9 @@ class NewDeclarationHandler(BaseRequestHandler):
                 give_error_response(self, 400, "De declaratie_sub_type bestaat niet.",
                                     "The declaration_sub_type is unknown.")
 
-        if "attachments" in post_data:
+        if "attachments" in declaration_data:
             try:
-                for attachment_data in post_data["attachments"]:
+                for attachment_data in declaration_data["attachments"]:
                     attachment_data["name"]
                     attachment_data["file"]
             except KeyError:
@@ -354,7 +308,7 @@ class NewDeclarationHandler(BaseRequestHandler):
                                                "kloppen niet.",
                                     "The body misses keys at an attachment.")
 
-            for attachment_data in post_data["attachments"]:
+            for attachment_data in declaration_data["attachments"]:
                 data = attachment_data["file"].split(":")[0]
                 mime = attachment_data["file"].split(":")[1].split(";")[0]
                 base = attachment_data["file"].split(":")[1].split(";")[1].split(",")[0]
@@ -400,9 +354,9 @@ class NewDeclarationHandler(BaseRequestHandler):
         declaration.put()
 
         posted_attachments = []
-        if "attachments" in post_data:
+        if "attachments" in declaration_data:
             try:
-                for attachment_data in post_data["attachments"]:
+                for attachment_data in declaration_data["attachments"]:
                     attachment = ilmoitus_model.Attachment()
                     attachment.declaration = declaration.key
                     attachment.name = attachment_data["name"]
