@@ -325,6 +325,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 		var fileInput = document.getElementById('fileInput');
 		var files = fileInput.files;
 		var i = 0;
+		var allFilesSuccess = true;
 		var fileReader = new FileReader();
 
 		//When file has finished reading, add it to the attachments
@@ -349,7 +350,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 				if(files[i].type == "application/pdf" || files[i].type.split("/")[0] == "image"){
 					fileReader.readAsDataURL(files[i]); //Results in base64 string
 				} else {
-					showMessage("Niet alle geselecteerde bestanden konden toegevoegd worden.\nAlleen afbeeldingen en pdf's zijn toegestaan.", "Fout");
+					allFilesSuccess = false;
 					i++;
 					readFile(i);
 				}
@@ -357,7 +358,11 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 				//No more files left to read.
 				//Clear file input to allow adding files that have already just been added. (and possibly deleted)
 				resetFileInput();
+				if(!allFilesSuccess){
+					showMessage("Niet alle geselecteerde bestanden konden toegevoegd worden.\nAlleen afbeeldingen en pdf's zijn toegestaan.", "Fout");
+				}
 			}
+			
 		}
 
 		resetFileInput = function() {
