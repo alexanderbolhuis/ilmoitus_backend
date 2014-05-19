@@ -349,7 +349,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 				if(files[i].type == "application/pdf" || files[i].type.split("/")[0] == "image"){
 					fileReader.readAsDataURL(files[i]); //Results in base64 string
 				} else {
-					alert("only images and pdf's are allowed");
+					showMessage("Niet alle geselecteerde bestanden konden toegevoegd worden.\nAlleen afbeeldingen en pdf's zijn toegestaan.", "Fout");
 					i++;
 					readFile(i);
 				}
