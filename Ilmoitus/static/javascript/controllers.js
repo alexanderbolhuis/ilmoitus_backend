@@ -149,6 +149,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	$scope.declaration = { lines:[{}] };
 	$scope.selectedattachment = null;
 	$scope.declarationamount = 0;
+	$scope.declarationAmountDisplay = "0,-";
 	
 	//Declaration type fields
 	$scope.declaration_types = [];
@@ -285,24 +286,39 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	
 	//Check if the price is valid
 	$scope.checkPrice = function(row){
-		var cost = Number($scope.declaration.lines[row].cost);
+		var cost = $scope.declaration.lines[row].cost.replace(",", ".");
 		var subtype = getSubtypeByID(row, $scope.declaration.lines[row].declaration_sub_type);
 		var maxcost = subtype != null && subtype.max_cost ? subtype.max_cost : 0;
+		var pricePattern = /^[0-9]{1}[0-9]{0,3}(\.[0-9]{2})?$/
 
-		$scope.declaration.lines[row].approvecosts = isFinite(cost) && (maxcost <= 0 || cost < maxcost);
-		
+		if($scope.declaration.lines[row].cost == ""){
+			$scope.declaration.lines[row].approvecosts = false;
+		} else {
+			$scope.declaration.lines[row].approvecosts = isFinite(Number(cost)) && (maxcost <= 0 || Number(cost) <= maxcost) && pricePattern.test(cost);
+		}
+
 		$scope.calcTotal();
 	}
 	
 	//Calculate total declaration amount each change
 	$scope.calcTotal = function(){
 		$scope.declarationamount = 0;
+		var pricePattern = /^[0-9]{1}[0-9]{0,3}(\.[0-9]{2})?$/;
 		
 		for(var i = 0; i < $scope.declaration.lines.length; i++){
-			if($scope.declaration.lines[i].cost && $scope.declaration.lines[i].cost > 0){
-				$scope.declarationamount += Number($scope.declaration.lines[i].cost);
+			if($scope.declaration.lines[i].approvecosts){
+				$scope.declarationamount += Number($scope.declaration.lines[i].cost.replace(",", "."));
 			}
-		}	
+		}
+
+		$scope.declarationAmountDisplay = $scope.declarationamount.toString().replace(".", ",");
+		if($scope.declarationAmountDisplay.indexOf(",") == -1) {
+			$scope.declarationAmountDisplay += ",-";
+		} else {
+			if ($scope.declarationAmountDisplay.split(",")[1].length < 2) {
+				$scope.declarationAmountDisplay += "0";
+			}
+		}
 	}
 	
 	//Remove attachment
