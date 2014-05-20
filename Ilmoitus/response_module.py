@@ -3,6 +3,7 @@ import json
 import logging
 import ilmoitus_auth
 import webapp2 as webapp
+from error_response_module import give_error_response
 
 
 class BaseRequestHandler(webapp.RequestHandler):
@@ -74,13 +75,12 @@ def respond_with_object_details_by_id(request_handler, class_reference, object_i
     try:
         safe_id = long(object_id)
     except ValueError:
-        #TODO: give proper error response here
-        request_handler.abort(500)
+        give_error_response(request_handler, 404, "Id is geen correcte waarde (" + str(object_id) + ")")
 
     item = class_reference.get_by_id(safe_id)
     if item is None:
-        #TODO: give proper error response here
-        request_handler.abort(404)
+        give_error_response(request_handler, 404, "Object ["+class_reference+"] met id [" + str(object_id) + "] is niet gevonden")
+
     give_response(request_handler, item.get_object_json_data())
 
 
@@ -120,8 +120,7 @@ def give_response(request_handler, json_data):
     if json_data is not None:
         request_handler.response.write(json_data)
     else:
-        #TODO: give proper error response here
-        request_handler.abort(404)
+        give_error_response(request_handler, 404, "De opgevraagde collectie is leeg")
 
 
 def give_hard_response(request_handler, response_data):

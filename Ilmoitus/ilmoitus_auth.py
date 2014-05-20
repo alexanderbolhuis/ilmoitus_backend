@@ -56,7 +56,7 @@ def auth_error(request_handler):
 
 def auth(email, password):
     #TODO: Figure out how not to do this in unittests
-    #time.sleep(1)
+    time.sleep(1)
 
     person_query = ilmoitus_model.Person.query(ilmoitus_model.Person.email == email)
     query_result = person_query.get()

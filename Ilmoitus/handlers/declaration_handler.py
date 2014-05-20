@@ -6,6 +6,7 @@ from mail_module import *
 import datetime
 import mail_module
 import dateutil.parser
+import base64
 
 
 def find_declaration(handler, declaration_id):
@@ -13,11 +14,11 @@ def find_declaration(handler, declaration_id):
     try:
         safe_id = long(declaration_id)
     except ValueError:
-        give_error_response(handler, 400, "the given id isn't an int (" + str(declaration_id) + ")")
+        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(declaration_id) + ")")
 
     declaration = Declaration.get_by_id(safe_id)
     if declaration is None:
-        give_error_response(handler, 400, "Declaratie ["+str(safe_id)+"] niet gevonden.",
+        give_error_response(handler, 400, "Declaratie ["+str(safe_id)+"] niet gevonden",
                                           "Declaration is None")
 
     return declaration
@@ -31,25 +32,25 @@ def is_declaration_creator(handler, declaration, employee):
 def is_declaration_assigned(handler, declaration, current_person):
     if current_person.key is not declaration.get_last_assigned_to():
         give_error_response(handler, 401, "Kan de declaratie niet goedkeuren. Deze declaratie is niet aan u toegewezen",
-                                          "current_person_object's id was not in the declaration_object's asigned_to list.")
+                                          "current_person_object's id was not in the declaration_object's asigned_to list")
 
 
 def is_declaration_price_allowed_supervisor(handler, declaration, current_person):
     if current_person.max_declaration_price < declaration.items_total_price and current_person.max_declaration_price != -1:
-        give_error_response(handler, 401, "De huidige persoon mag deze declaratie niet goedkeuren. Bedrag te hoog.",
+        give_error_response(handler, 401, "De huidige persoon mag deze declaratie niet goedkeuren. Bedrag te hoog",
                             "Total item costs is: " + str(current_person.items_total_price) + " and the max amount is: "
-                            + str(current_person.max_declaration_price) + " .")
+                            + str(current_person.max_declaration_price))
 
 
 def is_declaration_state(handler, declaration, class_name):
     if declaration.class_name != class_name:
-        give_error_response(handler, 400, "Declaratie heeft niet de jusite status voor deze actie.",
+        give_error_response(handler, 400, "Declaratie heeft niet de jusite status voor deze actie",
                                           "Expected state: " + class_name + " Received state: " + declaration.class_name)
 
 
 def has_post(handler, post):
     if handler.request.POST[post] is None:
-        give_error_response(handler, 400, "Geen " + has_post + " ontvangen.", has_post + " is None")
+        give_error_response(handler, 400, "Geen " + has_post + " ontvangen", has_post + " is None")
 
 
 def is_declaration_states(handler, declaration, class_names):
@@ -375,3 +376,79 @@ class NewDeclarationHandler(BaseRequestHandler):
                                     'attachments': posted_attachments})
 
         response_module.give_response(self, combined_dict)
+
+
+class SpecificDeclarationHandler(BaseRequestHandler):
+    def get(self, declaration_id):
+        if self.is_logged_in() and str.isdigit(declaration_id):
+            result = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
+
+            if result is None:
+                give_error_response(self, 404, "Kan de opgevraagde declaratie niet vinden",
+                                    "Declaration id can only be of the type integer and cannot be None", 404)
+
+            if len(result.lines) == 0:
+                declarationline_query_result = []
+            else:
+                declarationline_query = ilmoitus_model.DeclarationLine.query(ilmoitus_model.DeclarationLine.key.IN(result.lines))
+                declarationline_query_result = declarationline_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+
+            if len(result.attachments) == 0:
+                attachments_query_result = []
+            else:
+                attachments_query = ilmoitus_model.Attachment.query(ilmoitus_model.Attachment.key.IN(result.attachments))
+                attachments_query_result = attachments_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
+
+            attachment_data = []
+            for attachment in attachments_query_result:
+                item = {"id": attachment.key.integer_id(), "name": attachment.name}
+                attachment_data.append(item)
+
+            data_dict = result.get_object_as_full_data_dict()
+            data_dict["attachments"] = attachment_data
+            data_dict["lines"] = map(lambda declaration_item: declaration_item.get_object_as_full_data_dict(), declarationline_query_result)
+
+            current_user = self.logged_in_person()
+            key = current_user.key
+
+            if result.created_by == key:
+                response_module.give_response(self, json.dumps(data_dict))
+
+            elif current_user.class_name == 'supervisor':
+                if key in result.assigned_to:
+                    response_module.give_response(self, json.dumps(data_dict))
+                else:
+                    give_error_response(self, 401,
+                                        "Deze declratie is niet aan jouw toegewezen", None, 401)
+
+            elif current_user.class_name == 'human_resources' and result.class_name == \
+                    'supervisor_approved_declaration' and result.submitted_to_human_resources_by is not None:
+                response_module.give_response(self, json.dumps(data_dict))
+            else:
+                give_error_response(self, 401,
+                                    "Je hebt niet de juiste rechten om deze declratie te openen", None, 401)
+        # if declaration_id not is int
+        else:
+            give_error_response(self, 400, "Kan de opgevraagde declaratie niet vinden",
+                                "Declaration id can only be of the type integer and cannot be None", 400)
+
+
+class SpecificAttachmentHandler(BaseRequestHandler):
+    def get(self, attachment_id):
+        #TODO find a way to secure this (declaration nonce?)
+
+        if str.isdigit(attachment_id):
+            attachment = ilmoitus_model.Attachment.get_by_id(long(attachment_id))
+            if attachment is None:
+                    give_error_response(self, 404, "Kan de opgevraagde bijlage niet vinden.",
+                                        "attachment id does not exist in the database.")
+        else:
+            give_error_response(self, 400, "Kan de opgevraagde bijlage niet vinden.",
+                                "attachment id can only be of the type integer.")
+
+        base64_string = attachment.file.split(",")[1]
+        mime = attachment.file.split(":")[1].split(";")[0]
+
+        self.response.headers['Content-Type'] = str(mime)
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.write(base64.b64decode(base64_string))
