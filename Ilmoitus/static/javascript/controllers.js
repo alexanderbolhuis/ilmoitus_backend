@@ -356,7 +356,9 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	request.done(function(data){
 		$scope.declaration = data;
 		$scope.comments = data.comment;
-		$scope.selectedattachment = $scope.declaration.attachments[0].id;
+		if($scope.declaration.attachments.length > 0){
+			$scope.selectedattachment = $scope.declaration.attachments[0].id;
+		}
 		$scope.$apply();
 		
 		//Get supervisor name and id
