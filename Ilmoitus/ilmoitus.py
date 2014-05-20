@@ -713,14 +713,13 @@ class SpecificDeclarationAttachmentsHandler(BaseRequestHandler):
 
 class SpecificAttachmentHandler(BaseRequestHandler):
     def get(self, attachment_id):
-        #=== web is unable to download the attachment if it has to send the header with authorization token. ===#
-        #person_data = ilmoitus_auth.get_current_person(self)
-        #current_user = person_data["person_value"]
-        #
-        #if current_user is None:
-        #    give_error_response(self, 401, "De bijlage kan niet worden opgehaald omdat u niet "
-        #                                   "de juiste permissies heeft.",
-        #                        "current_user is None")
+        person_data = ilmoitus_auth.get_current_person(self)
+        current_user = person_data["person_value"]
+
+        if current_user is None:
+            give_error_response(self, 401, "De bijlage kan niet worden opgehaald omdat u niet "
+                                           "de juiste permissies heeft.",
+                                "current_user is None")
 
         if str.isdigit(attachment_id):
             attachment = ilmoitus_model.Attachment.get_by_id(long(attachment_id))
@@ -733,8 +732,7 @@ class SpecificAttachmentHandler(BaseRequestHandler):
 
         base64_string = attachment.file.split(",")[1]
         mime = attachment.file.split(":")[1].split(";")[0]
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.headers['Content-Type'] = str(mime)
+        self.response.headers['Content-Type'] = mime
         self.response.write(base64.b64decode(base64_string))
 
 
