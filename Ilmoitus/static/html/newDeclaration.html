@@ -13,7 +13,7 @@
     <div>
         <div class="floatContainer">
             <div class="DeclarationTableTitle"><h3>Declaratie items:</h3></div>
-            <div class="TotalDeclarationPrice"> Totaal declaratiebedrag: &euro; {{declarationamount}},- </div>
+            <div class="TotalDeclarationPrice"> Totaal declaratiebedrag: &euro; {{declarationAmountDisplay}} </div>
         </div>
         <div>
             <table id="DeclarationTable" class="styledTable">
@@ -36,7 +36,7 @@
                         <td>
                         	<select ng-model="item.declaration_sub_type" ng-options="type.id as type.name for type in declaration_sub_types[$index]" ng:change="checkPrice($index);"></select>
                         </td>
-                        <td>&euro; <input class="DeclarationPriceinput" type="text" maxlength="4" ng-model="item.cost" ng-class="{FieldError: !item.approvecosts}" ng:change="checkPrice($index);" /></td>
+                        <td>&euro; <input class="DeclarationPriceinput" type="text" maxlength="6" ng-model="item.cost" ng-class="{FieldError: !item.approvecosts}" ng:change="checkPrice($index);" /></td>
                         <td><input type="text" ng-model="item.comment" /></td>
                         <td><input class="DeclarationDelete" type="button" value="X" ng:click="removeRow($index);" /></td>
                     </tr>
