@@ -1,4 +1,5 @@
 var baseurl = 'http://127.0.0.1:8080';
+var pricePattern = /^[0-9]{1}[0-9]{0,3}(\.[0-9]{2})?$/
 
 ilmoitusApp.controller('loginController', function($scope, $state) {
 	//Login button. Check for correct credentials.
@@ -149,6 +150,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	$scope.declaration = { lines:[{}] };
 	$scope.selectedattachment = null;
 	$scope.declarationamount = 0;
+	$scope.declarationAmountDisplay = "0,-";
 	
 	//Declaration type fields
 	$scope.declaration_types = [];
@@ -182,7 +184,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: baseurl + "/supervisors/",
+		url: baseurl + "/current_user/supervisors",
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
@@ -216,11 +218,44 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	
 	$scope.postDeclaration = function() {
 		var declaration = $scope.declaration;
-		for(var i = 0; i < declaration.lines.length; i++){
+		var today = new Date();
+		var errorReasons = [];
+
+		// Check if everything is correctly filled in. If not, show messagebox and don't submit anything.
+		if(declaration.lines.length == 1) {
+			errorReasons.push("Geef minimaal 1 declaratie item op.<br/>");
+		}
+
+		if(declaration.attachments.length == 0 || declaration.attachments[0].name == undefined) {
+			errorReasons.push("Voeg minimaal 1 bewijsstuk toe.<br/>");
+		}
+
+		for(var i = 0; i < declaration.lines.length - 1; i++){
+			if(!declaration.lines[i].receipt_date || new Date(declaration.lines[i].receipt_date) > today) {
+				errorReasons.push("Niet alle declaratie items hebben een geldige datum. Een datum kan niet in de toekomst liggen<br/>");
+			}
+
 			if(!declaration.lines[i].declaration_sub_type || declaration.lines[i].declaration_sub_type <= 0){
-				declaration.lines.splice(i, 1);	
+				errorReasons.push("Niet alle declaratie items hebben een soort en subsoort.<br/>");
+			}
+
+			if(!declaration.lines[i].approvecosts){
+				errorReasons.push("Niet alle bedragen zijn correct.<br/>");
 			}
 		}
+
+		if(errorReasons.length > 0) {
+			var errorMessage = "Kan de declaratie niet verzenden vanwege de volgende redenen:<br/><ul>"
+			for (var i = 0; i < errorReasons.length; i++) {
+				errorMessage += "<li>" + errorReasons[i] + "</li>";
+			};
+			errorMessage += "</ul>";
+			showMessage(errorMessage, "Fout");
+			return;
+		}
+
+		//Remove the last empty line and send the declaration data
+		declaration.lines.splice(declaration.lines.length - 1, 1);
 		
 		var request = $.ajax({
 			type: "POST",
@@ -285,12 +320,16 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	
 	//Check if the price is valid
 	$scope.checkPrice = function(row){
-		var cost = Number($scope.declaration.lines[row].cost);
+		var cost = $scope.declaration.lines[row].cost.replace(",", ".");
 		var subtype = getSubtypeByID(row, $scope.declaration.lines[row].declaration_sub_type);
 		var maxcost = subtype != null && subtype.max_cost ? subtype.max_cost : 0;
 
-		$scope.declaration.lines[row].approvecosts = isFinite(cost) && (maxcost <= 0 || cost < maxcost);
-		
+		if($scope.declaration.lines[row].cost == ""){
+			$scope.declaration.lines[row].approvecosts = false;
+		} else {
+			$scope.declaration.lines[row].approvecosts = isFinite(Number(cost)) && Number(cost) > 0 && (maxcost <= 0 || Number(cost) <= maxcost) && pricePattern.test(cost);
+		}
+
 		$scope.calcTotal();
 	}
 	
@@ -299,10 +338,19 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 		$scope.declarationamount = 0;
 		
 		for(var i = 0; i < $scope.declaration.lines.length; i++){
-			if($scope.declaration.lines[i].cost && $scope.declaration.lines[i].cost > 0){
-				$scope.declarationamount += Number($scope.declaration.lines[i].cost);
+			if($scope.declaration.lines[i].approvecosts){
+				$scope.declarationamount += Number($scope.declaration.lines[i].cost.replace(",", "."));
 			}
-		}	
+		}
+
+		$scope.declarationAmountDisplay = $scope.declarationamount.toString().replace(".", ",");
+		if($scope.declarationAmountDisplay.indexOf(",") == -1) {
+			$scope.declarationAmountDisplay += ",-";
+		} else {
+			if ($scope.declarationAmountDisplay.split(",")[1].length < 2) {
+				$scope.declarationAmountDisplay += "0";
+			}
+		}
 	}
 	
 	//Remove attachment
@@ -356,8 +404,10 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	request.done(function(data){
 		$scope.declaration = data;
 		$scope.comments = data.comment;
+		if($scope.declaration.attachments.length > 0){
+			$scope.selectedattachment = $scope.declaration.attachments[0].id;
+		}
 		$scope.$apply();
-		console.log(data);
 		
 		//Get supervisor name and id
 		var supervisorKey = data.assigned_to[data.assigned_to.length-1];
@@ -377,4 +427,9 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 			$scope.$apply();
 		});
 	});
+
+    $scope.openAttachment = function() {
+        window.open("/attachment/"+$scope.selectedattachment, '_blank');
+    }
+    
 });
