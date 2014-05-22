@@ -373,7 +373,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 
 
 ilmoitusApp.controller('declarationsSubmittedController', function($scope, $state) {
-	$scope.navBtnSelect("sendedDeclarationsBtn");
+	$scope.navBtnSelect("declarationsSubmittedBtn");
 
 	var request = $.ajax({
 		type: "GET",
@@ -420,7 +420,7 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 });
 
 ilmoitusApp.controller('sentDeclarationDetailsController', function($scope) {
-	$scope.navBtnSelect("sentDeclarationDetailsBtn");
+	
 });
 
 ilmoitusApp.controller('declarationsHistoryController', function($scope) {
