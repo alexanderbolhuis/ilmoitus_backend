@@ -18,10 +18,11 @@ def find_declaration(handler, declaration_id):
 
     declaration = Declaration.get_by_id(safe_id)
     if declaration is None:
-        give_error_response(handler, 400, "Declaratie ["+str(safe_id)+"] niet gevonden",
+        give_error_response(handler, 404, "Declaratie ["+str(safe_id)+"] niet gevonden",
                                           "Declaration is None")
 
     return declaration
+
 
 def is_declaration_creator(handler, declaration, employee):
     if declaration.created_by is not employee:
@@ -61,6 +62,14 @@ def is_declaration_states(handler, declaration, class_names):
     if not found:
         give_error_response(handler, 400, "Declaratie heeft niet de jusite status voor deze actie.",
                                           "Expected state: " + str(class_names) + " Received state: " + declaration.class_name)
+
+
+def is_allowed_declaration_viewer(handler, declaration, current_user):
+    if declaration.created_by != current_user.key and \
+       (current_user.class_name != 'supervisor' or current_user.key not in declaration.assigned_to) and \
+       current_user.class_name != 'human_resources':
+
+        give_error_response(handler, 401, "U heeft niet de juiste rechten om deze declaratie te openen")
 
 
 class OpenToLockedDeclarationHandler(BaseRequestHandler):
@@ -137,102 +146,49 @@ class ApproveBySupervisorHandler(BaseRequestHandler):
 
 class DeclineByHumanResourcesHandler(BaseRequestHandler):
     def put(self, declaration_id):
-        person_data = ilmoitus_auth.get_current_person(self)
-        person = person_data["person_value"]
-        if person is not None:
-            if person.class_name == "human_resources":  # person.key.class_name == "human_resources":
-                if self.request.body is not None:
-                    data = None
-                    try:
-                        data = json.loads(self.request.body)
-                    except ValueError:
+        #Checks (break when fails)
+        self.is_logged_in()
+        self.check_hr()
+        has_post(self, "comment")
 
-                        give_error_response(self, 500, "Kan de declaratie niet afkeuren omdat er ongeldige data "
-                                                       "is verstuurd",
-                                            "Invalid json data; Invalid format", more_info=str(self.request.body))
-                    declaration_id = data['declaration_id']
-                    person_key = person.key
-                    current_date = datetime.datetime.now()
-                    declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
-                    if declaration.class_name == 'supervisor_approved_declaration':
-                        declaration.class_name = 'human_resources_declined_declaration'
-                        declaration.human_resources_declined_by = person_key
-                        declaration.human_resources_declined_at = current_date
-                        declaration.put()
-                        mail_module.send_message_declaration_status_changed(self, declaration)
-                        response_module.give_response(self, declaration.get_object_json_data())
-                    else:
-                        #
-                        give_error_response(self, 500, "Kan de declaratie niet afkeuren omdat deze niet eerst "
-                                                       "door een leidinggevende is goedgekeurd.",
-                                            "Can only decline a supervisor_approved_declaration.")
-                else:
-                    #
-                    give_error_response(self, 500, "Kan de declaratie niet afkeuren omdat er is geen data is "
-                                                   "opgegeven.",
-                                        "Request body is None!.")
-            else:
-                give_error_response(self, 401, "Kan de declaratie niet afkeuren omdat u niet de juiste "
-                                               "permissie heeft.",
-                                    "current_user is not from human_resources")
-        else:
-            give_error_response(self, 401, "Kan de declaratie niet afkeuren omdat u niet ingelogd bent.",
-                                "current_user is None")
+        declaration = find_declaration(self, declaration_id)
+        is_declaration_state(self, declaration, {"supervisor_approved_declaration"})
+
+        declaration.class_name = 'human_resources_declined_declaration'
+        declaration.human_resources_declined_by = self.logged_in_person().key
+        declaration.human_resources_declined_at = datetime.datetime.now()
+        declaration.human_resources_comment = str(self.request.POST["comment"])
+        declaration.put()
+
+        send_message_declaration_status_changed(self, declaration)
+        response_module.give_response(self, declaration.get_object_json_data())
 
 
 class ApproveByHumanResourcesHandler(BaseRequestHandler):
     def put(self, declaration_id):
-        person_data = ilmoitus_auth.get_current_person(self)
-        current_user = person_data["person_value"]
+        #Checks (break when fails)
+        self.is_logged_in()
+        self.check_hr()
+        declaration = find_declaration(self, declaration_id)
+        is_declaration_state(self, declaration, {"supervisor_approved_declaration"})
 
-        if current_user is not None:
-            if self.request.body is not None:
-                data = None
-                try:
-                    data = json.loads(self.request.body)
-                except ValueError:
-                    give_error_response(self, 500, "Kan de declaratie niet goedkeuren omdat er ongeldige data "
-                                                   "is verstuurd.",
-                                        "Invalid JSON data; invalid format.", more_info=str(self.request.body))
+        #Action
+        declaration.class_name = "human_resources_approved_declaration"
+        declaration.human_resources_approved_by = self.logged_in_person().key
+        declaration.human_resources_approved_at = datetime.datetime.now()
+        if self.request.POST["comment"] is not None:
+            declaration.human_resources_comment = str(self.request.POST["comment"])
+        declaration.put()
 
-                declaration_id = data["id"]
-                pay_date = dateutil.parser.parse(data["pay_date"])
-                today_date = datetime.datetime.now()
-
-                declaration = ilmoitus_model.Declaration.get_by_id(declaration_id)
-
-                if declaration.class_name == "supervisor_approved_declaration":
-                    declaration.class_name = "human_resources_approved_declaration"
-                    declaration.human_resources_approved_at = today_date
-                    declaration.will_be_payed_out_on = pay_date
-                    declaration.human_resources_approved_by = current_user.key
-                    declaration.put()
-                    mail_module.send_mail_declaration_approved(self, declaration)
-                    response_module.give_response(self, declaration.get_object_json_data())
-                else:
-                    give_error_response(self, 500, "Kan de declaratie niet goedkeuren omdat deze niet eerst "
-                                                   "door een leidinggevende is goedgekeurd.",
-                                        "Can only approve a supervisor_approved_declaration.")
-            else:
-                give_error_response(self, 500, "Kan de declaratie niet goedkeuren omdat er is geen data is opgegeven.",
-                                    "Request body is None.")
-        else:
-            #user does not have the appropriate permissions or isn't logged in at all.
-            give_error_response(self, 401, "Geen permissie om een declaratie goed te keuren!",
-                                "current_user is None or not from human_resources")
+        send_message_declaration_status_changed(self, declaration)
+        give_response(self, json.dumps(declaration.get_object_as_data_dict()))
 
 
 class NewDeclarationHandler(BaseRequestHandler):
     def post(self):
-        # Check if logged in
-        current_person_data = ilmoitus_auth.get_current_person(self)
-        created_by = current_person_data["person_value"]
+        #Checks (break when fails)
+        self.is_logged_in()
 
-        if "user_is_logged_in" not in current_person_data.keys() or \
-                not current_person_data["user_is_logged_in"]:
-            give_error_response(self, 401,
-                                "Er is niemand ingelogd.",
-                                "get_current_person returned a False value for user_is_logged_in")
         # Check if body is set
         post_data = None
         try:
@@ -327,7 +283,7 @@ class NewDeclarationHandler(BaseRequestHandler):
         declaration = ilmoitus_model.Declaration()
         declaration.class_name = "open_declaration"
         declaration.assigned_to = [assigned_to.key]
-        declaration.created_by = created_by.key
+        declaration.created_by = self.logged_in_person().key
         declaration.comment = declaration_data["comment"]
         declaration.items_count = 0
         declaration.items_total_price = 0
@@ -363,74 +319,28 @@ class NewDeclarationHandler(BaseRequestHandler):
                     attachment.name = attachment_data["name"]
                     attachment.file = attachment_data["file"]
                     attachment.put()
-                    posted_attachments.append(attachment.get_object_as_data_dict())
+                    posted_attachments.append(attachment)
             except Exception:
                 give_error_response(self, 400, "Kan geen declaratie toevoegen. De opgestuurde data bevat foute "
                                                "waardes voor een bijlage.",
                                     "The body contains wrong values.")
 
+        declaration.attachments = map(lambda attachment: attachment.key, posted_attachments)
+        declaration.put()
 
-        lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), posted_lines)
-        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
-                                    'lines': lines,
-                                    'attachments': posted_attachments})
-
-        response_module.give_response(self, combined_dict)
+        data_dict = declaration.get_object_as_full_data_dict()
+        give_response(self, json.dumps(data_dict))
 
 
 class SpecificDeclarationHandler(BaseRequestHandler):
     def get(self, declaration_id):
-        if self.is_logged_in() and str.isdigit(declaration_id):
-            result = ilmoitus_model.Declaration.get_by_id(long(declaration_id))
+        self.is_logged_in()
+        declaration = find_declaration(self, declaration_id)
+        current_user = self.logged_in_person()
+        is_allowed_declaration_viewer(self, declaration, current_user)
 
-            if result is None:
-                give_error_response(self, 404, "Kan de opgevraagde declaratie niet vinden",
-                                    "Declaration id can only be of the type integer and cannot be None", 404)
-
-            if len(result.lines) == 0:
-                declarationline_query_result = []
-            else:
-                declarationline_query = ilmoitus_model.DeclarationLine.query(ilmoitus_model.DeclarationLine.key.IN(result.lines))
-                declarationline_query_result = declarationline_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
-
-            if len(result.attachments) == 0:
-                attachments_query_result = []
-            else:
-                attachments_query = ilmoitus_model.Attachment.query(ilmoitus_model.Attachment.key.IN(result.attachments))
-                attachments_query_result = attachments_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
-
-            attachment_data = []
-            for attachment in attachments_query_result:
-                item = {"id": attachment.key.integer_id(), "name": attachment.name}
-                attachment_data.append(item)
-
-            data_dict = result.get_object_as_full_data_dict()
-            data_dict["attachments"] = attachment_data
-            data_dict["lines"] = map(lambda declaration_item: declaration_item.get_object_as_full_data_dict(), declarationline_query_result)
-
-            current_user = self.logged_in_person()
-            key = current_user.key
-
-            if result.created_by == key:
-                response_module.give_response(self, json.dumps(data_dict))
-
-            elif current_user.class_name == 'supervisor':
-                if key in result.assigned_to:
-                    response_module.give_response(self, json.dumps(data_dict))
-                else:
-                    give_error_response(self, 401,
-                                        "Deze declratie is niet aan jouw toegewezen", None, 401)
-
-            elif current_user.class_name == 'human_resources' and result.class_name == \
-                    'supervisor_approved_declaration' and result.submitted_to_human_resources_by is not None:
-                response_module.give_response(self, json.dumps(data_dict))
-            else:
-                give_error_response(self, 401,
-                                    "Je hebt niet de juiste rechten om deze declratie te openen", None, 401)
-        # if declaration_id not is int
-        else:
-            give_error_response(self, 400, "Kan de opgevraagde declaratie niet vinden",
-                                "Declaration id can only be of the type integer and cannot be None", 400)
+        data_dict = declaration.get_object_as_full_data_dict()
+        give_response(self, json.dumps(data_dict))
 
 
 class SpecificAttachmentHandler(BaseRequestHandler):
