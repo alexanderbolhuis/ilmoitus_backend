@@ -142,6 +142,9 @@ class Declaration(ndb.Model):
                                                             "human_resources_comment", "human_resources_approved_by",
                                                             "human_resources_approved_at", "lines", "attachments"]}
 
+    def get_last_assigned_to(self):
+        return self.assigned_to[len(self.assigned_to)-1]
+
     def get_object_as_data_dict(self):
         return dict({'id': self.key.integer_id(),
                      'class_name': self.class_name,
@@ -149,7 +152,7 @@ class Declaration(ndb.Model):
                     property_not_none_key_value_pair_with_permissions(self).items())
 
     def get_object_as_full_data_dict(self):
-        last_assigned_to = Person.get_by_id(self.assigned_to[len(self.assigned_to)-1].integer_id())
+        last_assigned_to = Person.get_by_id(self.get_last_assigned_to().integer_id())
         return dict({'id': self.key.integer_id(),
                      'class_name': self.class_name,
                      'last_assigned_to': last_assigned_to.get_object_as_data_dict(),
@@ -206,10 +209,10 @@ class Declaration(ndb.Model):
 # DeclarationSubType Model class
 class DeclarationSubType(ndb.Model):
     name = ndb.StringProperty()
-    declarationType = ndb.KeyProperty(kind="DeclarationType")
+    declaration_type = ndb.KeyProperty(kind="DeclarationType")
     max_cost = ndb.IntegerProperty()  # Optional
 
-    all_custom_properties = ['name', 'max_cost', 'declarationType']
+    all_custom_properties = ['name', 'max_cost', 'declaration_type']
 
     def get_object_as_data_dict(self):
         return dict({'id': self.key.integer_id()}.items() + property_not_none_key_value_pair(self, self.all_custom_properties).items())
@@ -246,7 +249,7 @@ class DeclarationLine(ndb.Model):
 
     def get_object_as_full_data_dict(self):
         subdeclaration = DeclarationSubType.get_by_id(self.declaration_sub_type.integer_id())
-        declaration = DeclarationType.get_by_id(subdeclaration.declarationType.integer_id())
+        declaration = DeclarationType.get_by_id(subdeclaration.declaration_type.integer_id())
 
         return dict({'id': self.key.integer_id(),
                      'cost': self.cost,
@@ -254,7 +257,6 @@ class DeclarationLine(ndb.Model):
                      'comment': self.comment,
                      'declaration_sub_type': subdeclaration.get_object_as_data_dict(),
                      'declaration_type': declaration.get_object_as_data_dict()}.items())
-
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
