@@ -375,7 +375,14 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 		$scope.comments = data.comment;
 		$scope.supervisorId = data.last_assigned_to.employee_number
 		$scope.supervisor = data.last_assigned_to.first_name + " " + data.last_assigned_to.last_name;
+		if($scope.declaration.attachments.length > 0){
+			$scope.selectedattachment = $scope.declaration.attachments[0].id;
+		}
 		$scope.$apply();
-		console.log(data);
 	});
+
+    $scope.openAttachment = function() {
+        window.open("/attachment/"+$scope.selectedattachment, '_blank');
+    }
+    
 });
