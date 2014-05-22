@@ -191,7 +191,6 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 		}
 	});
 	request.done(function(data){
-		console.log(data);
 		$scope.supervisorList = data;
 		if(data.length > 0){
 			$scope.declaration.assigned_to = data[0].id;
@@ -227,9 +226,9 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 			errorReasons.push("Geef minimaal 1 declaratie item op.<br/>");
 		}
 
-		/*if(declaration.attachments.length == 0 || declaration.attachments[0].name == undefined) {
+		if(declaration.attachments.length == 0 || declaration.attachments[0].name == undefined) {
 			errorReasons.push("Voeg minimaal 1 bewijsstuk toe.<br/>");
-		}*/
+		}
 
 		for(var i = 0; i < declaration.lines.length - 1; i++){
 			if(!declaration.lines[i].receipt_date || new Date(declaration.lines[i].receipt_date) > today) {
