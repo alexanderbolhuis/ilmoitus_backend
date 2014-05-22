@@ -216,11 +216,44 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	
 	$scope.postDeclaration = function() {
 		var declaration = $scope.declaration;
-		for(var i = 0; i < declaration.lines.length; i++){
+		var today = new Date();
+		var errorReasons = [];
+
+		// Check if everything is correctly filled in. If not, show messagebox and don't submit anything.
+		if(declaration.lines.length == 1) {
+			errorReasons.push("Geef minimaal 1 declaratie item op.<br/>");
+		}
+
+		if(declaration.attachments.length == 0 || declaration.attachments[0].name == undefined) {
+			errorReasons.push("Voeg minimaal 1 bewijsstuk toe.<br/>");
+		}
+
+		for(var i = 0; i < declaration.lines.length - 1; i++){
+			if(!declaration.lines[i].receipt_date || new Date(declaration.lines[i].receipt_date) > today) {
+				errorReasons.push("Niet alle declaratie items hebben een geldige datum. Een datum kan niet in de toekomst liggen<br/>");
+			}
+
 			if(!declaration.lines[i].declaration_sub_type || declaration.lines[i].declaration_sub_type <= 0){
-				declaration.lines.splice(i, 1);	
+				errorReasons.push("Niet alle declaratie items hebben een soort en subsoort.<br/>");
+			}
+
+			if(!declaration.lines[i].approvecosts){
+				errorReasons.push("Niet alle bedragen zijn correct.<br/>");
 			}
 		}
+
+		if(errorReasons.length > 0) {
+			var errorMessage = "Kan de declaratie niet verzenden vanwege de volgende redenen:<br/><ul>"
+			for (var i = 0; i < errorReasons.length; i++) {
+				errorMessage += "<li>" + errorReasons[i] + "</li>";
+			};
+			errorMessage += "</ul>";
+			showMessage(errorMessage, "Fout");
+			return;
+		}
+
+		//Remove the last empty line and send the declaration data
+		declaration.lines.splice(declaration.lines.length - 1, 1);
 		
 		var request = $.ajax({
 			type: "POST",
