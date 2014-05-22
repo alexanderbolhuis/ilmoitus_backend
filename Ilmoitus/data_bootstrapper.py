@@ -121,22 +121,22 @@ class DataBootsTrapper(webapp2.RequestHandler):
         type_one.put()
 
         #DECLARATION TYPES & SUBTYPES
-        subtype_one = ilmoitus_model.DeclarationSubType(name="Zakelijke lunch/Diner met relaties", declarationType=type_one.key)
+        subtype_one = ilmoitus_model.DeclarationSubType(name="Zakelijke lunch/Diner met relaties", declaration_type=type_one.key)
         subtype_one.put()
 
-        subtype_two = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfskosten (eventueel incl. maaltijd)", declarationType=type_one.key)
+        subtype_two = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfskosten (eventueel incl. maaltijd)", declaration_type=type_one.key)
         subtype_two.put()
 
-        subtype_three = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie", declarationType=type_one.key)
+        subtype_three = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfs-/Lunch-/Dinerkosten i.v.m. studie", declaration_type=type_one.key)
         subtype_three.put()
 
-        subtype_four = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfskosten buitenland", declarationType=type_one.key)
+        subtype_four = ilmoitus_model.DeclarationSubType(name="Logies/Verblijfskosten buitenland", declaration_type=type_one.key)
         subtype_four.put()
 
-        subtype_five = ilmoitus_model.DeclarationSubType(name="Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", max_cost=15, declarationType=type_one.key)
+        subtype_five = ilmoitus_model.DeclarationSubType(name="Lunch onderweg/i.v.m. meerwerk (max 15,- p.d.)", max_cost=15, declaration_type=type_one.key)
         subtype_five.put()
 
-        subtype_six = ilmoitus_model.DeclarationSubType(name="Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", max_cost=15, declarationType=type_one.key)
+        subtype_six = ilmoitus_model.DeclarationSubType(name="Diner onderweg/i.v.m. meerwerk (max 15,- p.d.)", max_cost=15, declaration_type=type_one.key)
         subtype_six.put()
 
         type_one.sub_types = [subtype_one.key, subtype_two.key, subtype_three.key, subtype_four.key, subtype_five.key,
