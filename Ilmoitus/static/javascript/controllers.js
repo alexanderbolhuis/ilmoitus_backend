@@ -1,4 +1,5 @@
 var baseurl = 'http://127.0.0.1:8080';
+var userData;
 var pricePattern = /^[0-9]{1}[0-9]{0,3}(\.[0-9]{2})?$/
 
 ilmoitusApp.controller('loginController', function($scope, $state) {
@@ -55,8 +56,9 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 	});
 
 	request.done(function(data){
-		$scope.userName = data.first_name + " " + data.last_name;
-		$scope.userId = data.employee_number;
+		userData = data;
+		$scope.userName = userData.first_name + " " + userData.last_name;
+		$scope.userId = userData.employee_number;
 		$scope.$apply();
 	});
 
@@ -371,25 +373,9 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	request.done(function(data){
 		$scope.declaration = data;
 		$scope.comments = data.comment;
+		$scope.supervisorId = data.last_assigned_to.employee_number
+		$scope.supervisor = data.last_assigned_to.first_name + " " + data.last_assigned_to.last_name;
 		$scope.$apply();
 		console.log(data);
-		
-		//Get supervisor name and id
-		var supervisorKey = data.assigned_to[data.assigned_to.length-1];
-		var request2 = $.ajax({
-			type: "GET",
-			headers: {"Authorization": sessionStorage.token},
-			url: baseurl + "/persons/"+supervisorKey,
-			crossDomain: true,
-			error: function(jqXHR, textStatus, errorThrown){
-				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
-			}
-		});
-
-		request2.done(function(data){
-			$scope.supervisorId = data.employee_number;
-			$scope.supervisor = data.first_name + " " + data.last_name;
-			$scope.$apply();
-		});
 	});
 });
