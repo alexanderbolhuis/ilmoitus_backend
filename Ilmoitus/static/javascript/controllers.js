@@ -1,4 +1,5 @@
 var baseurl = 'http://127.0.0.1:8080';
+var pricePattern = /^[0-9]{1}[0-9]{0,3}(\.[0-9]{2})?$/
 
 ilmoitusApp.controller('loginController', function($scope, $state) {
 	//Login button. Check for correct credentials.
@@ -289,12 +290,11 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 		var cost = $scope.declaration.lines[row].cost.replace(",", ".");
 		var subtype = getSubtypeByID(row, $scope.declaration.lines[row].declaration_sub_type);
 		var maxcost = subtype != null && subtype.max_cost ? subtype.max_cost : 0;
-		var pricePattern = /^[0-9]{1}[0-9]{0,3}(\.[0-9]{2})?$/
 
 		if($scope.declaration.lines[row].cost == ""){
 			$scope.declaration.lines[row].approvecosts = false;
 		} else {
-			$scope.declaration.lines[row].approvecosts = isFinite(Number(cost)) && (maxcost <= 0 || Number(cost) <= maxcost) && pricePattern.test(cost);
+			$scope.declaration.lines[row].approvecosts = isFinite(Number(cost)) && Number(cost) > 0 && (maxcost <= 0 || Number(cost) <= maxcost) && pricePattern.test(cost);
 		}
 
 		$scope.calcTotal();
@@ -303,7 +303,6 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	//Calculate total declaration amount each change
 	$scope.calcTotal = function(){
 		$scope.declarationamount = 0;
-		var pricePattern = /^[0-9]{1}[0-9]{0,3}(\.[0-9]{2})?$/;
 		
 		for(var i = 0; i < $scope.declaration.lines.length; i++){
 			if($scope.declaration.lines[i].approvecosts){
