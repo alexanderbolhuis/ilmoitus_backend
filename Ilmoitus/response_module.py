@@ -19,6 +19,11 @@ class BaseRequestHandler(webapp.RequestHandler):
         result = ilmoitus_auth.get_current_person(self)
         return result["person_value"]
 
+    def check_hr(self):
+        if self.logged_in_person().class_name != "human_resources":
+            give_error_response(self, 401, "U bent niet ingelogd als HR",
+                                           "User is not HR")
+
     def options(self, optionalkey=None):
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization'

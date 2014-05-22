@@ -375,7 +375,7 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
 
         token = setup_data["token"]
         path = "/declaration/10000/approve_by_supervisor"
-        self.negative_test_stub_handler(token, path, "put", 400, data_dict=json.dumps({"comment": "none"}))
+        self.negative_test_stub_handler(token, path, "put", 404, data_dict=json.dumps({"comment": "none"}))
 
 
     def test_negative_put_invalid_class_name(self):
@@ -1150,18 +1150,12 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         self.assertEqual(attachment_data[0]["id"], attachments[0].key.integer_id())
 
     def test_positive_no_attachments(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
         path = "/declaration/(.*)"
 
-        setup_data = self.setup_server_with_user(
-            [(path, SpecificDeclarationHandler)],
-            user_is_logged_in)
+        setup_data = self.setup_server_with_user([(path, SpecificDeclarationHandler)], True)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
-        logged_in_person.class_name = "employee"
-
         logged_in_person.put()
 
         supervisor = PersonDataCreator.create_valid_supervisor()
@@ -1231,49 +1225,21 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         path = "/declaration/" + str(open_declaration.key.integer_id())
         self.negative_test_stub_handler(token, path, "get", 401)
 
-    def test_negative_get_hr_declaration_open_declaration(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/declaration/(.*)"
-        setup_data = self.setup_server_with_user([(path, SpecificDeclarationHandler)],
-                                                 user_is_logged_in)
-        token = setup_data["token"]
-
-        logged_in_person = setup_data["random_person"]
-        logged_in_person.class_name = "human_resources"
-        logged_in_person.put()
-
-        employee = PersonDataCreator.create_valid_employee_data()
-        supervisor = PersonDataCreator.create_valid_supervisor()
-
-        # checks if hr can see an open declaration
-        open_declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
-        path = "/declaration/" + str(open_declaration.key.integer_id())
-        self.negative_test_stub_handler(token, path, "get", 401)
 
     def test_negative_declaration_not_found(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
         path = "/declaration/(.*)"
-
-        setup_data = self.setup_server_with_user(
-            [(path, SpecificDeclarationHandler)],
-            user_is_logged_in)
+        setup_data = self.setup_server_with_user([(path, SpecificDeclarationHandler)], True)
         token = setup_data["token"]
 
         logged_in_person = setup_data["random_person"]
-        logged_in_person.class_name = "employee"
-
         logged_in_person.put()
 
         supervisor = PersonDataCreator.create_valid_supervisor()
-
         declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
         declaration_id = declaration.key.integer_id()
         declaration.key.delete()
 
         path = "/declaration/" + str(declaration_id)
-
         self.negative_test_stub_handler(token, path, "get", 404)
 
     def test_negative_declaration_sent_text_as_id(self):
@@ -1384,7 +1350,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         declarationattachments = DeclarationsDataCreator.create_valid_declaration_attachments(declaration, 2)
 
         lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
-        attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_data_dict(), declarationattachments)
+        attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_full_data_dict(), declarationattachments)
 
         combined_dict = json.dumps({'declaration': dict(declaration.get_object_as_data_dict().items() +
                                                    {'supervisor': supervisor.key.integer_id(),
@@ -1405,7 +1371,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
 
         response_data = json.loads(response.body)
 
-        response_declaration = response_data["declaration"]
+        response_declaration = response_data
         response_declarationlines = response_data["lines"]
         response_attachments = response_data["attachments"]
 
@@ -1417,15 +1383,13 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
             self.assertEqual(response_declaration["items_total_price"], items_total_price)
             self.assertIsNotNone(response_declarationlines[0]["declaration_sub_type"])
             self.assertEqual(response_attachments[0]["name"], declarationattachments[0].name)
-            self.assertEqual(response_attachments[0]["file"], declarationattachments[0].file)
             self.assertEqual(response_attachments[1]["name"], declarationattachments[1].name)
-            self.assertEqual(response_attachments[1]["file"], declarationattachments[1].file)
 
             self.assertEqual(response_declaration["created_by"], (employee.key.integer_id()))
             self.assertEqual(response_declaration["assigned_to"], [supervisor.key.integer_id()])
 
 
-            self.assertEqual(response_declaration['lines'][0], response_declarationlines[0]['id'])
+            self.assertEqual(response_declaration['lines'][0]["id"], response_declarationlines[0]['id'])
 
         except KeyError as error:
             self.fail("Test Failed! Expected the key: " + str(
@@ -1463,7 +1427,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         declarationattachments = DeclarationsDataCreator.create_valid_declaration_attachments(declaration, 2)
 
         lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
-        attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_data_dict(), declarationattachments)
+        attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_full_data_dict(), declarationattachments)
 
         combined_dict = json.dumps({'declaration': dict(declaration.get_object_as_data_dict().items() +
                                                    {'supervisor': supervisor.key.integer_id(),
@@ -1488,7 +1452,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
                                                    data_dict=combined_dict)
 
         response_data = json.loads(response.body)
-        response_declaration = response_data["declaration"]
+        response_declaration = response_data
         response_declarationlines = response_data["lines"]
         response_attachments = response_data["attachments"]
 
@@ -1502,15 +1466,15 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
             self.assertIsNotNone(response_declarationlines[1]["declaration_sub_type"])
             self.assertIsNotNone(response_declarationlines[2]["declaration_sub_type"])
             self.assertEqual(response_attachments[0]["name"], declarationattachments[0].name)
-            self.assertEqual(response_attachments[0]["file"], declarationattachments[0].file)
+            #self.assertEqual(response_attachments[0]["file"], declarationattachments[0].file)
             self.assertEqual(response_attachments[1]["name"], declarationattachments[1].name)
-            self.assertEqual(response_attachments[1]["file"], declarationattachments[1].file)
+            #self.assertEqual(response_attachments[1]["file"], declarationattachments[1].file)
 
             self.assertEqual(response_declaration["created_by"], (employee.key.integer_id()))
             self.assertEqual(response_declaration["assigned_to"], [supervisor.key.integer_id()])
 
             for i in range(len(response_declarationlines)):
-                self.assertEqual(response_declaration['lines'][i], response_declarationlines[i]['id'])
+                self.assertEqual(response_declaration['lines'][i]['id'], response_declarationlines[i]['id'])
 
         except KeyError as error:
             self.fail("Test Failed! Expected the key: " + str(
@@ -1563,7 +1527,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
 
         response_data = json.loads(response.body)
 
-        response_declaration = response_data["declaration"]
+        response_declaration = response_data
         response_declarationlines = response_data["lines"]
         response_attachments = response_data["attachments"]
 
@@ -1578,7 +1542,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
 
             self.assertEqual(response_declaration["created_by"], (employee.key.integer_id()))
             self.assertEqual(response_declaration["assigned_to"], [supervisor.key.integer_id()])
-            self.assertEqual(response_declaration["lines"][0], response_declarationlines[0]["id"])
+            self.assertEqual(response_declaration["lines"][0]["id"], response_declarationlines[0]["id"])
 
         except KeyError as error:
             self.fail("Test Failed! Expected the key: " + str(
@@ -1596,44 +1560,6 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
                       "Full error message:\n"
                       + str(error))
 
-    def test_add_new_declaration_negative(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
-        path = "/declaration"
-
-        setup_data = self.setup_server_with_user([(path, NewDeclarationHandler)],
-                                                 user_is_logged_in)
-
-        logged_in_person = setup_data["random_person"]
-        token = setup_data["token"]
-        logged_in_person.class_name = "employee"
-        logged_in_person.put()
-
-        employee = logged_in_person
-        supervisor = PersonDataCreator.create_valid_supervisor()
-        declaration = DeclarationsDataCreator.create_valid_open_declaration(employee, supervisor)
-        declarationlines = DeclarationsDataCreator.create_valid_declaration_lines(declaration, 1)
-        declarationattachments = DeclarationsDataCreator.create_valid_declaration_attachments(declaration, 2)
-
-        declaration.assigned_to[0] = None
-
-        lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
-        attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_data_dict(), declarationattachments)
-
-        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
-                                    'supervisor': supervisor.key.integer_id(),
-                                    'lines': lines,
-                                    'attachments': attachments})
-
-        for declarationline in declarationlines:
-            declarationline.key.delete()
-
-        for declarationattachment in declarationattachments:
-            declarationattachment.key.delete()
-
-        declaration.key.delete()
-
-        self.negative_test_stub_handler(token, path, "post", 400, combined_dict)
 
     def test_add_new_declaration_one_line_negative(self):
         user_is_logged_in = True
@@ -1658,11 +1584,12 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
             declarationline.declaration_sub_type = None
 
         lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
-        attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_data_dict(), declarationattachments)
+        attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_full_data_dict(), declarationattachments)
 
-        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
-                                    'lines': lines,
-                                    'attachments': attachments})
+        combined_dict = json.dumps({'declaration': dict(declaration.get_object_as_data_dict().items() +
+                                                   {'lines': lines,
+                                                    'attachments': attachments
+                                                   }.items())})
 
         for declarationline in declarationlines:
             declarationline.key.delete()
@@ -1675,16 +1602,11 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         self.negative_test_stub_handler(token, path, "post", 400, combined_dict)
 
     def test_add_new_declaration_more_lines_negative(self):
-        user_is_logged_in = True
-        user_is_admin = '0'
         path = "/declaration"
 
-        setup_data = self.setup_server_with_user([(path, NewDeclarationHandler)],
-                                                 user_is_logged_in)
-
+        setup_data = self.setup_server_with_user([(path, NewDeclarationHandler)], True)
         logged_in_person = setup_data["random_person"]
         token = setup_data["token"]
-        logged_in_person.class_name = "employee"
         logged_in_person.put()
 
         employee = logged_in_person
@@ -1697,11 +1619,12 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
             declarationline.declaration_sub_type = None
 
         lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
-        attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_data_dict(), declarationattachments)
+        attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_full_data_dict(), declarationattachments)
 
-        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
-                                    'lines': lines,
-                                    'attachments': attachments})
+        combined_dict = json.dumps({'declaration': dict(declaration.get_object_as_data_dict().items() +
+                                                   {'lines': lines,
+                                                    'attachments': attachments
+                                                   }.items())})
 
         for declarationline in declarationlines:
             declarationline.key.delete()
@@ -1735,11 +1658,12 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
         declarationattachments[1].file = declarationattachments[1].file.replace("application/pdf", "application/x-msdownload")
 
         lines = map(lambda declaration_line: declaration_line.get_object_as_data_dict(), declarationlines)
-        attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_data_dict(), declarationattachments)
+        attachments = map(lambda declaration_attachment: declaration_attachment.get_object_as_full_data_dict(), declarationattachments)
 
-        combined_dict = json.dumps({'declaration': declaration.get_object_as_data_dict(),
-                                    'lines': lines,
-                                    'attachments': attachments})
+        combined_dict = json.dumps({'declaration': dict(declaration.get_object_as_data_dict().items() +
+                                                   {'lines': lines,
+                                                    'attachments': attachments
+                                                   }.items())})
 
         for declarationline in declarationlines:
             declarationline.key.delete()

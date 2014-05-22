@@ -106,25 +106,23 @@ class Declaration(ndb.Model):
                              "supervisor_comment", "human_resources_comment", "declined_by",
                              "submitted_to_human_resources_by", "locked_at", "sent_to_human_resources_at",
                              "supervisor_declined_at", "supervisor_approved_at", "human_resources_approved_at",
-                             "human_resources_declined_at", "will_be_payed_out_on", "human_resources_approved_by",
-                             "lines", "attachments"]
+                             "human_resources_declined_at", "will_be_payed_out_on", "human_resources_approved_by"]
 
     permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment", "items_total_price",
-                                        "items_count", "lines", "attachments"],
+                                        "items_count"],
 
                    "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "items_total_price",
-                                          "items_count", "locked_at", "supervisor_comment", "lines", "attachments"],
+                                          "items_count", "locked_at", "supervisor_comment"],
 
                    "supervisor_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                        "items_total_price", "items_count", "locked_at", "declined_by",
-                                                       "supervisor_declined_at", "supervisor_comment", "lines",
-                                                       "attachments"],
+                                                       "supervisor_declined_at", "supervisor_comment"],
 
                    "supervisor_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                        "items_total_price", "items_count", "locked_at",
                                                        "submitted_to_human_resources_by", "supervisor_approved_at",
                                                        "supervisor_approved_by", "sent_to_human_resources_at",
-                                                       "supervisor_comment", "lines", "attachments"],
+                                                       "supervisor_comment"],
 
                    "human_resources_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                             "items_total_price", "items_count", "locked_at",
@@ -132,7 +130,7 @@ class Declaration(ndb.Model):
                                                             "supervisor_approved_by", "sent_to_human_resources_at",
                                                             "declined_by", "supervisor_comment",
                                                             "human_resources_comment", "human_resources_declined_at",
-                                                            "human_resources_declined_by", "lines", "attachments"],
+                                                            "human_resources_declined_by"],
 
                    "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
                                                             "items_total_price", "items_count", "locked_at",
@@ -140,7 +138,7 @@ class Declaration(ndb.Model):
                                                             "supervisor_approved_by", "sent_to_human_resources_at",
                                                             "supervisor_comment", "will_be_payed_out_on",
                                                             "human_resources_comment", "human_resources_approved_by",
-                                                            "human_resources_approved_at", "lines", "attachments"]}
+                                                            "human_resources_approved_at"]}
 
     def get_last_assigned_to(self):
         return self.assigned_to[len(self.assigned_to)-1]
@@ -153,11 +151,22 @@ class Declaration(ndb.Model):
 
     def get_object_as_full_data_dict(self):
         last_assigned_to = Person.get_by_id(self.get_last_assigned_to().integer_id())
+
+        declaration_lines = []
+        if len(self.lines) > 0:
+            declaration_lines = DeclarationLine.query(DeclarationLine.key.IN(self.lines)).fetch()
+
+        attachments = []
+        if len(self.attachments) > 0:
+            attachments = Attachment.query(Attachment.key.IN(self.attachments)).fetch()
+
         return dict({'id': self.key.integer_id(),
                      'class_name': self.class_name,
                      'last_assigned_to': last_assigned_to.get_object_as_data_dict(),
-                     "state": self.readable_state()}.items() +
-                    property_not_none_key_value_pair_with_permissions(self).items())
+                     "state": self.readable_state(),
+                     "lines": map(lambda declaration_item: declaration_item.get_object_as_full_data_dict(), declaration_lines),
+                     "attachments": map(lambda attachment: attachment.get_object_as_data_dict(), attachments)
+                     }.items() + property_not_none_key_value_pair_with_permissions(self).items())
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
@@ -266,8 +275,11 @@ class Attachment(ndb.Model):
     name = ndb.StringProperty()
     file = ndb.TextProperty()
 
-    def get_object_as_data_dict(self):
+    def get_object_as_full_data_dict(self):
         return dict({'id': self.key.integer_id(), 'name': self.name, 'file': self.file})
+
+    def get_object_as_data_dict(self):
+        return dict({'id': self.key.integer_id(), 'name': self.name})
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
