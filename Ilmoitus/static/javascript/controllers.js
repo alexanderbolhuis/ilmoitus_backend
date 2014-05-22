@@ -386,7 +386,6 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 	});
 
 	request.done(function(data){
-		console.log(data);
 		$scope.declarationList = data;
 		for(var i = 0 ; i < $scope.declarationList.length ; i++){
 			//turn created_at dates to actual javascript dates for comparison and string convertion.
