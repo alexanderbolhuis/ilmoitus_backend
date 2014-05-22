@@ -46,7 +46,7 @@
         </div>
         <div class="DeclarationEvidenceDiv">
             <h3>Bewijsstukken:</h3>
-            <select size="4" ng-model="selectedattachment" ng-options="n.id as n.name for n in declaration.attachments"></select>
+            <select size="4" ng-model="selectedattachment" ng-dblclick="openAttachment()" ng-options="n.id as n.name for n in declaration.attachments"></select>
         </div>
     </div>
 </div>

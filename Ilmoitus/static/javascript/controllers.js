@@ -371,8 +371,10 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	request.done(function(data){
 		$scope.declaration = data;
 		$scope.comments = data.comment;
+		if($scope.declaration.attachments.length > 0){
+			$scope.selectedattachment = $scope.declaration.attachments[0].id;
+		}
 		$scope.$apply();
-		console.log(data);
 		
 		//Get supervisor name and id
 		var supervisorKey = data.assigned_to[data.assigned_to.length-1];
@@ -392,4 +394,9 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 			$scope.$apply();
 		});
 	});
+
+    $scope.openAttachment = function() {
+        window.open("/attachment/"+$scope.selectedattachment, '_blank');
+    }
+    
 });
