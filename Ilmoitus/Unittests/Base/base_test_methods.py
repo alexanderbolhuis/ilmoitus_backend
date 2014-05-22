@@ -301,6 +301,7 @@ class BaseTestClass(TestCase):
         except webtest.AppError as appError:
             #We want this to happen! See if the appError variable is properly initialized.
             self.assertIsNotNone(appError)
+            print "Got error: " + appError.message + "\r\n"
             self.assertTrue(
                 str(expected_error_code)
                 in appError.message)  # Bit ugly, but only way possible to check for the given code specifically
