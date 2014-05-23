@@ -54,9 +54,10 @@
         </div>
         <div class="DeclarationEvidenceDiv">
             <h3>Bewijsstukken:</h3>
-            <select size="4" ng-model="selectedattachment" ng-options="n.id as n.name for n in declaration.attachments"></select><br/>
+            <select size="4" ng-model="selectedattachment" ng-options="n.name for n in declaration.attachments"></select><br/>
             <input type="button" value="Verwijder bewijsstuk" ng:click="removeAttachment();" />
-            <input type="button" value="Nieuw bewijsstuk" ng:click="addAttachment();" />
+            <input type="button" value="Nieuw bewijsstuk" ng:click="addAttachments();" />
+            <input id='fileInput' class="hidden" type="file" value="Nieuw bewijsstuk" ng-model="file" onchange="attachmentsAdded();" accept="image/*, application/pdf" multiple />
         </div>
         <input class="DeclarationSendButton" type="button" value="Verzenden" ng:click="postDeclaration();" />
     </div>

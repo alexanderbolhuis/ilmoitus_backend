@@ -147,7 +147,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	$(".datepicker").datepicker();
 	
 	//Declaration fields
-	$scope.declaration = { lines:[{}] };
+	$scope.declaration = { comment: "", lines:[{}], attachments:[{}] };
 	$scope.selectedattachment = null;
 	$scope.declarationamount = 0;
 	$scope.declarationAmountDisplay = "0,-";
@@ -364,8 +364,63 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	}
 	
 	//New attachment
-	$scope.addAttachment = function(){
-		
+	$scope.addAttachments = function(){
+		//Trigger the hidden file input field.
+		$('#fileInput').click();
+	}
+
+	attachmentsAdded = function(){
+		var fileInput = document.getElementById('fileInput');
+		var files = fileInput.files;
+		var i = 0;
+		var allFilesSuccess = true;
+		var fileReader = new FileReader();
+
+		//When file has finished reading, add it to the attachments
+		fileReader.onload = function(fileLoadedEvent) 
+		{
+			//Remove the first empty element that keeps apearing the first time.
+			if($scope.declaration.attachments[0] && !$scope.declaration.attachments[0].file){
+				$scope.declaration.attachments.splice(0, 1);
+			}
+			$scope.declaration.attachments.push({name: files[i].name, file: fileLoadedEvent.target.result}); 
+			$scope.selectedattachment = $scope.declaration.attachments[0];
+			$scope.$apply();
+
+			//Start reading the next file. Was unable to read multiple files simultaneously.
+			i++;
+			readFile(i);
+		};
+
+		//Read the file, if unsupported type, skip it. 
+		readFile = function(index) {
+			if(i <= files.length - 1) {
+				if(files[i].type == "application/pdf" || files[i].type.split("/")[0] == "image"){
+					fileReader.readAsDataURL(files[i]); //Results in base64 string
+				} else {
+					allFilesSuccess = false;
+					i++;
+					readFile(i);
+				}
+			} else {
+				//No more files left to read.
+				//Clear file input to allow adding files that have already just been added. (and possibly deleted)
+				resetFileInput();
+				if(!allFilesSuccess){
+					showMessage("Niet alle geselecteerde bestanden konden toegevoegd worden.\nAlleen afbeeldingen en pdf's zijn toegestaan.", "Fout");
+				}
+			}
+			
+		}
+
+		resetFileInput = function() {
+			$("#fileInput").wrap('<form>').parent('form').trigger('reset');
+    		$("#fileInput").unwrap();
+		}
+
+		//Start reading the first file.
+		readFile(i);
+
 	}
 	
 });
