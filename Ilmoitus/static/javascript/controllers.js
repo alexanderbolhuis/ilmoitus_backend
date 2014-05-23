@@ -59,7 +59,7 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 		userData = data;
 		$scope.userName = userData.first_name + " " + userData.last_name;
 		$scope.userId = userData.employee_number;
-		$scope.userClass = data.class_name;
+		$scope.userClass = userData.class_name;
 		$scope.$apply();
 	});
 
