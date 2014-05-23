@@ -1,4 +1,5 @@
 var baseurl = 'http://127.0.0.1:8080';
+var userData;
 var pricePattern = /^[0-9]{1}[0-9]{0,3}(\.[0-9]{2})?$/
 
 ilmoitusApp.controller('loginController', function($scope, $state) {
@@ -55,8 +56,9 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 	});
 
 	request.done(function(data){
-		$scope.userName = data.first_name + " " + data.last_name;
-		$scope.userId = data.employee_number;
+		userData = data;
+		$scope.userName = userData.first_name + " " + userData.last_name;
+		$scope.userId = userData.employee_number;
 		$scope.userClass = data.class_name;
 		$scope.$apply();
 	});
@@ -148,7 +150,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	$(".datepicker").datepicker();
 	
 	//Declaration fields
-	$scope.declaration = { lines:[{}] };
+	$scope.declaration = { comment: "", lines:[{}], attachments:[{}] };
 	$scope.selectedattachment = null;
 	$scope.declarationamount = 0;
 	$scope.declarationAmountDisplay = "0,-";
@@ -365,8 +367,63 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	}
 	
 	//New attachment
-	$scope.addAttachment = function(){
-		
+	$scope.addAttachments = function(){
+		//Trigger the hidden file input field.
+		$('#fileInput').click();
+	}
+
+	attachmentsAdded = function(){
+		var fileInput = document.getElementById('fileInput');
+		var files = fileInput.files;
+		var i = 0;
+		var allFilesSuccess = true;
+		var fileReader = new FileReader();
+
+		//When file has finished reading, add it to the attachments
+		fileReader.onload = function(fileLoadedEvent) 
+		{
+			//Remove the first empty element that keeps apearing the first time.
+			if($scope.declaration.attachments[0] && !$scope.declaration.attachments[0].file){
+				$scope.declaration.attachments.splice(0, 1);
+			}
+			$scope.declaration.attachments.push({name: files[i].name, file: fileLoadedEvent.target.result}); 
+			$scope.selectedattachment = $scope.declaration.attachments[0];
+			$scope.$apply();
+
+			//Start reading the next file. Was unable to read multiple files simultaneously.
+			i++;
+			readFile(i);
+		};
+
+		//Read the file, if unsupported type, skip it. 
+		readFile = function(index) {
+			if(i <= files.length - 1) {
+				if(files[i].type == "application/pdf" || files[i].type.split("/")[0] == "image"){
+					fileReader.readAsDataURL(files[i]); //Results in base64 string
+				} else {
+					allFilesSuccess = false;
+					i++;
+					readFile(i);
+				}
+			} else {
+				//No more files left to read.
+				//Clear file input to allow adding files that have already just been added. (and possibly deleted)
+				resetFileInput();
+				if(!allFilesSuccess){
+					showMessage("Niet alle geselecteerde bestanden konden toegevoegd worden.\nAlleen afbeeldingen en pdf's zijn toegestaan.", "Fout");
+				}
+			}
+			
+		}
+
+		resetFileInput = function() {
+			$("#fileInput").wrap('<form>').parent('form').trigger('reset');
+    		$("#fileInput").unwrap();
+		}
+
+		//Start reading the first file.
+		readFile(i);
+
 	}
 	
 });
@@ -447,28 +504,12 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	request.done(function(data){
 		$scope.declaration = data;
 		$scope.comments = data.comment;
+		$scope.supervisorId = data.last_assigned_to.employee_number
+		$scope.supervisor = data.last_assigned_to.first_name + " " + data.last_assigned_to.last_name;
 		if($scope.declaration.attachments.length > 0){
 			$scope.selectedattachment = $scope.declaration.attachments[0].id;
 		}
 		$scope.$apply();
-		
-		//Get supervisor name and id
-		var supervisorKey = data.assigned_to[data.assigned_to.length-1];
-		var request2 = $.ajax({
-			type: "GET",
-			headers: {"Authorization": sessionStorage.token},
-			url: baseurl + "/persons/"+supervisorKey,
-			crossDomain: true,
-			error: function(jqXHR, textStatus, errorThrown){
-				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
-			}
-		});
-
-		request2.done(function(data){
-			$scope.supervisorId = data.employee_number;
-			$scope.supervisor = data.first_name + " " + data.last_name;
-			$scope.$apply();
-		});
 	});
 
     $scope.openAttachment = function() {
