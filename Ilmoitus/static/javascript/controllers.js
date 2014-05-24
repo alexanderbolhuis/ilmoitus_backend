@@ -478,7 +478,58 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 ilmoitusApp.controller('sentDeclarationDetailsController', function($scope) {
 	
 });
+  //Todo: set these in sentDeclarationDetailsController
+//Start
+	//Approve declaration button
+	$scope.approveDeclarationBtn = function(){
+        handleSentDeclaration("/declaration/" + $scope.declaration.id + "/approve_by_supervisor", "PUT",
+            refresh_declaration_in_view_after_put, true);
+  	};
 
+	//Forward declaration button
+	$scope.forwardDeclarationBtn = function(){
+        //TODO find new supervisor through the selection box
+        handleSentDeclaration("/declaration/" + $scope.declaration.id + "/forward_to_supervisor/" +
+            $scope.new_supervisor, "PUT", refresh_declaration_in_view_after_put, true);
+  	};
+
+	//Decline declaration button
+	$scope.declineDeclarationBtn = function(){
+        //TODO confirmation message box
+        handleSentDeclaration("/declaration/" + $scope.declaration.id + "/decline_by_supervisor", "PUT",
+            refresh_declaration_in_view_after_put, true);
+  	};
+
+    function refresh_declaration_in_view_after_put(new_declaration){
+        $scope.declaration = new_declaration;
+        $scope.$apply();
+    }
+
+    function handleSentDeclaration(target_url, request_type, supervisor_comment, callback_function,
+                                   should_pass_data_into_callback){
+        //Perform the wanted action
+        var request = $.ajax({
+            type: request_type,
+            headers: {"Authorization": sessionStorage.token},
+            url: baseurl + target_url,
+            data: {"comment": supervisor_comment},
+            crossDomain: true,
+            error: function(jqXHR, textStatus, errorThrown){
+                showMessage("Er is een fout opgetreden en de handeling is niet voltooid.", "Error!");
+                console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+            }
+        });
+
+        request.done(function(data){
+            if (should_pass_data_into_callback){
+                callback_function(data);
+            }else{
+                callback_function();
+            }
+        });
+    }
+
+//end
 ilmoitusApp.controller('declarationsHistoryController', function($scope) {
 	$scope.navBtnSelect("declarationsHistoryBtn");
 	

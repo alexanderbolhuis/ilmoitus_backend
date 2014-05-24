@@ -44,6 +44,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         supervisor_two.email = "muhammad_hasdim@gmail.com"
         supervisor_two.password = ilmoitus_auth.hash_secret("123456")
         supervisor_two.employee_number = 4
+        supervisor_two.max_declaration_price = 100;
         supervisor_two.department = department_it.key
         supervisor_two.supervisor = supervisor_one.key
         supervisor_two.put()
