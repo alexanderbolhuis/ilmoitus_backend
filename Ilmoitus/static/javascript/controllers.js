@@ -59,6 +59,7 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 		userData = data;
 		$scope.userName = userData.first_name + " " + userData.last_name;
 		$scope.userId = userData.employee_number;
+		$scope.userClass = userData.class_name;
 		$scope.$apply();
 	});
 
@@ -428,12 +429,54 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 });
 
 
-ilmoitusApp.controller('declarationsSubmittedController', function($scope) {
-	$scope.navBtnSelect("sendedDeclarationsBtn");
+ilmoitusApp.controller('declarationsSubmittedController', function($scope, $state) {
+	$scope.navBtnSelect("declarationsSubmittedBtn");
+
+	var request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/declarations/supervisor",
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+
+	request.done(function(data){
+		$scope.declarationList = data;
+		for(var i = 0 ; i < $scope.declarationList.length ; i++){
+			//turn created_at dates to actual javascript dates for comparison and string convertion.
+			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
+		}
+
+		//sort the array on creation date
+		$scope.declarationList.sort(function(a, b) {
+		    a = a.created_at;
+		    b = b.created_at;
+		    return a>b ? -1 : a<b ? 1 : 0;
+		});
+		$scope.$apply();
+	});
+		
+	//Select declaration
+	$scope.selectDeclaration = function(declaration){
+		$scope.currentdeclaration = declaration;
+	}
+	
+	//Doubleclick declaration
+	$scope.openDeclarationDetails = function(declarationid){
+ 		$state.go('template.sentDeclarationDetails', {declarationId: declarationid});
+  	}
+	
+	//Open declaration button
+	$scope.openDeclarationDetailsBtn = function(declarationid){
+ 		$state.go('template.sentDeclarationDetails', {declarationId: $scope.currentdeclaration.id});
+  	}
+
 });
 
 ilmoitusApp.controller('sentDeclarationDetailsController', function($scope) {
-	$scope.navBtnSelect("sentDeclarationDetailsBtn");
+	
 });
 
 ilmoitusApp.controller('declarationsHistoryController', function($scope) {

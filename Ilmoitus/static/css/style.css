@@ -126,6 +126,10 @@ header {
     margin-top: 10px;
 }
 
+#navigation div {
+    display: inline-block;
+}
+
 /* Content */
 #content {
     padding: 10px;
