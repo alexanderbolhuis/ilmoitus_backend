@@ -19,6 +19,11 @@ class AllDeclarationsForSupervisorHandler(BaseRequestHandler):
             response_module.respond_with_object_collection_with_query(self, declaration_query)
 
 
+class AllHistoryDeclarationsForSupervisorHandler(BaseRequestHandler):
+    def get(self):
+        pass
+
+
 class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
