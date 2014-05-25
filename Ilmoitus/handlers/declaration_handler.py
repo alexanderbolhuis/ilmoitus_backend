@@ -25,13 +25,13 @@ def find_declaration(handler, declaration_id):
 
 
 def is_declaration_creator(handler, declaration, employee):
-    if declaration.created_by is not employee:
+    if declaration.created_by != employee:
         give_error_response(handler, 401, "Declaratie kan niet worden aangepast.",
                                           "User is not the owner")
 
 
 def is_declaration_assigned(handler, declaration, current_person):
-    if current_person.key is not declaration.get_last_assigned_to():
+    if current_person.key != declaration.get_last_assigned_to():
         give_error_response(handler, 401, "Kan de declaratie niet goedkeuren. Deze declaratie is niet aan u toegewezen",
                                           "current_person_object's id was not in the declaration_object's asigned_to list")
 
@@ -91,6 +91,8 @@ class ForwardDeclarationHandler(BaseRequestHandler):
         #Checks (break when fails)
         self.is_logged_in()
         declaration = find_declaration(self, declaration_id)
+
+        #TODO: Implement this function
 
 
 class DeclineBySupervisorHandler(BaseRequestHandler):
