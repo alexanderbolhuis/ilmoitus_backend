@@ -492,12 +492,26 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function($scope, $sta
 
 	request.done(function(data){
 		$scope.declaration = data;
-		$scope.comments = data.comment;
-		$scope.supervisorId = data.last_assigned_to.employee_number
+		$scope.supervisorId = data.last_assigned_to.id;
 		$scope.supervisor = data.last_assigned_to.first_name + " " + data.last_assigned_to.last_name;
 		if($scope.declaration.attachments.length > 0){
 			$scope.selectedattachment = $scope.declaration.attachments[0].id;
 		}
+		$scope.$apply();
+	});
+
+    //Preload supervisors
+	request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/current_user/supervisors",
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+	request.done(function(data){
+		$scope.supervisorList = data;
 		$scope.$apply();
 	});
 

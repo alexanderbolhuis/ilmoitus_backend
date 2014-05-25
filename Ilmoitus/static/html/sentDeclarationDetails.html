@@ -3,13 +3,15 @@
         <table>
             <tr>
                 <td>Werknemer:</td>
-                <td title="{{declaration.created_by}}">{{declaration.created_by}}
+                <td title="{{declaration.created_by}}">{{declaration.created_by.first_name + " " +
+                    declaration.created_by.last_name}}
                 </td>
                 <td>
                 </td>
                 <td>Leidinggevende:</td>
-                <td title="{{declaration.last_assigned_to.email}}">{{declaration.last_assigned_to.first_name + " " +
-                    declaration.last_assigned_to.last_name}}
+                <td>
+                    <select ng-model="supervisorId"
+                            ng-options="n.id as (n.last_name + ', ' + n.first_name) for n in supervisorList"></select>
                 </td>
                 <td></td>
                 <td></td>
@@ -24,15 +26,18 @@
                 <td></td>
                 <td></td>
                 <td></td>
-                <td><input type="button" value="Goedkeuren"/></td>
+                <td><input type="button" value="Goedkeuren" ng-disabled="!declaration"
+                           ng-click="approveDeclarationBtn();"/></td>
                 <td></td>
-                <td><input type="button" value="Doorsturen"/></td>
+                <td><input type="button" value="Doorsturen" ng-disabled="!declaration"
+                           ng-click="forwardDeclarationBtn();"/></td>
                 <td></td>
-                <td><input type="button" value="Afwijzen"/></td>
+                <td><input type="button" value="Afwijzen" ng-disabled="!declaration"
+                           ng-click="declineDeclarationBtn();"/></td>
             </tr>
             <tr>
                 <td>Personeelsnr</td>
-                <td title="{{declaration.created_by}}">{{declaration.created_by}}
+                <td title="{{declaration.created_by}}">{{declaration.created_by.employee_number}}
                 </td>
                 <td></td>
                 <td>Personeelsnr</td>
