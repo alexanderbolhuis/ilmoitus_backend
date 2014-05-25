@@ -486,6 +486,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function($scope, $sta
 		url: baseurl + "/declaration/"+$scope.declarationId,
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
+            showMessage(jqXHR.responseJSON.user_message, "Error!");
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 		}
 	});
@@ -507,6 +508,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function($scope, $sta
 		url: baseurl + "/current_user/supervisors",
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
+            showMessage(jqXHR.responseJSON.user_message, "Error!");
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 		}
 	});
