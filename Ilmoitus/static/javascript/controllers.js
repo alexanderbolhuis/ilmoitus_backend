@@ -478,11 +478,11 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 ilmoitusApp.controller('sentDeclarationDetailsController', function($scope) {
 	
 });
-  //Todo: set these in sentDeclarationDetailsController
+    //Todo: set these in sentDeclarationDetailsController
 //Start
 	//Approve declaration button
 	$scope.approveDeclarationBtn = function(){
-        handleSentDeclaration("/declaration/" + $scope.declaration.id + "/approve_by_supervisor", "PUT",
+        handleSentDeclaration("/declaration/" + $scope.declaration.id + "/approve_by_supervisor", "PUT", null,
             refresh_declaration_in_view_after_put, true);
   	};
 
@@ -490,19 +490,18 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function($scope) {
 	$scope.forwardDeclarationBtn = function(){
         //TODO find new supervisor through the selection box
         handleSentDeclaration("/declaration/" + $scope.declaration.id + "/forward_to_supervisor/" +
-            $scope.new_supervisor, "PUT", refresh_declaration_in_view_after_put, true);
+            $scope.new_supervisor, "PUT", null, refresh_declaration_in_view_after_put, true);
   	};
 
 	//Decline declaration button
 	$scope.declineDeclarationBtn = function(){
-        //TODO confirmation message box
-        handleSentDeclaration("/declaration/" + $scope.declaration.id + "/decline_by_supervisor", "PUT",
+        //TODO confirmation message box with reason
+        handleSentDeclaration("/declaration/" + $scope.declaration.id + "/decline_by_supervisor", "PUT", null,
             refresh_declaration_in_view_after_put, true);
   	};
 
     function refresh_declaration_in_view_after_put(new_declaration){
-        $scope.declaration = new_declaration;
-        $scope.$apply();
+        $state.go("template.declarationsSubmitted");
     }
 
     function handleSentDeclaration(target_url, request_type, supervisor_comment, callback_function,
@@ -512,7 +511,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function($scope) {
             type: request_type,
             headers: {"Authorization": sessionStorage.token},
             url: baseurl + target_url,
-            data: {"comment": supervisor_comment},
+            data: JSON.stringify({"comment": supervisor_comment}),
             crossDomain: true,
             error: function(jqXHR, textStatus, errorThrown){
                 showMessage("Er is een fout opgetreden en de handeling is niet voltooid.", "Error!");

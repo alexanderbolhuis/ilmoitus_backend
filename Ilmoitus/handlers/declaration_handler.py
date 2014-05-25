@@ -138,8 +138,9 @@ class ApproveBySupervisorHandler(BaseRequestHandler):
         declaration.submitted_to_human_resources_by = current_person.key
         declaration.supervisor_approved_at = datetime.datetime.now()
 
-        if self.request.POST["comment"] is not None:
-            declaration.supervisor_comment = str(self.request.POST["comment"])
+        request_body = json.loads(self.request.body)
+        if "comment" in request_body and request_body["comment"] is not None:
+            declaration.supervisor_comment = str(request_body["comment"])
 
         declaration.put()
         mail_module.send_message_declaration_status_changed(self, declaration)
