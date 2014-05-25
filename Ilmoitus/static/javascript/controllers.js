@@ -475,7 +475,7 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 
 });
 
-ilmoitusApp.controller('sentDeclarationDetailsController', function($scope, $stateParams) {
+ilmoitusApp.controller('sentDeclarationDetailsController', function($scope, $stateParams, $state) {
 	// Get declaration ID from url parameter.
 	$scope.declarationId = $stateParams.declarationId;
 
@@ -519,50 +519,109 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function($scope, $sta
 
     $scope.openAttachment = function() {
         window.open("/attachment/"+$scope.selectedattachment, '_blank');
-    }
-});
-    //Todo: set these in sentDeclarationDetailsController
-//Start
-	//Approve declaration button
+    };
+
+    	//Approve declaration button
 	$scope.approveDeclarationBtn = function(){
-        handleSentDeclaration("/declaration/" + $scope.declaration.id + "/approve_by_supervisor", "PUT", null,
-            refresh_declaration_in_view_after_put, true);
+        showMessageInputForDeclarationAction(
+            "Declaratie goedkeuren",
+            "Goedkeuren",
+            "U heeft gekozen om de declaratie goed te keuren.<br /><br />Vul eventueel hieronder nog een opmerking in.",
+             function(comment) {
+                comment = (typeof comment === "undefined") ? null : comment; //Title is optional.
+
+                var request_data = {};
+                if(comment != null){
+                    request_data["comment"] = comment;
+                }
+
+                handleSentDeclaration("/declaration/" + $scope.declaration.id + "/approve_by_supervisor", "PUT",
+                    request_data, function() {
+                        $state.go("template.declarationsSubmitted");
+                    });
+            },
+            "decline"
+           );
   	};
 
 	//Forward declaration button
 	$scope.forwardDeclarationBtn = function(){
-        //TODO find new supervisor through the selection box
-        handleSentDeclaration("/declaration/" + $scope.declaration.id + "/forward_to_supervisor/" +
-            $scope.new_supervisor, "PUT", null, refresh_declaration_in_view_after_put, true);
+        var new_supervisor_id = $scope.supervisorId;
+        var new_supervisor_name = "";
+        if (new_supervisor_id != $scope.declaration.assigned_to){
+
+            for(var i in $scope.supervisorList){
+                var supervisor = $scope.supervisorList[i];
+                if (supervisor.id == new_supervisor_id){
+                    new_supervisor_name = supervisor.last_name + ', ' + supervisor.first_name;
+                }
+            }
+        }else{
+            showMessage("U heeft een leidinggevende geselecteerd die al bij deze declaratie hoorde!", "Error!");
+            return;
+        }
+        showMessageInputForDeclarationAction(
+            "Declaratie doorsturen",
+            "Doorsturen",
+            "U heeft gekozen om de declaratie door te sturen naar: <br />\"" + new_supervisor_name +
+                "\".<br />Klopt dit? Selecteer anders een andere leidinggevende.<br /><br />Vul eventueel hieronder nog een opmerking in.",
+             function(comment) {
+                comment = (typeof comment === "undefined") ? null : comment; //Title is optional.
+
+                var request_data = {};
+                if(comment != null){
+                    request_data["comment"] = comment;
+                }
+
+                handleSentDeclaration("/declaration/" + $scope.declaration.id + "/forward_to_supervisor", "PUT",
+                    request_data, function() {
+                        $state.go("template.declarationsSubmitted");
+                    });
+            },
+            "decline"
+           );
   	};
 
 	//Decline declaration button
 	$scope.declineDeclarationBtn = function(){
-        //TODO confirmation message box with reason
-        handleSentDeclaration("/declaration/" + $scope.declaration.id + "/decline_by_supervisor", "PUT", null,
-            refresh_declaration_in_view_after_put, true);
+        showMessageInputForDeclarationAction(
+            "Declaration afkeuren",
+            "Afkeuren",
+            "U heeft gekozen om de declaratie af te keuren.<br /><br />Geef hieronder de reden van afkeuring op (verplicht).",
+             function(comment) {
+                comment = (typeof comment === "undefined") ? null : comment; //Title is optional.
+
+                var request_data = {};
+                if(comment != null){
+                    request_data["comment"] = comment;
+                }
+
+                handleSentDeclaration("/declaration/" + $scope.declaration.id + "/decline_by_supervisor", "PUT",
+                    request_data, function() {
+                        $state.go("template.declarationsSubmitted");
+                    });
+            },
+            "decline"
+           );
   	};
 
-    function refresh_declaration_in_view_after_put(new_declaration){
-        $state.go("template.declarationsSubmitted");
-    }
-
-    function handleSentDeclaration(target_url, request_type, supervisor_comment, callback_function,
+    function handleSentDeclaration(target_url, request_type, request_data, callback_function,
                                    should_pass_data_into_callback){
         //Perform the wanted action
         var request = $.ajax({
             type: request_type,
             headers: {"Authorization": sessionStorage.token},
             url: baseurl + target_url,
-            data: JSON.stringify({"comment": supervisor_comment}),
+            data: JSON.stringify(request_data),
             crossDomain: true,
             error: function(jqXHR, textStatus, errorThrown){
-                showMessage("Er is een fout opgetreden en de handeling is niet voltooid.", "Error!");
+                showMessage(JSON.parse(jqXHR.responseText.user_message), "Error!");
                 console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
             }
         });
 
         request.done(function(data){
+            closeMessage();
             if (should_pass_data_into_callback){
                 callback_function(data);
             }else{
@@ -571,7 +630,36 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function($scope, $sta
         });
     }
 
-//end
+    function showMessageInputForDeclarationAction(title, button_value, message, callback_function, action_type){
+        var message_box =  "<div class='coverBg' onclick='closeMessage();' id='coverBg' ></div>"+
+        "<div class='cover' id='messageCover'>" +
+            "<div class='header'>" + title +
+                "<div class='closeButton' onclick='closeMessage();'>X</div>" +
+            "</div>" +
+            "<div class='contentMessage'>" +
+        	    message + "<br /><input id='supervisorComment' class='ng-pristine ng-valid' " +
+            "type='text'/> <input id='confirmButton' type='button' value='" + button_value + "'/>" +
+            "</div>" +
+            "</div>";
+
+        $("body").append(message_box);
+        $("#confirmButton").click(function() {
+            var supervisorComment = $("#supervisorComment").val();
+            if (action_type.toLowerCase() != "decline") { //only situation where comment is mandatory
+                if (supervisorComment != null && supervisorComment != "") {
+                    //Comment is filled so we can call the callback_function, which will send the request
+                    callback_function(supervisorComment);
+                }//comment is mandatory; no else clause!
+            }
+            else {
+                callback_function(supervisorComment); //Can be undefined
+            }
+        });
+        $("#messageCover").fadeIn();
+        $("#coverBg").fadeIn();
+    }
+});
+
 ilmoitusApp.controller('declarationsHistoryController', function($scope) {
 	$scope.navBtnSelect("declarationsHistoryBtn");
 	
