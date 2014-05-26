@@ -1,47 +1,35 @@
 <div>
     <div>
+        <div id="declarationSupervisorControls">
+            <td><input class="declarationSupervisorButtons" type="button" value="Goedkeuren" ng-disabled="!declaration"
+                       ng-click="approveDeclarationBtn();"/></td>
+            <td></td>
+            <td><input class="declarationSupervisorButtons" type="button" value="Doorsturen" ng-disabled="!declaration"
+                       ng-click="forwardDeclarationBtn();"/></td>
+            <td></td>
+            <td><input class="declarationSupervisorButtons" type="button" value="Afwijzen" ng-disabled="!declaration"
+                       ng-click="declineDeclarationBtn();"/></td>
+        </div>
         <table>
             <tr>
                 <td>Werknemer:</td>
-                <td title="{{declaration.created_by}}">{{declaration.created_by.first_name + " " +
-                    declaration.created_by.last_name}}
-                </td>
-                <td>
+                <td class="tableColumnExtraPaddingRight" title="{{declaration.created_by}}">
+                    {{declaration.created_by.first_name + " " + declaration.created_by.last_name}}
                 </td>
                 <td>Leidinggevende:</td>
                 <td>
                     <select ng-model="supervisorId"
                             ng-options="n.id as (n.last_name + ', ' + n.first_name) for n in supervisorList"></select>
                 </td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td><input type="button" value="Goedkeuren" ng-disabled="!declaration"
-                           ng-click="approveDeclarationBtn();"/></td>
-                <td></td>
-                <td><input type="button" value="Doorsturen" ng-disabled="!declaration"
-                           ng-click="forwardDeclarationBtn();"/></td>
-                <td></td>
-                <td><input type="button" value="Afwijzen" ng-disabled="!declaration"
-                           ng-click="declineDeclarationBtn();"/></td>
             </tr>
             <tr>
-                <td>Personeelsnr</td>
-                <td title="{{declaration.created_by}}">{{declaration.created_by.employee_number}}
+                <td>Personeelsnr:</td>
+                <td class="tableColumnExtraPaddingRight" title="{{declaration.created_by}}">
+                    {{declaration.created_by.employee_number}}
                 </td>
-                <td></td>
-                <td>Personeelsnr</td>
-                <td title="{{declaration.last_assigned_to.id}}">{{declaration.last_assigned_to.employee_number}}
+                <td>Personeelsnr:</td>
+                <td title="{{declaration.last_assigned_to.id}}">
+                    {{declaration.last_assigned_to.employee_number}}
                 </td>
             </tr>
         </table>
@@ -87,7 +75,7 @@
         </div>
         <div class="DeclarationsEvidenceDiv">
             <h3>Bewijsstukken:</h3>
-            <select size="4" ng-model="selectedattachment" ng-dblclick="openAttachment()"
+            <select size="4" ng-model="selectedattachment" ng-dblclick="openAttachment();"
                     ng-options="n.id as n.name for n in declaration.attachments"></select>
         </div>
     </div>

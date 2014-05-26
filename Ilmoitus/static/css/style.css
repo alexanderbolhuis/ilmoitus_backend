@@ -330,6 +330,19 @@ header {
 	background-color:#F88;
 }
 
+#declarationSupervisorControls{
+    float: right;
+}
+
+#declarationSupervisorControls input{
+    margin-top: 3px;
+    margin-right: 5px;
+}
+
+.tableColumnExtraPaddingRight{
+    padding-right: 30px;
+}
+
 #DeclarationTable .td{
 	cursor:pointer;	
 }
