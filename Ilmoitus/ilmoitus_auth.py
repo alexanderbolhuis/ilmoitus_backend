@@ -127,4 +127,8 @@ class LoginHandler(BaseRequestHandler):
 
 class LogoutHandler(BaseRequestHandler):
     def get(self):
-        pass
+        person = self.logged_in_person()
+        person.token = ""
+        person.put()
+
+        give_response(self, json.dumps({"person_id":0, "is_logged_in": False}))
