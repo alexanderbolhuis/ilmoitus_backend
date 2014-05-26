@@ -181,7 +181,7 @@ class DeclarationsForEmployeeHandlerTest(BaseAuthorizationHandler):
             self.assertIsNotNone(response_data[0]["class_name"])
             self.assertIsNotNone(response_data[0]["state"])
 
-            self.assertEqual(response_data[0]["created_by"], (logged_in_person.key.integer_id()))
+            self.assertEqual(response_data[0]["created_by"]["id"], (logged_in_person.key.integer_id()))
             self.assertEqual(response_data[0]["assigned_to"][0], supervisor.key.integer_id())
         except KeyError as error:
             self.fail("Test Failed! Expected the key: " + str(
@@ -447,7 +447,7 @@ class AllDeclarationsForHumanResourcesHandlerTest(BaseAuthorizationHandler):
         self.assertEqual(response_data[0]["comment"], "Thanks for taking care of this for me!")
         self.assertEqual(response_data[0]["class_name"], "supervisor_approved_declaration")
         self.assertEqual(response_data[0]["created_at"], str(declaration.created_at))
-        self.assertEqual(response_data[0]["created_by"], employee.key.integer_id())
+        self.assertEqual(response_data[0]["created_by"]["id"], employee.key.integer_id())
 
         self.assertEqual(response_data[0]["supervisor_approved_by"], supervisor.key.integer_id())
         self.assertEqual(response_data[0]["assigned_to"][0], supervisor.key.integer_id())
@@ -1020,7 +1020,7 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         attachment_data = response_data["attachments"]
 
         # check for VALID declaration by logged_in_person
-        self.assertEqual(response_data["created_by"], logged_in_person.key.integer_id())
+        self.assertEqual(response_data["created_by"]["id"], logged_in_person.key.integer_id())
         self.assertEqual(response_data["id"], declaration_valid.key.integer_id())
         self.assertEqual(len(line_data), 4)
         self.assertEqual(len(attachment_data), 2)
@@ -1143,7 +1143,7 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         attachment_data = response_data["attachments"]
 
         # check for VALID declaration by logged_in_person
-        self.assertEqual(response_data["created_by"], logged_in_person.key.integer_id())
+        self.assertEqual(response_data["created_by"]["id"], logged_in_person.key.integer_id())
         self.assertEqual(response_data["id"], declaration_valid.key.integer_id())
         self.assertEqual(len(line_data), 0)
         self.assertEqual(len(attachment_data), 2)
@@ -1169,7 +1169,7 @@ class SpecificDeclarationTest(BaseAuthorizationHandler):
         attachment_data = response_data["attachments"]
 
         # check for VALID declaration by logged_in_person
-        self.assertEqual(response_data["created_by"], logged_in_person.key.integer_id())
+        self.assertEqual(response_data["created_by"]["id"], logged_in_person.key.integer_id())
         self.assertEqual(response_data["id"], declaration_valid.key.integer_id())
         self.assertEqual(len(line_data), 4)
         self.assertEqual(len(attachment_data), 0)
@@ -1385,7 +1385,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
             self.assertEqual(response_attachments[0]["name"], declarationattachments[0].name)
             self.assertEqual(response_attachments[1]["name"], declarationattachments[1].name)
 
-            self.assertEqual(response_declaration["created_by"], (employee.key.integer_id()))
+            self.assertEqual(response_declaration["created_by"]["id"], (employee.key.integer_id()))
             self.assertEqual(response_declaration["assigned_to"], [supervisor.key.integer_id()])
 
 
@@ -1470,7 +1470,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
             self.assertEqual(response_attachments[1]["name"], declarationattachments[1].name)
             #self.assertEqual(response_attachments[1]["file"], declarationattachments[1].file)
 
-            self.assertEqual(response_declaration["created_by"], (employee.key.integer_id()))
+            self.assertEqual(response_declaration["created_by"]["id"], (employee.key.integer_id()))
             self.assertEqual(response_declaration["assigned_to"], [supervisor.key.integer_id()])
 
             for i in range(len(response_declarationlines)):
@@ -1540,7 +1540,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
             self.assertIsNotNone(response_declarationlines[0]["id"])
             self.assertIsNotNone(response_declarationlines[0]["declaration_sub_type"])
 
-            self.assertEqual(response_declaration["created_by"], (employee.key.integer_id()))
+            self.assertEqual(response_declaration["created_by"]["id"], (employee.key.integer_id()))
             self.assertEqual(response_declaration["assigned_to"], [supervisor.key.integer_id()])
             self.assertEqual(response_declaration["lines"][0]["id"], response_declarationlines[0]["id"])
 

@@ -33,9 +33,11 @@ application = webapp.WSGIApplication(
         #Current user handlers
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/current_user/settings', CurrentUserSettingsHandler),
-        ('/current_user/associated_declarations', CurrentUserAssociatedDeclarationsHandler),
+        #('/current_user/associated_declarations', CurrentUserAssociatedDeclarationsHandler),
         ('/current_user/supervisors', CurrentUserSupervisorsHandler),
         ('/current_user/declarations', AllDeclarationsForEmployeeHandler),
+        ('/current_user/declarations/assigned', AllDeclarationsForSupervisorHandler),
+        ('/current_user/declarations/assigned_history', AllHistoryDeclarationsForSupervisorHandler),
 
         #Employee handlers
         ('/employees', AllEmployeesHandler),
@@ -43,8 +45,6 @@ application = webapp.WSGIApplication(
         ('/employee/(.*)', SpecificEmployeeDetailsHandler),
 
         #Declaration list
-
-        ('/declarations/supervisor', AllDeclarationsForSupervisorHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
 
         #Declaration type list
@@ -54,7 +54,7 @@ application = webapp.WSGIApplication(
 
         #Declaration handlers
         ('/declaration/(.*)/lock', OpenToLockedDeclarationHandler),
-        ('/declaration/(.*)/forward_to_supervisor/(.*)', ForwardDeclarationHandler),
+        ('/declaration/(.*)/forward_to_supervisor', ForwardDeclarationHandler),
         ('/declaration/(.*)/decline_by_supervisor', DeclineBySupervisorHandler),
         ('/declaration/(.*)/approve_by_supervisor', ApproveBySupervisorHandler),
         ('/declaration/(.*)/decline_by_hr', DeclineByHumanResourcesHandler),

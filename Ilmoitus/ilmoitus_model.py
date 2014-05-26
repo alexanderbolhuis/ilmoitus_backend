@@ -102,29 +102,29 @@ class Declaration(ndb.Model):
     }
 
     # this property is used to check the permissions against
-    all_custom_properties = ["created_at", "created_by", "assigned_to", "comment", "items_total_price", "items_count"
+    all_custom_properties = ["created_at", "assigned_to", "comment", "items_total_price", "items_count"
                              "supervisor_comment", "human_resources_comment", "declined_by",
                              "submitted_to_human_resources_by", "locked_at", "sent_to_human_resources_at",
                              "supervisor_declined_at", "supervisor_approved_at", "human_resources_approved_at",
                              "human_resources_declined_at", "will_be_payed_out_on", "human_resources_approved_by"]
 
-    permissions = {"open_declaration": ["created_at", "created_by", "assigned_to", "comment", "items_total_price",
+    permissions = {"open_declaration": ["created_at", "assigned_to", "comment", "items_total_price",
                                         "items_count"],
 
-                   "locked_declaration": ["created_at", "created_by", "assigned_to", "comment", "items_total_price",
+                   "locked_declaration": ["created_at", "assigned_to", "comment", "items_total_price",
                                           "items_count", "locked_at", "supervisor_comment"],
 
-                   "supervisor_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
+                   "supervisor_declined_declaration": ["created_at", "assigned_to", "comment",
                                                        "items_total_price", "items_count", "locked_at", "declined_by",
                                                        "supervisor_declined_at", "supervisor_comment"],
 
-                   "supervisor_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
+                   "supervisor_approved_declaration": ["created_at", "assigned_to", "comment",
                                                        "items_total_price", "items_count", "locked_at",
                                                        "submitted_to_human_resources_by", "supervisor_approved_at",
                                                        "supervisor_approved_by", "sent_to_human_resources_at",
                                                        "supervisor_comment"],
 
-                   "human_resources_declined_declaration": ["created_at", "created_by", "assigned_to", "comment",
+                   "human_resources_declined_declaration": ["created_at", "assigned_to", "comment",
                                                             "items_total_price", "items_count", "locked_at",
                                                             "submitted_to_human_resources_by", "supervisor_approved_at",
                                                             "supervisor_approved_by", "sent_to_human_resources_at",
@@ -132,7 +132,7 @@ class Declaration(ndb.Model):
                                                             "human_resources_comment", "human_resources_declined_at",
                                                             "human_resources_declined_by"],
 
-                   "human_resources_approved_declaration": ["created_at", "created_by", "assigned_to", "comment",
+                   "human_resources_approved_declaration": ["created_at", "assigned_to", "comment",
                                                             "items_total_price", "items_count", "locked_at",
                                                             "submitted_to_human_resources_by", "supervisor_approved_at",
                                                             "supervisor_approved_by", "sent_to_human_resources_at",
@@ -144,13 +144,17 @@ class Declaration(ndb.Model):
         return self.assigned_to[len(self.assigned_to)-1]
 
     def get_object_as_data_dict(self):
+        owner = Person.get_by_id(self.created_by.integer_id())
+
         return dict({'id': self.key.integer_id(),
                      'class_name': self.class_name,
-                     "state": self.readable_state()}.items() +
+                     "state": self.readable_state(),
+                     "created_by": owner.get_object_as_data_dict()}.items() +
                     property_not_none_key_value_pair_with_permissions(self).items())
 
     def get_object_as_full_data_dict(self):
         last_assigned_to = Person.get_by_id(self.get_last_assigned_to().integer_id())
+        owner = Person.get_by_id(self.created_by.integer_id())
 
         declaration_lines = []
         if len(self.lines) > 0:
@@ -165,8 +169,10 @@ class Declaration(ndb.Model):
                      'last_assigned_to': last_assigned_to.get_object_as_data_dict(),
                      "state": self.readable_state(),
                      "lines": map(lambda declaration_item: declaration_item.get_object_as_full_data_dict(), declaration_lines),
-                     "attachments": map(lambda attachment: attachment.get_object_as_data_dict(), attachments)
-                     }.items() + property_not_none_key_value_pair_with_permissions(self).items())
+                     "attachments": map(lambda attachment: attachment.get_object_as_data_dict(), attachments),
+                     "created_by": owner.get_object_as_data_dict()
+                     }.items() +
+                    property_not_none_key_value_pair_with_permissions(self).items())
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())
