@@ -18,6 +18,7 @@ class PersonDataCreator():
         person.email = "r.boleij" + str(email_added_id) + "@gmail.com"
         person.password = ilmoitus_auth.hash_secret("123456")
         person.employee_number = 12345
+        person.department = DepartmentDataCreator.create_valid_department("default").key
         person.wants_email_notifications = bool(random.randint(0, 1))
         person.wants_phone_notifications = not bool(person.wants_email_notifications)
 
