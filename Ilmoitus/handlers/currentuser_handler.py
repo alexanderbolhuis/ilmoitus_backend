@@ -10,21 +10,20 @@ import dateutil.parser
 class CurrentUserDetailsHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
-            response_module.give_response(self, self.logged_in_person().get_object_json_data())
+            person = self.logged_in_person()
+            give_response(self, person.get_object_json_data())
 
 
 class CurrentUserSettingsHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
-            employee = self.logged_in_person()
-            response_module.give_response(self, json.dumps(employee.details()))
-            response_module.give_response(self, employee.get_object_json_data())
+            #TODO make this function
+            pass
 
     def put(self):
         if self.is_logged_in():
-            employee = self.logged_in_person()
-            employee.wants_email_notifications = bool(self.request.get("wants_email_notifications"))
-            employee.wants_phone_notifications = bool(self.request.get("wants_phone_notifications"))
+            #TODO make this function
+            pass
 
 
 class CurrentUserSupervisorsHandler(BaseRequestHandler):

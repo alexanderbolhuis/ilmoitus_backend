@@ -35,6 +35,7 @@ application = webapp.WSGIApplication(
         ('/current_user/settings', CurrentUserSettingsHandler),
         ('/current_user/associated_declarations', CurrentUserAssociatedDeclarationsHandler),
         ('/current_user/supervisors', CurrentUserSupervisorsHandler),
+        ('/current_user/declarations', AllDeclarationsForEmployeeHandler),
 
         #Employee handlers
         ('/employees', AllEmployeesHandler),
@@ -42,7 +43,7 @@ application = webapp.WSGIApplication(
         ('/employee/(.*)', SpecificEmployeeDetailsHandler),
 
         #Declaration list
-        ('/declarations/employee', AllDeclarationsForEmployeeHandler),
+
         ('/declarations/supervisor', AllDeclarationsForSupervisorHandler),
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
 
