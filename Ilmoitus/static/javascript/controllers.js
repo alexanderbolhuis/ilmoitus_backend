@@ -452,11 +452,11 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 		console.log(data);
 
 		//sort the array on creation date
-		/*$scope.declarationList.sort(function(a, b) {
+		$scope.declarationList.sort(function(a, b) {
 		    a = a.created_at;
 		    b = b.created_at;
 		    return a>b ? -1 : a<b ? 1 : 0;
-		});*/
+		});
 		$scope.$apply();
 	});
 		
