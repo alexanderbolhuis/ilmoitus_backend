@@ -21,7 +21,7 @@ class SpecificEmployeeDetailsHandler(BaseRequestHandler):
     def get(self, employee_id):
         if self.is_logged_in():
             #TODO check if user is allowed to see this data (discussion needed)
-            response_module.respond_with_object_details_by_id(self, Person, employee_id)
+            respond_with_object_details_by_id(self, Person, employee_id)
 
 
 class SpecificEmployeeTotalDeclarationsHandler(BaseRequestHandler):
