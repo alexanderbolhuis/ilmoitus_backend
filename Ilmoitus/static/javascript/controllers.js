@@ -449,8 +449,6 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
 		}
 
-		console.log(data);
-
 		//sort the array on creation date
 		$scope.declarationList.sort(function(a, b) {
 		    a = a.created_at;
