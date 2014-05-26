@@ -33,7 +33,6 @@ application = webapp.WSGIApplication(
         #Current user handlers
         ('/current_user/details', CurrentUserDetailsHandler),
         ('/current_user/settings', CurrentUserSettingsHandler),
-        #('/current_user/associated_declarations', CurrentUserAssociatedDeclarationsHandler),
         ('/current_user/supervisors', CurrentUserSupervisorsHandler),
         ('/current_user/declarations', AllDeclarationsForEmployeeHandler),
         ('/current_user/declarations/assigned', AllDeclarationsForSupervisorHandler),
