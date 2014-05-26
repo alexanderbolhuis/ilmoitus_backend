@@ -87,7 +87,7 @@ ilmoitusApp.controller('declarationsController', function($scope, $state, $http)
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: baseurl + "/declarations/employee",
+		url: baseurl + "/current_user/declarations",
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
@@ -435,7 +435,7 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: baseurl + "/declarations/supervisor",
+		url: baseurl + "/current_user/declarations/assigned",
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
@@ -449,12 +449,14 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
 		}
 
+		console.log(data);
+
 		//sort the array on creation date
-		$scope.declarationList.sort(function(a, b) {
+		/*$scope.declarationList.sort(function(a, b) {
 		    a = a.created_at;
 		    b = b.created_at;
 		    return a>b ? -1 : a<b ? 1 : 0;
-		});
+		});*/
 		$scope.$apply();
 	});
 		
