@@ -7,8 +7,8 @@ from response_module import *
 class AllDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
-            query = Declaration.query(Declaration.created_by == self.logged_in_person().key)
-            response_module.respond_with_object_collection_with_query(self, query)
+            query = Declaration.query(Declaration.created_by == self.logged_in_person().key).order(Declaration.created_at)
+            response_module.respond_with_object_collection_with_query(self, query).order(Declaration.created_at)
 
 
 class AllDeclarationsForSupervisorHandler(BaseRequestHandler):
@@ -16,14 +16,14 @@ class AllDeclarationsForSupervisorHandler(BaseRequestHandler):
         if self.is_logged_in():
             declaration_query = Declaration.query(ndb.OR(Declaration.class_name == 'open_declaration',
                                                          Declaration.class_name == 'locked_declaration'),
-                                                  self.logged_in_person().key in Declaration.assigned_to)
+                                                  self.logged_in_person().key == Declaration.assigned_to).order(Declaration.created_at)
             response_module.respond_with_object_collection_with_query(self, declaration_query)
 
 
 class AllHistoryDeclarationsForSupervisorHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
-            declaration_query = Declaration.query(self.logged_in_person().key in Declaration.assigned_to)
+            declaration_query = Declaration.query(self.logged_in_person().key == Declaration.assigned_to).order(Declaration.created_at)
             response_module.respond_with_object_collection_with_query(self, declaration_query)
 
 
@@ -31,7 +31,7 @@ class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
             if self.logged_in_person().class_name == "human_resources":
-                declaration_query = Declaration.query(Declaration.class_name == "supervisor_approved_declaration")
+                declaration_query = Declaration.query(Declaration.class_name == "supervisor_approved_declaration").order(Declaration.created_at)
                 response_module.respond_with_object_collection_with_query(self, declaration_query)
             else:
                 give_error_response(self, 401, "De declaraties kunnen niet worden opgehaald omdat u niet "
