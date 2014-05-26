@@ -122,6 +122,7 @@ def respond_with_existing_model_object_collection(request_handler, collection):
 def give_response(request_handler, json_data):
     request_handler.response.headers['Access-Control-Allow-Origin'] = '*'
     request_handler.response.headers['Content-Type'] = "application/json"
+
     if json_data is not None:
         request_handler.response.write(json_data)
     else:
