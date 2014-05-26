@@ -14,16 +14,23 @@ class AllDeclarationsForEmployeeHandler(BaseRequestHandler):
 class AllDeclarationsForSupervisorHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
-            declaration_query = Declaration.query(Declaration.class_name == 'open_declaration',
-                                                  Declaration.assigned_to == self.logged_in_person().key)
+            declaration_query = Declaration.query(ndb.OR(Declaration.class_name == 'open_declaration',
+                                                         Declaration.class_name == 'locked_declaration'),
+                                                  self.logged_in_person().key in Declaration.assigned_to)
+            response_module.respond_with_object_collection_with_query(self, declaration_query)
+
+
+class AllHistoryDeclarationsForSupervisorHandler(BaseRequestHandler):
+    def get(self):
+        if self.is_logged_in():
+            declaration_query = Declaration.query(self.logged_in_person().key in Declaration.assigned_to)
             response_module.respond_with_object_collection_with_query(self, declaration_query)
 
 
 class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
-            #TODO: check if user is hr (maybe it already works?)
-            if self.logged_in_person().class_name == "human_resources":  # person.key.class_name == "human_resources":
+            if self.logged_in_person().class_name == "human_resources":
                 declaration_query = Declaration.query(Declaration.class_name == "supervisor_approved_declaration")
                 response_module.respond_with_object_collection_with_query(self, declaration_query)
             else:
