@@ -81,7 +81,7 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
     }
 });
 
-ilmoitusApp.controller('declarationsController', function($scope, $state, $http) {
+ilmoitusApp.controller('declarationsController', function($scope, $state) {
 	$scope.navBtnSelect("declarationsBtn");
 	
 	var request = $.ajax({
@@ -479,11 +479,49 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function($scope) {
 	
 });
 
-ilmoitusApp.controller('declarationsHistoryController', function($scope) {
+ilmoitusApp.controller('declarationsHistoryController', function($scope, $state) {
 	$scope.navBtnSelect("declarationsHistoryBtn");
 	
-	//TODO: use Angular like in declarations.html
-	SetTableSelectable("declarationTable");
+	var request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/current_user/declarations/assigned_history",
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+
+	request.done(function(data){
+		$scope.declarationList = data;
+		for(var i = 0 ; i < $scope.declarationList.length ; i++){
+			//turn created_at dates to actual javascript dates for comparison and string convertion.
+			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
+		}
+
+		//sort the array on creation date
+		$scope.declarationList.sort(function(a, b) {
+		    a = a.created_at;
+		    b = b.created_at;
+		    return a>b ? -1 : a<b ? 1 : 0;
+		});
+		$scope.$apply();
+	});
+		
+	//Select declaration
+	$scope.selectDeclaration = function(declaration){
+		$scope.currentdeclaration = declaration;
+	}
+	
+	//Doubleclick declaration
+	$scope.openDeclarationDetails = function(declarationid){
+ 		$state.go('template.declarationDetails', {declarationId: declarationid});
+  	}
+	
+	//Open declaration button
+	$scope.openDeclarationDetailsBtn = function(declarationid){
+ 		$state.go('template.declarationDetails', {declarationId: $scope.currentdeclaration.id});
+  	}
 });
 
 ilmoitusApp.controller('declarationDetailsController', function($scope, $stateParams) {

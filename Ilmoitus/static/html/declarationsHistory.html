@@ -8,7 +8,7 @@
             <td>Tot:</td><td><input name="declarationdate" type="date"/></td></tr>
         </table>
 		<div style="float : right;">
-			<input type="button" value="Declaratie tonen" ng-click="openDeclarationDetails(5)" />
+			<input type="button" value="Declaratie tonen" ng-disabled="!currentdeclaration;" ng-click="openDeclarationDetailsBtn();" />
 		</div>
 	</div>
 	<table id="declarationTable" class="styledTable">
@@ -29,6 +29,7 @@
 				<td>{{ declaration.created_by.department.name }}</td>
 				<td>{{ declaration.items_count }}</td>
 				<td>&euro; {{ declaration.items_total_price }}</td>
+				<td>{{ declaration.state }}</td>
 		</tbody>
 	</table>
 </div>
