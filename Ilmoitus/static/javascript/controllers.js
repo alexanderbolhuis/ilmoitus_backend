@@ -87,7 +87,7 @@ ilmoitusApp.controller('declarationsController', function($scope, $state, $http)
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: baseurl + "/declarations/employee",
+		url: baseurl + "/current_user/declarations",
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
@@ -435,7 +435,7 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: baseurl + "/declarations/supervisor",
+		url: baseurl + "/current_user/declarations/assigned",
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
