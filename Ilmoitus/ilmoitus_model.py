@@ -7,10 +7,11 @@ import collections
 
 # Department Model class
 class Department(ndb.Model):
-    name = ndb.StringProperty
+    name = ndb.StringProperty()
 
-    def details(self):
-        return {'name': self.name}
+    def get_object_as_data_dict(self):
+        return {'id': self.key.integer_id(),
+                'name': self.name}
 
 
 # Person Model class
@@ -26,18 +27,22 @@ class Person(ndb.Model):
     supervisor = ndb.KeyProperty(kind="Person")
     max_declaration_price = ndb.IntegerProperty()
 
-    all_custom_properties = ["first_name", "last_name", "email", "employee_number", "department",
+    all_custom_properties = ["first_name", "last_name", "email", "employee_number",
                              "supervisor", "max_declaration_price"]
     permissions = {"user": ["first_name", "last_name", "email", "class_name"],
-                   "employee": ["first_name", "last_name", "email", "employee_number", "department",
+                   "employee": ["first_name", "last_name", "email", "employee_number",
                                 "supervisor", "class_name"],
-                   "supervisor": ["first_name", "last_name", "email", "employee_number", "department",
+                   "supervisor": ["first_name", "last_name", "email", "employee_number",
                                   "supervisor", "class_name", "max_declaration_price"],
-                   "human_resources": ["first_name", "last_name", "email", "employee_number", "department",
+                   "human_resources": ["first_name", "last_name", "email", "employee_number",
                                        "supervisor"]}
 
     def get_object_as_data_dict(self):
-        return dict({'id': self.key.integer_id(), 'class_name': self.class_name}.items() +
+        department = Department.get_by_id(self.department.integer_id())
+
+        return dict({'id': self.key.integer_id(),
+                     'class_name': self.class_name,
+                     'department': department.get_object_as_data_dict()}.items() +
                     property_not_none_key_value_pair_with_permissions(self).items())
 
     def get_object_json_data(self):

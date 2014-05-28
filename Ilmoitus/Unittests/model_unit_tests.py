@@ -69,7 +69,6 @@ class ModelTest(BaseTestClass):
         person.department = department.key
         person.employee_number = employee_number
 
-        self.assertIsNone(person.department)
         self.assertIsNone(person.employee_number)
 
     def test_employee_can_set_own_properties(self):

@@ -9,7 +9,8 @@
 	<table id="declarationTable" class="styledTable">
 		<thead>
 			<th>Ingediend op</th>
-			<th>Ingediend door</th>
+			<th>Aanvrager</th>
+			<th>Afdeling</th>
 			<th>Aantal declaratie items</th>
 			<th>Declaratie bedrag</th>
 		</thead>
@@ -18,7 +19,8 @@
                 ng-class="{selected:currentdeclaration.id==declaration.id}" ng-click="selectDeclaration(declaration);">
                 
 				<td>{{ declaration.created_at.toLocaleDateString() }}</td>
-				<td>{{ declaration.created_by }}
+				<td>{{ declaration.created_by.first_name }} {{ declaration.created_by.last_name }}
+				<td>{{ declaration.created_by.department.name }}</td>
 				<td>{{ declaration.items_count }}</td>
 				<td>&euro; {{ declaration.items_total_price }}</td>
 			</tr>
