@@ -113,13 +113,6 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
 			//turn created_at dates to actual javascript dates for comparison and string convertion.
 			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
 		}
-
-		//sort the array on creation date
-		$scope.declarationList.sort(function(a, b) {
-		    a = a.created_at;
-		    b = b.created_at;
-		    return a>b ? -1 : a<b ? 1 : 0;
-		});
 		$scope.$apply();
 	});
 		
@@ -448,13 +441,6 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 			//turn created_at dates to actual javascript dates for comparison and string convertion.
 			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
 		}
-
-		//sort the array on creation date
-		$scope.declarationList.sort(function(a, b) {
-		    a = a.created_at;
-		    b = b.created_at;
-		    return a>b ? -1 : a<b ? 1 : 0;
-		});
 		$scope.$apply();
 	});
 		
@@ -498,13 +484,6 @@ ilmoitusApp.controller('declarationsHistoryController', function($scope, $state)
 			//turn created_at dates to actual javascript dates for comparison and string convertion.
 			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
 		}
-
-		//sort the array on creation date
-		$scope.declarationList.sort(function(a, b) {
-		    a = a.created_at;
-		    b = b.created_at;
-		    return a>b ? -1 : a<b ? 1 : 0;
-		});
 		$scope.$apply();
 	});
 		
@@ -537,8 +516,7 @@ ilmoitusApp.controller('declarationsHistoryController', function($scope, $state)
 			return false;
 		}
 
-	    if($scope.searchTerm != null && 
-	    	$scope.searchTerm != "" &&
+	    if($scope.searchTerm &&
 	    	declaration.state.toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1 && 
 	    	(declaration.created_by.first_name + " " +declaration.created_by.last_name).toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1 &&
     		declaration.created_by.department.name.toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1 &&
