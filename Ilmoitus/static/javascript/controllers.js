@@ -522,6 +522,33 @@ ilmoitusApp.controller('declarationsHistoryController', function($scope, $state)
 	$scope.openDeclarationDetailsBtn = function(declarationid){
  		$state.go('template.declarationDetails', {declarationId: $scope.currentdeclaration.id});
   	}
+
+  	//Filter function for the result table.
+  	$scope.searchFilter = function(declaration)
+	{
+		var fromDate = new Date($scope.searchFromDate);
+		var toDate = new Date($scope.searchToDate);
+
+		if(fromDate != "Invalid Date" && declaration.created_at < fromDate){
+			return false;
+		}
+
+		if(toDate != "Invalid Date" && declaration.created_at > toDate) {
+			return false;
+		}
+
+	    if($scope.searchTerm != null && 
+	    	$scope.searchTerm != "" &&
+	    	declaration.state.toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1 && 
+	    	(declaration.created_by.first_name + " " +declaration.created_by.last_name).toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1 &&
+    		declaration.created_by.department.name.toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1 &&
+			declaration.items_count.toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1 &&
+			declaration.items_total_price.toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1) {
+	        return false;
+	    }
+
+	    return true; // It will be shown in the results
+	};
 });
 
 ilmoitusApp.controller('declarationDetailsController', function($scope, $stateParams) {

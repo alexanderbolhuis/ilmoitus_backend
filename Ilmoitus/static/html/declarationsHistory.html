@@ -3,9 +3,9 @@
 		<h2>Declaratie historie:</h2>
 		<br/>
     	<table>
-    		<tr><td>Zoeken:</td><td colspan="3"><input type="text" placeholder="Naam" /> <input type="button" value="Zoeken"/></td></tr>
-            <tr><td>Van:</td><td><input name="declarationdate" type="date"/></td>
-            <td>Tot:</td><td><input name="declarationdate" type="date"/></td></tr>
+    		<tr><td>Zoeken:</td><td colspan="3"><input type="text" placeholder="Naam" ng-model="searchTerm" /> <!--<input type="button" value="Zoeken"/>--></td></tr>
+            <tr><td>Van:</td><td><input type="date" ng-model="searchFromDate"/></td>
+            <td>Tot:</td><td><input type="date" ng-model="searchToDate"/></td></tr>
         </table>
 		<div style="float : right;">
 			<input type="button" value="Declaratie tonen" ng-disabled="!currentdeclaration;" ng-click="openDeclarationDetailsBtn();" />
@@ -21,7 +21,7 @@
 			<th>Status</th>
 		</thead>
 		<tbody>
-			<tr ng-repeat="declaration in declarationList" ng-dblclick="openDeclarationDetails(declaration.id);" id="{{ declaration.id }}" 
+			<tr ng-repeat="declaration in declarationList | filter:searchFilter" ng-dblclick="openDeclarationDetails(declaration.id);" id="{{ declaration.id }}" 
                 ng-class="{selected:currentdeclaration.id==declaration.id}" ng-click="selectDeclaration(declaration);">
                 
 				<td>{{ declaration.created_at.toLocaleDateString() }}</td>
