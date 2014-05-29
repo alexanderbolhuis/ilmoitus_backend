@@ -9,7 +9,7 @@ class AllDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
             query = Declaration.query(Declaration.created_by == self.logged_in_person().key).order(Declaration.created_at)
-            response_module.respond_with_object_collection_with_query(self, query).order(Declaration.created_at)
+            response_module.respond_with_object_collection_with_query(self, query)
 
 
 class AllDeclarationsForSupervisorHandler(BaseRequestHandler):
