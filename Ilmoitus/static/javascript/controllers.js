@@ -475,8 +475,51 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 
 });
 
-ilmoitusApp.controller('sentDeclarationDetailsController', function($scope) {
-	
+ilmoitusApp.controller('sentDeclarationDetailsController', function($scope, $stateParams) {
+	// Get declaration ID from url parameter.
+	$scope.declarationId = $stateParams.declarationId;
+
+	//Get declaration details
+	var request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/declaration/"+$scope.declarationId,
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+            showMessage(jqXHR.responseJSON.user_message, "Error!");
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+
+	request.done(function(data){
+		$scope.declaration = data;
+		$scope.supervisorId = data.last_assigned_to.id;
+		$scope.supervisor = data.last_assigned_to.first_name + " " + data.last_assigned_to.last_name;
+		if($scope.declaration.attachments.length > 0){
+			$scope.selectedattachment = $scope.declaration.attachments[0].id;
+		}
+		$scope.$apply();
+	});
+
+    //Preload supervisors
+	request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/current_user/supervisors",
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+            showMessage(jqXHR.responseJSON.user_message, "Error!");
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+	request.done(function(data){
+		$scope.supervisorList = data;
+		$scope.$apply();
+	});
+
+    $scope.openAttachment = function() {
+        window.open("/attachment/"+$scope.selectedattachment, '_blank');
+    }
 });
 
 ilmoitusApp.controller('declarationsHistoryController', function($scope) {
