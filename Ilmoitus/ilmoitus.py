@@ -45,6 +45,7 @@ application = webapp.WSGIApplication(
 
         #Declaration list
         ('/declarations/hr', AllDeclarationsForHumanResourcesHandler),
+        ('/declarations/hr_history', AllHistoryDeclarationsForHumanResourcesHandler),
 
         #Declaration type list
         ('/declarationtypes', AllDeclarationTypesHandler),
