@@ -25,6 +25,10 @@ div.ui-datepicker{
     overflow: auto;
 }
 
+.hidden {
+    display: none;
+}
+
 /* Buttons */
 input[type="button"] {
     border-radius: 5px;
@@ -120,6 +124,10 @@ header {
 
 #navigation {
     margin-top: 10px;
+}
+
+#navigation div {
+    display: inline-block;
 }
 
 /* Content */
