@@ -38,8 +38,8 @@ def is_declaration_assigned(handler, declaration, current_person):
 
 def is_declaration_price_allowed_supervisor(handler, declaration, current_person):
     if current_person.max_declaration_price < declaration.items_total_price and current_person.max_declaration_price != -1:
-        give_error_response(handler, 401, "De huidige persoon mag deze declaratie niet goedkeuren. Bedrag te hoog",
-                            "Total item costs is: " + str(current_person.items_total_price) + " and the max amount is: "
+        give_error_response(handler, 400, "De huidige persoon mag deze declaratie niet goedkeuren. Bedrag te hoog",
+                            "Total item costs is: " + str(declaration.items_total_price) + " and the max amount is: "
                             + str(current_person.max_declaration_price))
 
 
@@ -107,7 +107,6 @@ class DeclineBySupervisorHandler(BaseRequestHandler):
         #Checks (break when fails)
         has_post(self, "comment")
         is_declaration_assigned(self, declaration, current_person)
-        is_declaration_price_allowed_supervisor(self, declaration, current_person)
 
         #Action
         declaration.class_name = "supervisor_declined_declaration"
