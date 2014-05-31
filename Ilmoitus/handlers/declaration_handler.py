@@ -49,9 +49,13 @@ def is_declaration_state(handler, declaration, class_name):
                                           "Expected state: " + class_name + " Received state: " + declaration.class_name)
 
 
-def has_post(handler, post):
-    if handler.request.POST[post] is None:
-        give_error_response(handler, 400, "Geen " + has_post + " ontvangen", has_post + " is None")
+def has_post(handler, post, break_if_missing=False):
+    if handler.request.body is not None:
+        request_body = json.loads(handler.request.body)
+        if "comment" in request_body.keys() and request_body["comment"] is not None and request_body["comment"] != "":
+            return str(request_body["comment"])
+    if break_if_missing:
+        give_error_response(handler, 400, "Geen " + post + " ontvangen", post + " is None")
 
 
 def is_declaration_states(handler, declaration, class_names):
@@ -93,8 +97,9 @@ class ForwardDeclarationHandler(BaseRequestHandler):
         declaration = find_declaration(self, declaration_id)
 
         #TODO: Implement this function
-        #Input will be in the body & POST multidict and will always have a "assigned_to" value (new person/supervisor
+        #Input will be in the body and will always have a "assigned_to" value (new person/supervisor
         # ID) and optionally a "comment" with a supervisor_comment value
+
 
 class DeclineBySupervisorHandler(BaseRequestHandler):
     def put(self, declaration_id):
@@ -106,14 +111,14 @@ class DeclineBySupervisorHandler(BaseRequestHandler):
         current_person = self.logged_in_person()
 
         #Checks (break when fails)
-        has_post(self, "comment")
+        comment = has_post(self, "comment", break_if_missing=True)
         is_declaration_assigned(self, declaration, current_person)
 
         #Action
         declaration.class_name = "supervisor_declined_declaration"
         declaration.submitted_to_human_resources_by = current_person.key
         declaration.supervisor_approved_at = datetime.datetime.now()
-        declaration.supervisor_comment = str(self.request.POST["comment"])
+        declaration.supervisor_comment = comment
         declaration.put()
 
         send_message_declaration_status_changed(self, declaration)
@@ -128,6 +133,7 @@ class ApproveBySupervisorHandler(BaseRequestHandler):
         is_declaration_states(self, declaration, {"locked_declaration", "open_declaration"})
 
         current_person = self.logged_in_person()
+        comment = has_post(self, "comment", break_if_missing=False)
 
         #Checks (break when fails)
         is_declaration_assigned(self, declaration, current_person)
@@ -138,9 +144,7 @@ class ApproveBySupervisorHandler(BaseRequestHandler):
         declaration.submitted_to_human_resources_by = current_person.key
         declaration.supervisor_approved_at = datetime.datetime.now()
 
-        request_body = json.loads(self.request.body)
-        if "comment" in request_body and request_body["comment"] is not None:
-            declaration.supervisor_comment = str(request_body["comment"])
+        declaration.supervisor_comment = comment  # comment will be None if none is given
 
         declaration.put()
         mail_module.send_message_declaration_status_changed(self, declaration)
@@ -152,7 +156,7 @@ class DeclineByHumanResourcesHandler(BaseRequestHandler):
         #Checks (break when fails)
         self.is_logged_in()
         self.check_hr()
-        has_post(self, "comment")
+        comment = has_post(self, "comment", break_if_missing=False)
 
         declaration = find_declaration(self, declaration_id)
         is_declaration_state(self, declaration, {"supervisor_approved_declaration"})
@@ -160,7 +164,7 @@ class DeclineByHumanResourcesHandler(BaseRequestHandler):
         declaration.class_name = 'human_resources_declined_declaration'
         declaration.human_resources_declined_by = self.logged_in_person().key
         declaration.human_resources_declined_at = datetime.datetime.now()
-        declaration.human_resources_comment = str(self.request.POST["comment"])
+        declaration.human_resources_comment = comment  # comment will be None if none is given
         declaration.put()
 
         send_message_declaration_status_changed(self, declaration)
@@ -175,12 +179,13 @@ class ApproveByHumanResourcesHandler(BaseRequestHandler):
         declaration = find_declaration(self, declaration_id)
         is_declaration_state(self, declaration, {"supervisor_approved_declaration"})
 
+        comment = has_post(self, "comment", break_if_missing=False)
+
         #Action
         declaration.class_name = "human_resources_approved_declaration"
         declaration.human_resources_approved_by = self.logged_in_person().key
         declaration.human_resources_approved_at = datetime.datetime.now()
-        if self.request.POST["comment"] is not None:
-            declaration.human_resources_comment = str(self.request.POST["comment"])
+        declaration.human_resources_comment = comment  # comment will be None if none is given
         declaration.put()
 
         send_message_declaration_status_changed(self, declaration)

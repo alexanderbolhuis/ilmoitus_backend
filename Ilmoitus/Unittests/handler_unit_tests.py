@@ -347,7 +347,7 @@ class SetLockedToSupervisorApprovedDeclarationHandlerTest(BaseAuthorizationHandl
         locked_declaration_data_json_string = json.dumps(locked_declaration_data)
 
         path = "/declaration/"+ str(locked_declaration.key.integer_id()) +"/approve_by_supervisor"
-        response = self.positive_test_stub_handler(token, path, "put", data_dict={'comment': supervisors_comment})
+        response = self.positive_test_stub_handler(token, path, "put", data_dict=json.dumps({'comment': supervisors_comment}))
         response_data = json.loads(response.body)
 
         self.assertTrue("id" in response_data.keys())
