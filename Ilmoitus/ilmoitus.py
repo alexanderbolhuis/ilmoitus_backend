@@ -25,7 +25,7 @@ class DefaultHandler(BaseRequestHandler):
                 </p>
              </body>
             </html>"""
-        response_module.give_hard_response(self, html_data)
+        give_hard_response(self, html_data)
 
 
 application = webapp.WSGIApplication(

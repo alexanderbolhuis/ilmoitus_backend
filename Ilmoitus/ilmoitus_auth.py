@@ -1,14 +1,11 @@
 __author__ = 'Robin'
 
-from error_response_module import give_error_response
+from error_checks import *
 from ilmoitus_model import *
 from response_module import *
-import ilmoitus_model
-import response_module
 import hashlib
 import random
 import string
-import time
 
 
 def get_current_person(request_handler):
@@ -48,17 +45,11 @@ def get_current_person(request_handler):
     return auth_error(request_handler)
 
 
-def auth_error(request_handler):
-    #Send 401 right away
-    give_error_response(request_handler, 401, "U bent niet ingelogd", "token not found or accepted")
-    return {"user_is_logged_in": False, "person_value": None}
-
-
 def auth(email, password):
     #TODO: Figure out how not to do this in unittests
     #time.sleep(1)
 
-    person_query = ilmoitus_model.Person.query(ilmoitus_model.Person.email == email)
+    person_query = Person.query(Person.email == email)
     query_result = person_query.get()
     if query_result is not None and check_secret(password, query_result.password):
         # User passed the test, generate token and save hashed version to database

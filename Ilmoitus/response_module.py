@@ -24,7 +24,7 @@ class BaseRequestHandler(webapp.RequestHandler):
             give_error_response(self, 401, "U bent niet ingelogd als HR",
                                            "User is not HR")
 
-    def options(self, optionalkey=None):
+    def options(self, optionalkey=None, optionalkey2=None):
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
         self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE'
