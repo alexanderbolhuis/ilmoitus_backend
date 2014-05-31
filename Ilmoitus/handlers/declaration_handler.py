@@ -93,7 +93,8 @@ class ForwardDeclarationHandler(BaseRequestHandler):
         declaration = find_declaration(self, declaration_id)
 
         #TODO: Implement this function
-
+        #Input will be in the body & POST multidict and will always have a "assigned_to" value (new person/supervisor
+        # ID) and optionally a "comment" with a supervisor_comment value
 
 class DeclineBySupervisorHandler(BaseRequestHandler):
     def put(self, declaration_id):
