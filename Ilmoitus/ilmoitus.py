@@ -1,13 +1,15 @@
 __author__ = 'Sjors van Lemmen'
 
+from response_module import *
+from ilmoitus_model import *
 from handlers.declaration_list import *
 from handlers.declaration_handler import *
 from handlers.employee_list import *
 from handlers.declaration_type_list import *
 from handlers.currentuser_handler import *
 from ilmoitus_auth import *
-from response_module import *
 import data_bootstrapper
+import webapp2 as webapp
 
 
 class DefaultHandler(BaseRequestHandler):
@@ -63,7 +65,8 @@ application = webapp.WSGIApplication(
         ("/declaration", NewDeclarationHandler),
 
         #Attchment handlers
-        ('/attachment/(.*)', SpecificAttachmentHandler),
+        ('/attachment/(.*)/(.*)', SpecificAttachmentHandler),
+        ('/attachment_token/(.*)', CreateAttachmentTokenHandler),
 
         #Authencation
         ('/auth/login', LoginHandler),

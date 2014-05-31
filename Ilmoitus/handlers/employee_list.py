@@ -1,6 +1,6 @@
 __author__ = 'RobinB'
 
-from error_checks import *
+from handlers.error_checks import *
 
 
 class AllEmployeesHandler(BaseRequestHandler):

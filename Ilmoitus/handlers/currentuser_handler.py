@@ -2,9 +2,7 @@ __author__ = 'RobinB'
 
 from ilmoitus_auth import *
 from response_module import *
-import datetime
-import mail_module
-import dateutil.parser
+from ilmoitus_model import *
 
 
 class CurrentUserDetailsHandler(BaseRequestHandler):

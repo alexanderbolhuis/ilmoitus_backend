@@ -1,6 +1,8 @@
 __author__ = 'RobinB'
 
 from error_checks import *
+from response_module import *
+from ilmoitus_model import *
 from mail_module import *
 from ilmoitus_auth import hash_secret, check_secret, gen_salt
 import datetime
@@ -285,15 +287,15 @@ class CreateAttachmentTokenHandler(BaseRequestHandler):
     def get(self, attachment_id):
         self.is_logged_in()
         attachment = find_attachment(self, attachment_id)
-        declaration = find_declaration(self, attachment.declaration)
+        declaration = find_declaration(self, attachment.declaration.integer_id())
         is_allowed_declaration_viewer(self, declaration, self.logged_in_person())
 
         #Generate token for view rights
-        token = gen_salt(16);
+        token = gen_salt(16)
         attachment.token = hash_secret(token)
         attachment.put()
 
-        give_response(self, json.dumps({ "attachment_token": token }))
+        give_response(self, json.dumps({"attachment_token": token}))
 
 
 class SpecificAttachmentHandler(BaseRequestHandler):

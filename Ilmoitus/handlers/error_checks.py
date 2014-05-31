@@ -1,6 +1,6 @@
 __author__ = 'Robin'
-from response_module import *
-from ilmoitus_model import *
+from ilmoitus_auth import *
+
 
 def find_declaration(handler, declaration_id):
     safe_id = 0
@@ -112,8 +112,3 @@ def is_allowed_declaration_viewer(handler, declaration, current_user):
        current_user.class_name != 'human_resources':
 
         give_error_response(handler, 401, "U heeft niet de juiste rechten om deze declaratie te openen")
-
-
-def auth_error(handler):
-    #Send 401 right away
-    give_error_response(handler, 401, "U bent niet ingelogd", "token not found or accepted")
