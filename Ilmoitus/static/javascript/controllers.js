@@ -81,7 +81,7 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
     }
 });
 
-ilmoitusApp.controller('declarationsController', function($scope, $state, $http) {
+ilmoitusApp.controller('declarationsController', function($scope, $state) {
 	$scope.navBtnSelect("declarationsBtn");
 	
 	var request = $.ajax({
@@ -113,13 +113,6 @@ ilmoitusApp.controller('declarationsController', function($scope, $state, $http)
 			//turn created_at dates to actual javascript dates for comparison and string convertion.
 			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
 		}
-
-		//sort the array on creation date
-		$scope.declarationList.sort(function(a, b) {
-		    a = a.created_at;
-		    b = b.created_at;
-		    return a>b ? -1 : a<b ? 1 : 0;
-		});
 		$scope.$apply();
 	});
 		
@@ -448,13 +441,6 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 			//turn created_at dates to actual javascript dates for comparison and string convertion.
 			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
 		}
-
-		//sort the array on creation date
-		$scope.declarationList.sort(function(a, b) {
-		    a = a.created_at;
-		    b = b.created_at;
-		    return a>b ? -1 : a<b ? 1 : 0;
-		});
 		$scope.$apply();
 	});
 		
@@ -475,15 +461,115 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 
 });
 
-ilmoitusApp.controller('sentDeclarationDetailsController', function($scope) {
-	
+ilmoitusApp.controller('sentDeclarationDetailsController', function($scope, $stateParams) {
+	// Get declaration ID from url parameter.
+	$scope.declarationId = $stateParams.declarationId;
+
+	//Get declaration details
+	var request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/declaration/"+$scope.declarationId,
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+            showMessage(jqXHR.responseJSON.user_message, "Error!");
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+
+	request.done(function(data){
+		$scope.declaration = data;
+		$scope.supervisorId = data.last_assigned_to.id;
+		$scope.supervisor = data.last_assigned_to.first_name + " " + data.last_assigned_to.last_name;
+		if($scope.declaration.attachments.length > 0){
+			$scope.selectedattachment = $scope.declaration.attachments[0].id;
+		}
+		$scope.$apply();
+	});
+
+    //Preload supervisors
+	request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/current_user/supervisors",
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+            showMessage(jqXHR.responseJSON.user_message, "Error!");
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+	request.done(function(data){
+		$scope.supervisorList = data;
+		$scope.$apply();
+	});
+
+    $scope.openAttachment = function() {
+        window.open("/attachment/"+$scope.selectedattachment, '_blank');
+    }
 });
 
-ilmoitusApp.controller('declarationsHistoryController', function($scope) {
+ilmoitusApp.controller('declarationsHistoryController', function($scope, $state) {
 	$scope.navBtnSelect("declarationsHistoryBtn");
 	
-	//TODO: use Angular like in declarations.html
-	SetTableSelectable("declarationTable");
+	var request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/current_user/declarations/assigned_history",
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+
+	request.done(function(data){
+		$scope.declarationList = data;
+		for(var i = 0 ; i < $scope.declarationList.length ; i++){
+			//turn created_at dates to actual javascript dates for comparison and string convertion.
+			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
+		}
+		$scope.$apply();
+	});
+		
+	//Select declaration
+	$scope.selectDeclaration = function(declaration){
+		$scope.currentdeclaration = declaration;
+	}
+	
+	//Doubleclick declaration
+	$scope.openDeclarationDetails = function(declarationid){
+ 		$state.go('template.declarationDetails', {declarationId: declarationid});
+  	}
+	
+	//Open declaration button
+	$scope.openDeclarationDetailsBtn = function(declarationid){
+ 		$state.go('template.declarationDetails', {declarationId: $scope.currentdeclaration.id});
+  	}
+
+  	//Filter function for the result table.
+  	$scope.searchFilter = function(declaration)
+	{
+		var fromDate = new Date($scope.searchFromDate);
+		var toDate = new Date($scope.searchToDate);
+
+		if(fromDate != "Invalid Date" && declaration.created_at < fromDate){
+			return false;
+		}
+
+		if(toDate != "Invalid Date" && declaration.created_at > toDate) {
+			return false;
+		}
+
+	    if($scope.searchTerm &&
+	    	declaration.state.toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1 && 
+	    	(declaration.created_by.first_name + " " +declaration.created_by.last_name).toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1 &&
+    		declaration.created_by.department.name.toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1 &&
+			declaration.items_count.toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1 &&
+			declaration.items_total_price.toLowerCase().indexOf($scope.searchTerm.toLowerCase()) == -1) {
+	        return false;
+	    }
+
+	    return true; // It will be shown in the results
+	};
 });
 
 ilmoitusApp.controller('declarationDetailsController', function($scope, $stateParams) {
