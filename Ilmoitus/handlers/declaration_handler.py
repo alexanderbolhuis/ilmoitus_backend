@@ -9,6 +9,25 @@ import dateutil.parser
 import base64
 
 
+def find_employee(handler, employee_id):
+    safe_id = 0
+    try:
+        safe_id = long(employee_id)
+    except ValueError:
+        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(employee_id) + ")")
+
+    employee = Person.get_by_id(safe_id)
+    if employee is None:
+        give_error_response(handler, 404, "Persoon [" + str(safe_id) + "] niet gevonden", "Person is None")
+    return employee
+
+
+def if_employee_is_supervisor(handler, current_person):
+    if current_person.class_name != "supervisor":
+        give_error_response(handler, 401, "Kan de declaratie niet doorsturen. Deze persoon is geen leidinggevende",
+                            "current_person_object's id is not an supervisor")
+
+
 def find_declaration(handler, declaration_id):
     safe_id = 0
     try:
@@ -33,7 +52,7 @@ def is_declaration_creator(handler, declaration, employee):
 def is_declaration_assigned(handler, declaration, current_person):
     if current_person.key != declaration.get_last_assigned_to():
         give_error_response(handler, 401, "Kan de declaratie niet goedkeuren. Deze declaratie is niet aan u toegewezen",
-                                          "current_person_object's id was not in the declaration_object's asigned_to list")
+                            "current_person_object's id was not in the declaration_object's asigned_to list")
 
 
 def is_declaration_price_allowed_supervisor(handler, declaration, current_person):
@@ -52,8 +71,8 @@ def is_declaration_state(handler, declaration, class_name):
 def has_post(handler, post, break_if_missing=False):
     if handler.request.body is not None:
         request_body = json.loads(handler.request.body)
-        if "comment" in request_body.keys() and request_body["comment"] is not None and request_body["comment"] != "":
-            return str(request_body["comment"])
+        if post in request_body.keys() and request_body[post] is not None and request_body[post] != "":
+            return str(request_body[post])
     if break_if_missing:
         give_error_response(handler, 400, "Geen " + post + " ontvangen", post + " is None")
 
@@ -96,9 +115,23 @@ class ForwardDeclarationHandler(BaseRequestHandler):
         self.is_logged_in()
         declaration = find_declaration(self, declaration_id)
 
-        #TODO: Implement this function
-        #Input will be in the body and will always have a "assigned_to" value (new person/supervisor
-        # ID) and optionally a "comment" with a supervisor_comment value
+        is_declaration_states(self, declaration, {"locked_declaration", "open_declaration"})
+        current_person = self.logged_in_person()
+
+        #Checks (break when fails)
+        is_declaration_assigned(self, declaration, current_person)
+        assigned_to = has_post(self, "assigned_to", break_if_missing=True)
+
+        comment = has_post(self, "comment", break_if_missing=False)
+
+        #Action
+        new_supervisor = find_employee(self, assigned_to)
+        if_employee_is_supervisor(self, new_supervisor)
+        declaration.assigned_to.append(new_supervisor.key)
+        declaration.supervisor_comment = comment
+        declaration.put()
+
+        give_response(self, json.dumps(declaration.get_object_as_data_dict()))
 
 
 class DeclineBySupervisorHandler(BaseRequestHandler):
