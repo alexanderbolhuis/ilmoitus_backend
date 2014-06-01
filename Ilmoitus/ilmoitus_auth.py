@@ -11,6 +11,9 @@ class BaseRequestHandler(webapp.RequestHandler):
     """
     Wrapper class that will allow all other handler classes to make easily read what the
     limit and/or offset is for a request
+    check login
+    fetch loggedin user
+    supply with the correct headers with an option request (supports up to 2 get params!)
     """
     def is_logged_in(self):
         result = get_current_person(self)
