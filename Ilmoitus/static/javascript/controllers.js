@@ -576,40 +576,32 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
 
     //Decline declaration button
     $scope.declineDeclarationBtn = function () {
-        if ($scope.declaration.items_total_price <= $scope.declaration.assigned_to.max_declaration_price) {
-            showMessageInputForDeclarationAction(
-                "Declaration afwijzen",
-                "Afwijzen",
-                "U heeft gekozen om de declaratie af te wijzen.<br /><br />Geef hieronder de reden van afwijzing op (verplicht).",
-                function (data) {
-                    var comment = (data["comment"] == "") ? null : data["comment"];
+        showMessageInputForDeclarationAction(
+            "Declaration afwijzen",
+            "Afwijzen",
+            "U heeft gekozen om de declaratie af te wijzen.<br /><br />Geef hieronder de reden van afwijzing op (verplicht).",
+            function (data) {
+                var comment = (data["comment"] == "") ? null : data["comment"];
 
-                    var request_data = {};
-                    if (comment != null) {
-                        request_data["comment"] = comment;
-                    } else {
-                        //Comment is mandatory; show error text in the open dialog
-                        var errorArea = $("#sentDeclarationDialogErrorArea");
-                        if (errorArea != null) {
-                            errorArea.text("Er is geen opmerking ingevuld. Dit is verplicht bij het afwijzen van een declaratie!");
-                            errorArea.show();
-                            return;
-                        }
+                var request_data = {};
+                if (comment != null) {
+                    request_data["comment"] = comment;
+                } else {
+                    //Comment is mandatory; show error text in the open dialog
+                    var errorArea = $("#sentDeclarationDialogErrorArea");
+                    if (errorArea != null) {
+                        errorArea.text("Er is geen opmerking ingevuld. Dit is verplicht bij het afwijzen van een declaratie!");
+                        errorArea.show();
+                        return;
                     }
-
-                    handleSentDeclaration("/declaration/" + $scope.declaration.id + "/decline_by_supervisor", "PUT",
-                        request_data, function () {
-                            $state.go("template.declarationsSubmitted");
-                        });
                 }
-            );
-        } else {
-            showMessage("<p>U mag deze declaratie niet afwijzen omdat het bedrag te hoog is!</p>" +
-                "<p>Uw maximaal af te wijzen bedrag is: &euro;" + $scope.declaration.last_assigned_to.max_declaration_price +
-                "</p><p>Terwijl deze declaratie een totaal bedrag heeft van: &euro;" +
-                $scope.declaration.items_total_price + "</p><p>U mag deze declaratie alleen doorsturen.</p>",
-                "Error!");
-        }
+
+                handleSentDeclaration("/declaration/" + $scope.declaration.id + "/decline_by_supervisor", "PUT",
+                    request_data, function () {
+                        $state.go("template.declarationsSubmitted");
+                    });
+            }
+        );
     };
 
     function handleSentDeclaration(target_url, request_type, request_data, callback_function, should_pass_data_into_callback) {
