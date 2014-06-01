@@ -24,9 +24,11 @@ class AllDeclarationsForSupervisorHandler(BaseRequestHandler):
 class AllHistoryDeclarationsForSupervisorHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
-            declaration_query = Declaration.query(self.logged_in_person().key == Declaration.assigned_to,
-                                                  Declaration.class_name != 'open_declaration',
-                                                  Declaration.class_name != 'locked_declaration').order(Declaration.created_at)
+            declaration_query = Declaration.query(ndb.OR(Declaration.class_name == 'supervisor_declined_declaration',
+                                                         Declaration.class_name == 'supervisor_approved_declaration',
+                                                         Declaration.class_name == 'human_resources_declined_declaration',
+                                                         Declaration.class_name == 'human_resources_approved_declaration'),
+                                                  self.logged_in_person().key == Declaration.assigned_to).order(-Declaration.created_at)
             response_module.respond_with_object_collection_with_query(self, declaration_query)
 
 
@@ -45,5 +47,5 @@ class AllHistoryDeclarationsForHumanResourcesHandler(BaseRequestHandler):
         self.check_hr()
 
         declaration_query = Declaration.query(ndb.OR(Declaration.class_name == 'human_resources_declined_declaration',
-                                                     Declaration.class_name == 'human_resources_approved_declaration')).order(Declaration.created_at)
+                                                     Declaration.class_name == 'human_resources_approved_declaration')).order(-Declaration.created_at)
         respond_with_object_collection_with_query(self, declaration_query)
