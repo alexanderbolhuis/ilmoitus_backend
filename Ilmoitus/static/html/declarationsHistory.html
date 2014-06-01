@@ -2,18 +2,18 @@
 	<div class="DeclarationFloatContainer">
 		<h2>Declaratie historie:</h2>
 		<br/>
-    	<table>
-    		<tr>
-	    		<td>Zoeken:</td>
-	    		<td colspan="3"><input type="text" placeholder="Naam" ng-model="searchTerm" /></td>
-    		</tr>
-            <tr>
-	            <td>Van:</td>
-	            <td><input type="date" ng-model="searchFromDate"/></td>
-	            <td>Tot:</td>
-	            <td><input type="date" ng-model="searchToDate"/></td>
-            </tr>
-        </table>
+		<table>
+			<tr>
+				<td>Zoeken:</td>
+				<td colspan="3"><input type="text" placeholder="Naam" ng-model="searchTerm" /></td>
+			</tr>
+			<tr>
+				<td>Van:</td>
+				<td><input type="date" ng-model="searchFromDate"/></td>
+				<td>Tot:</td>
+				<td><input type="date" ng-model="searchToDate"/></td>
+			</tr>
+		</table>
 		<div style="float : right;">
 			<input type="button" value="Declaratie tonen" ng-disabled="!currentdeclaration;" ng-click="openDeclarationDetailsBtn();" />
 		</div>
