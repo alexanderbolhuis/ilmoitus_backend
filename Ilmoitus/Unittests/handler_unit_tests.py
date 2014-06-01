@@ -828,7 +828,7 @@ class DeclarationSubTypeHandlerTest(BaseAuthorizationHandler):
 
         path = "/declarationtype/" + "invalid_id"
 
-        self.negative_test_stub_handler(token, path, "get", 500)
+        self.negative_test_stub_handler(token, path, "get", 400)
 
 
 '''

@@ -38,3 +38,6 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# app-engine search indexes ?
+index.yaml

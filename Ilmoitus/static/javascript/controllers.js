@@ -47,6 +47,7 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 	//Get current user details
 	var request = $.ajax({
 		type: "GET",
+		async: false,
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + "/current_user/details",
 		crossDomain: true,
@@ -60,7 +61,6 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 		$scope.userName = userData.first_name + " " + userData.last_name;
 		$scope.userId = userData.employee_number;
 		$scope.userClass = userData.class_name;
-		$scope.$apply();
 	});
 
 	$scope.selectedNavBtn;
@@ -425,10 +425,16 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 ilmoitusApp.controller('declarationsSubmittedController', function($scope, $state) {
 	$scope.navBtnSelect("declarationsSubmittedBtn");
 
+	if (userData.class_name == "human_resources") {
+		var url = "/declarations/hr"
+	} else {
+		var url = "/current_user/declarations/assigned";
+	}
+
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: baseurl + "/current_user/declarations/assigned",
+		url: baseurl + url,
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
@@ -708,11 +714,17 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
 
 ilmoitusApp.controller('declarationsHistoryController', function($scope, $state) {
 	$scope.navBtnSelect("declarationsHistoryBtn");
+
+	if (userData.class_name == "human_resources") {
+		var url = "/declarations/hr_history"
+	} else {
+		var url = "/current_user/declarations/assigned_history";
+	}
 	
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: baseurl + "/current_user/declarations/assigned_history",
+		url: baseurl + url,
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
@@ -797,7 +809,21 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	});
 
     $scope.openAttachment = function() {
-        window.open("/attachment/"+$scope.selectedattachment, '_blank');
+		
+		var request = $.ajax({
+			type: "GET",
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/attachment_token/"+$scope.selectedattachment,
+			crossDomain: true,
+			error: function(jqXHR, textStatus, errorThrown){
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			}
+		});	
+		
+        request.done(function(data){
+			var token = data["attachment_token"];
+			window.open(baseurl + "/attachment/"+$scope.selectedattachment+"/"+token, '_blank');
+		});
     }
     
 });

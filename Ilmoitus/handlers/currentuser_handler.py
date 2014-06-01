@@ -2,9 +2,7 @@ __author__ = 'RobinB'
 
 from ilmoitus_auth import *
 from response_module import *
-import datetime
-import mail_module
-import dateutil.parser
+from ilmoitus_model import *
 
 
 class CurrentUserDetailsHandler(BaseRequestHandler):
@@ -28,9 +26,13 @@ class CurrentUserSettingsHandler(BaseRequestHandler):
 
 class CurrentUserSupervisorsHandler(BaseRequestHandler):
     def get(self):
-        #TODO now this function gets all supervisors, we need to know if it only need supervisors of current person
         if self.is_logged_in():
-            supervisor_query = ilmoitus_model.Person.query(Person.class_name == "supervisor")
+            supervisor = self.logged_in_person().supervisor
+            if supervisor is None:
+                supervisor_query = Person.query(Person.class_name == "supervisor")
+            else:
+                supervisor_query = Person.query(Person.class_name == "supervisor").order(self.logged_in_person().supervisor == Person.key)
+
             respond_with_object_collection_with_query(self, supervisor_query)
 
 
@@ -39,7 +41,7 @@ class CurrentUserAssociatedDeclarationsHandler(BaseRequestHandler):
         if self.is_logged_in():
             key = self.logged_in_person().key
             query = Declaration.query(ndb.OR(Declaration.created_by == key,
-                                             Declaration.assigned_to == key,  # TODO fix the list search
+                                             Declaration.assigned_to == key,
                                              Declaration.supervisor_approved_by == key,
                                              Declaration.submitted_to_human_resources_by == key,
                                              Declaration.human_resources_declined_by == key,
