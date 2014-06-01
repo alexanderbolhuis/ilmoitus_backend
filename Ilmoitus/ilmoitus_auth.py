@@ -1,14 +1,85 @@
 __author__ = 'Robin'
 
-from error_response_module import give_error_response
-from ilmoitus_model import *
-from response_module import *
-import ilmoitus_model
-import response_module
 import hashlib
 import random
 import string
-import time
+import webapp2 as webapp
+import logging
+
+
+class BaseRequestHandler(webapp.RequestHandler):
+    """
+    Wrapper class that will allow all other handler classes to make easily read what the
+    limit and/or offset is for a request
+    check login
+    fetch loggedin user
+    supply with the correct headers with an option request (supports up to 2 get params!)
+    """
+    def is_logged_in(self):
+        result = get_current_person(self)
+        return result["user_is_logged_in"]
+
+    def logged_in_person(self):
+        result = get_current_person(self)
+        return result["person_value"]
+
+    def check_hr(self):
+        if self.logged_in_person().class_name != "human_resources":
+            give_error_response(self, 401, "U bent niet ingelogd als HR",
+                                           "User is not HR")
+
+    def options(self, optionalkey=None, optionalkey2=None):
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+        self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE'
+
+    def get_header(self, key):
+        header = self.request.get(key, default_value=None)
+        return header
+
+    def get_header_limit(self):
+        limit = self.request.get("limit", default_value=20)
+        return limit
+
+    def get_header_offset(self):
+        offset = self.request.get("offset", default_value=0)
+        return offset
+
+    def handle_exception(self, exception, debug):
+        """
+        Overrides function in webapp.RequestHandler.
+
+        This function will catch any HTTP exceptions that can be raised by a .abort() function call within
+        a handler that inherits from the BaseRequestHandler class. When this happens, this function will
+        log the request and if the application is in debug mode, also the exception (basically the complete
+        stack trace).
+
+        Lastly, this function will write the full body of the request and set the status of the response
+        to the code of the exception. It's important to note that the body of the request is used as a
+        response, since it's through this property that any data will be sent back to the user (such as
+        a message indicating what went wrong, status and error codes, etc.). This is also the only real
+        custom functionality that this function provides (the rest is default, but a call to the base method
+        could cause problems in some cases).
+
+        :param exception: The exception that was raised by this handler or any handler that inherits from this handler.
+
+        :param debug: Boolean indicating whether the application is in debug mode or not. Will be automatically
+            detected.
+        """
+        logging.debug(self.request)
+        if debug:
+            logging.exception(exception)
+
+        self.response.write(self.request.body)
+        try:
+            self.response.set_status(exception.code)
+        except AttributeError:
+            #The caught exception was not a HTTPException; we don't know how to handle this so just raise it again
+            raise exception
+
+
+from response_module import *
+from ilmoitus_model import *
 
 
 def get_current_person(request_handler):
@@ -48,17 +119,16 @@ def get_current_person(request_handler):
     return auth_error(request_handler)
 
 
-def auth_error(request_handler):
+def auth_error(handler):
     #Send 401 right away
-    give_error_response(request_handler, 401, "U bent niet ingelogd", "token not found or accepted")
-    return {"user_is_logged_in": False, "person_value": None}
+    give_error_response(handler, 401, "U bent niet ingelogd", "token not found or accepted")
 
 
 def auth(email, password):
     #TODO: Figure out how not to do this in unittests
     #time.sleep(1)
 
-    person_query = ilmoitus_model.Person.query(ilmoitus_model.Person.email == email)
+    person_query = Person.query(Person.email == email)
     query_result = person_query.get()
     if query_result is not None and check_secret(password, query_result.password):
         # User passed the test, generate token and save hashed version to database

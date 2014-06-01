@@ -1,15 +1,13 @@
 __author__ = 'RobinB'
 
-from ilmoitus_auth import *
-from response_module import *
-from declaration_handler import *
+from handlers.error_checks import *
 
 
 class AllDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
             query = Declaration.query(Declaration.created_by == self.logged_in_person().key).order(Declaration.created_at)
-            response_module.respond_with_object_collection_with_query(self, query)
+            respond_with_object_collection_with_query(self, query)
 
 
 class AllDeclarationsForSupervisorHandler(BaseRequestHandler):
@@ -18,7 +16,7 @@ class AllDeclarationsForSupervisorHandler(BaseRequestHandler):
             declaration_query = Declaration.query(ndb.OR(Declaration.class_name == 'open_declaration',
                                                          Declaration.class_name == 'locked_declaration'),
                                                   self.logged_in_person().key == Declaration.assigned_to).order(Declaration.created_at)
-            response_module.respond_with_object_collection_with_query(self, declaration_query)
+            respond_with_object_collection_with_query(self, declaration_query)
 
 
 class AllHistoryDeclarationsForSupervisorHandler(BaseRequestHandler):
@@ -29,7 +27,7 @@ class AllHistoryDeclarationsForSupervisorHandler(BaseRequestHandler):
                                                          Declaration.class_name == 'human_resources_declined_declaration',
                                                          Declaration.class_name == 'human_resources_approved_declaration'),
                                                   self.logged_in_person().key == Declaration.assigned_to).order(-Declaration.created_at)
-            response_module.respond_with_object_collection_with_query(self, declaration_query)
+            respond_with_object_collection_with_query(self, declaration_query)
 
 
 class AllDeclarationsForHumanResourcesHandler(BaseRequestHandler):

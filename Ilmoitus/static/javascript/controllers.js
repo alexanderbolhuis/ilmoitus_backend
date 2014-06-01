@@ -611,7 +611,21 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 	});
 
     $scope.openAttachment = function() {
-        window.open("/attachment/"+$scope.selectedattachment, '_blank');
+		
+		var request = $.ajax({
+			type: "GET",
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/attachment_token/"+$scope.selectedattachment,
+			crossDomain: true,
+			error: function(jqXHR, textStatus, errorThrown){
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			}
+		});	
+		
+        request.done(function(data){
+			var token = data["attachment_token"];
+			window.open(baseurl + "/attachment/"+$scope.selectedattachment+"/"+token, '_blank');
+		});
     }
     
 });

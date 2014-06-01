@@ -283,14 +283,16 @@ class DeclarationLine(ndb.Model):
 
 
 class Attachment(ndb.Model):
+    declaration = ndb.KeyProperty(kind=Declaration)
     name = ndb.StringProperty()
+    token = ndb.StringProperty()
     file = ndb.TextProperty()
 
     def get_object_as_full_data_dict(self):
-        return dict({'id': self.key.integer_id(), 'name': self.name, 'file': self.file})
+        return dict({'id': self.key.integer_id(), 'declaration_id': self.declaration.integer_id(), 'name': self.name, 'file': self.file})
 
     def get_object_as_data_dict(self):
-        return dict({'id': self.key.integer_id(), 'name': self.name})
+        return dict({'id': self.key.integer_id(), 'declaration_id': self.declaration.integer_id(), 'name': self.name})
 
     def get_object_json_data(self):
         return json.dumps(self.get_object_as_data_dict())

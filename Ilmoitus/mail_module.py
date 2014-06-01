@@ -4,7 +4,7 @@ from webob.dec import _MiddlewareFactory
 __author__ = 'Sjors_Boom'
 
 from google.appengine.api import mail
-import ilmoitus_model
+from ilmoitus_model import *
 from error_response_module import give_error_response
 
 default_sender = "info.sns-ilmoitus@gmail.com"  # TODO: Check
@@ -39,7 +39,7 @@ def create_ending_of_the_body():
 
 
 def send_message_declaration_status_changed(request_handler, declaration):
-    person = ilmoitus_model.Person.get_by_id(declaration.created_by.integer_id())
+    person = Person.get_by_id(declaration.created_by.integer_id())
     to = person.email
     body = create_body(person.last_name,
                        "We send you this email to inform you that the status of your declaration (submitted on " +
@@ -51,7 +51,7 @@ def send_message_declaration_status_changed(request_handler, declaration):
 
 
 def send_mail_declaration_approved(request_handler, declaration):
-    person_to = ilmoitus_model.Person.get_by_id(declaration.created_by.integer_id())
+    person_to = Person.get_by_id(declaration.created_by.integer_id())
 
     body = create_body(person_to.last_name, "We send this email because your submitted declaration (submitted on " + \
            declaration.created_at.strftime('%Y-%m-%d %H:%M') + " is completely approved and it will be payed out on: "+\
