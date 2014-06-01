@@ -100,7 +100,7 @@ def has_post(handler, post, break_if_missing=False):
         give_error_response(handler, 400, "Geen " + post + " ontvangen", post + " is None")
 
 
-def if_employee_is_supervisor(handler, current_person):
+def is_current_person_supervisor(handler, current_person):
     if current_person.class_name != "supervisor":
         give_error_response(handler, 401, "Kan de declaratie niet doorsturen. Deze persoon is geen leidinggevende",
                             "current_person_object's id is not an supervisor")

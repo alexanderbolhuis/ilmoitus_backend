@@ -42,7 +42,7 @@ class ForwardDeclarationHandler(BaseRequestHandler):
 
         #Action
         new_supervisor = find_employee(self, assigned_to)
-        if_employee_is_supervisor(self, new_supervisor)
+        is_current_person_supervisor(self, new_supervisor)
         declaration.assigned_to.append(new_supervisor.key)
         declaration.supervisor_comment = comment
         declaration.put()
