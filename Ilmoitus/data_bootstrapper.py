@@ -699,11 +699,11 @@ class DataBootsTrapper(webapp2.RequestHandler):
         #for employee three
         declaration_five = ilmoitus_model.Declaration()
         declaration_five.class_name = "supervisor_declined_declaration"
-        declaration_five.created_by = employee_two.key
-        declaration_five.assigned_to.append(employee_two.supervisor)
+        declaration_five.created_by = employee_three.key
+        declaration_five.assigned_to.append(employee_three.supervisor)
         declaration_five.comment = "Bedrijfsuitje"
-        declaration_five.declined_by = employee_two.supervisor
-        declaration_five.submitted_to_human_resources_by = employee_two.supervisor
+        declaration_five.declined_by = employee_three.supervisor
+        declaration_five.submitted_to_human_resources_by = employee_three.supervisor
         declaration_five.items_count = 1
         declaration_five.items_total_price = 25
         declaration_five.put()
