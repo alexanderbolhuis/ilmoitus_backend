@@ -425,10 +425,16 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 ilmoitusApp.controller('declarationsSubmittedController', function($scope, $state) {
 	$scope.navBtnSelect("declarationsSubmittedBtn");
 
+	if (userData.class_name == "human_resources") {
+		var url = "/declarations/hr"
+	} else {
+		var url = "/current_user/declarations/assigned";
+	}
+
 	var request = $.ajax({
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
-		url: baseurl + "/current_user/declarations/assigned",
+		url: baseurl + url,
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
