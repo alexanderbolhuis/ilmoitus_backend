@@ -2,9 +2,9 @@
     <div>
         <table>
             <tr><td>Leidinggevende:</td><td>
-                <select ng-model="declaration.assigned_to" ng-options="n.id as (n.last_name + ', ' + n.first_name) for n in supervisorList"></select>
+                <select ng-model="declaration.supervisor" ng-options="n.id as (n.last_name + ', ' + n.first_name) for n in supervisorList"></select>
             </td></tr>
-            <tr><td>Personeelsnr</td><td>{{ getSupervisorByID(declaration.assigned_to).employee_number }}</td></tr>
+            <tr><td>Personeelsnr</td><td>{{ getSupervisorByID(declaration.supervisor).employee_number }}</td></tr>
         </table>
     </div>
 
@@ -29,14 +29,14 @@
         		</thead>
         		<tbody>
         			<tr ng-repeat="item in declaration.lines">
-                    	<td><input class="datepicker" type="date" ng-model="item.receipt_date" ng:change="addRow();" /></td>
+                    	<td><input class="datepicker" type="date" ng-model="item.receipt_date" ng-class="{FieldError: !item.approvedate}" ng:change="addRow(); checkFields($index);" /></td>
                         <td>
-                        	<select ng-model="item.declaration_type" ng-options="type.id as type.name for type in declaration_types" ng:change="loadSubList($index);"></select>
+                        	<select ng-model="item.declaration_type" ng-class="{FieldError: !item.approvetype}" ng-options="type.id as type.name for type in declaration_types" ng:change="loadSubList($index); checkFields($index);"></select>
                         </td>
                         <td>
-                        	<select ng-model="item.declaration_sub_type" ng-options="type.id as type.name for type in declaration_sub_types[$index]" ng:change="checkPrice($index);"></select>
+                        	<select ng-model="item.declaration_sub_type" ng-class="{FieldError: !item.approvesubtype}" ng-options="type.id as type.name for type in declaration_sub_types[$index]" ng:change="checkFields($index);"></select>
                         </td>
-                        <td>&euro; <input class="DeclarationPriceinput" type="text" maxlength="6" ng-model="item.cost" ng-class="{FieldError: !item.approvecosts}" ng:change="checkPrice($index);" /></td>
+                        <td>&euro; <input class="DeclarationPriceinput" type="text" maxlength="6" ng-model="item.cost" ng-class="{FieldError: !item.approvecosts}" ng:change="checkFields($index);" /></td>
                         <td><input type="text" ng-model="item.comment" /></td>
                         <td><input class="DeclarationDelete" type="button" value="X" ng:click="removeRow($index);" /></td>
                     </tr>

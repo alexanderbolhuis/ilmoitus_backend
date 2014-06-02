@@ -76,8 +76,12 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 
 	$scope.navBtnSelect = function (navBtnId) {
 		if($scope.selectedNavBtn) {$scope.selectedNavBtn.removeClass("selected");}
-		$("#"+navBtnId).addClass("selected");
-		$scope.selectedNavBtn = $("#"+navBtnId);
+		if(navBtnId != null) {
+			$("#"+navBtnId).addClass("selected");
+			$scope.selectedNavBtn = $("#"+navBtnId);
+		} else {
+			$scope.selectedNavBtn = null;
+		}
     }
 });
 
@@ -189,7 +193,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	request.done(function(data){
 		$scope.supervisorList = data;
 		if(data.length > 0){
-			$scope.declaration.assigned_to = data[0].id;
+			$scope.declaration.supervisor = data[0].id;
 		}
 		$scope.$apply();
 	});
@@ -214,7 +218,6 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	
 	$scope.postDeclaration = function() {
 		var declaration = $scope.declaration;
-		var today = new Date();
 		var errorReasons = [];
 
 		// Check if everything is correctly filled in. If not, show messagebox and don't submit anything.
@@ -227,11 +230,11 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 		}
 
 		for(var i = 0; i < declaration.lines.length - 1; i++){
-			if(!declaration.lines[i].receipt_date || new Date(declaration.lines[i].receipt_date) > today) {
-				errorReasons.push("Niet alle declaratie items hebben een geldige datum. Een datum kan niet in de toekomst liggen<br/>");
+			if(!declaration.lines[i].approvedate) {
+				errorReasons.push("Niet alle declaratie items hebben een geldige datum. Een datum mag niet in de toekomst liggen<br/>");
 			}
 
-			if(!declaration.lines[i].declaration_sub_type || declaration.lines[i].declaration_sub_type <= 0){
+			if(!declaration.lines[i].approvesubtype || declaration.lines[i].approvesubtype <= 0){
 				errorReasons.push("Niet alle declaratie items hebben een soort en subsoort.<br/>");
 			}
 
@@ -298,7 +301,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 		var request = $.ajax({
 			type: "GET",
 			headers: {"Authorization": sessionStorage.token},
-			url: baseurl + "/declarationsubtypes/" + $scope.declaration.lines[row].declaration_type,
+			url: baseurl + "/declarationtype/" + $scope.declaration.lines[row].declaration_type,
 			crossDomain: true,
 			error: function(jqXHR, textStatus, errorThrown){
 				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
@@ -309,20 +312,40 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 			$scope.declaration_sub_types[row].unshift({ id:0, name:"<selecteer>" });
 			$scope.declaration.lines[row].declaration_sub_type = $scope.declaration_sub_types[row][0].id;
 			$scope.$apply();
-			
-			$scope.checkPrice(row);
 		});
+	}
+
+	$scope.checkFields = function(row){
+		var today = new Date();
+
+		if(!$scope.declaration.lines[row].receipt_date || new Date($scope.declaration.lines[row].receipt_date) > today) {
+			$scope.declaration.lines[row].approvedate = false;
+		} else {
+			$scope.declaration.lines[row].approvedate = true;
+		}
+
+		if(!$scope.declaration.lines[row].declaration_type || $scope.declaration.lines[row].declaration_type <= 0){
+			$scope.declaration.lines[row].approvetype = false;
+			$scope.declaration.lines[row].approvesubtype = false;
+		} else if(!$scope.declaration.lines[row].declaration_sub_type || $scope.declaration.lines[row].declaration_sub_type <= 0){
+			$scope.declaration.lines[row].approvetype = true;
+			$scope.declaration.lines[row].approvesubtype = false;
+		} else {
+			$scope.declaration.lines[row].approvetype = true;
+			$scope.declaration.lines[row].approvesubtype = true;
+		}
+
+		$scope.checkPrice(row);
 	}
 	
 	//Check if the price is valid
 	$scope.checkPrice = function(row){
-		var cost = $scope.declaration.lines[row].cost.replace(",", ".");
-		var subtype = getSubtypeByID(row, $scope.declaration.lines[row].declaration_sub_type);
-		var maxcost = subtype != null && subtype.max_cost ? subtype.max_cost : 0;
-
-		if($scope.declaration.lines[row].cost == ""){
+		if($scope.declaration.lines[row].cost == undefined || $scope.declaration.lines[row].cost == ""){
 			$scope.declaration.lines[row].approvecosts = false;
 		} else {
+			var cost = $scope.declaration.lines[row].cost.replace(",", ".");
+			var subtype = getSubtypeByID(row, $scope.declaration.lines[row].declaration_sub_type);
+			var maxcost = subtype != null && subtype.max_cost ? subtype.max_cost : 0;
 			$scope.declaration.lines[row].approvecosts = isFinite(Number(cost)) && Number(cost) > 0 && (maxcost <= 0 || Number(cost) <= maxcost) && pricePattern.test(cost);
 		}
 
@@ -785,6 +808,7 @@ ilmoitusApp.controller('declarationsHistoryController', function($scope, $state)
 });
 
 ilmoitusApp.controller('declarationDetailsController', function($scope, $stateParams) {
+	$scope.navBtnSelect(null);
 	// Get declaration ID from url parameter.
 	$scope.declarationId = $stateParams.declarationId;
 
