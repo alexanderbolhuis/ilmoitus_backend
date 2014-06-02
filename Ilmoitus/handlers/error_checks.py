@@ -91,13 +91,13 @@ def is_declaration_state(handler, declaration, class_name):
                                           "Expected state: " + class_name + " Received state: " + declaration.class_name)
 
 
-def has_post(handler, post, break_if_missing=False):
+def has_post(handler, post, readable_post, break_if_missing=False):
     if handler.request.body is not None:
         request_body = json.loads(handler.request.body)
         if post in request_body.keys() and request_body[post] is not None and request_body[post] != "":
             return str(request_body[post])
     if break_if_missing:
-        give_error_response(handler, 400, "Geen " + post + " ontvangen", post + " is None")
+        give_error_response(handler, 400, "Geen " + readable_post + " ontvangen.", post + " is None")
 
 
 def is_current_person_supervisor(handler, current_person):

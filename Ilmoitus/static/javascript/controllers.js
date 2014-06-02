@@ -515,7 +515,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
 
     //Approve declaration button
     $scope.approveDeclarationBtn = function () {
-        if ($scope.declaration.items_total_price <= $scope.declaration.assigned_to.max_declaration_price) {
+        if (parseInt($scope.declaration.items_total_price) <= parseInt($scope.declaration.last_assigned_to.max_declaration_price)) {
             showMessageInputForDeclarationAction(
                 "Declaratie goedkeuren",
                 "Goedkeuren",
@@ -547,7 +547,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
     $scope.forwardDeclarationBtn = function () {
         var new_supervisor_id = $scope.supervisorId;
         var new_supervisor_name = "";
-        if (new_supervisor_id != $scope.declaration.assigned_to) {
+        if (new_supervisor_id != $scope.declaration.last_assigned_to) {
             for (var i in $scope.supervisorList) {
                 var supervisor = $scope.supervisorList[i];
                 if (supervisor.id == new_supervisor_id) {

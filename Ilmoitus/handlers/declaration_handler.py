@@ -36,9 +36,9 @@ class ForwardDeclarationHandler(BaseRequestHandler):
 
         #Checks (break when fails)
         is_declaration_assigned(self, declaration, current_person)
-        assigned_to = has_post(self, "assigned_to", break_if_missing=True)
+        assigned_to = has_post(self, "assigned_to", "nieuwe supervisor", break_if_missing=True)
 
-        comment = has_post(self, "comment", break_if_missing=False)
+        comment = has_post(self, "comment", "opmerking", break_if_missing=False)
 
         #Action
         new_supervisor = find_employee(self, assigned_to)
@@ -60,13 +60,13 @@ class DeclineBySupervisorHandler(BaseRequestHandler):
         current_person = self.logged_in_person()
 
         #Checks (break when fails)
-        comment = has_post(self, "comment", break_if_missing=True)
+        comment = has_post(self, "comment", "opmerking", break_if_missing=True)
         is_declaration_assigned(self, declaration, current_person)
 
         #Action
         declaration.class_name = "supervisor_declined_declaration"
         declaration.submitted_to_human_resources_by = current_person.key
-        declaration.supervisor_approved_at = datetime.datetime.now()
+        declaration.supervisor_declined_at = datetime.datetime.now()
         declaration.supervisor_comment = comment
         declaration.put()
 
@@ -82,7 +82,7 @@ class ApproveBySupervisorHandler(BaseRequestHandler):
         is_declaration_states(self, declaration, {"locked_declaration", "open_declaration"})
 
         current_person = self.logged_in_person()
-        comment = has_post(self, "comment", break_if_missing=False)
+        comment = has_post(self, "comment", "opmerking", break_if_missing=False)
 
         #Checks (break when fails)
         is_declaration_assigned(self, declaration, current_person)
@@ -105,7 +105,7 @@ class DeclineByHumanResourcesHandler(BaseRequestHandler):
         #Checks (break when fails)
         self.is_logged_in()
         self.check_hr()
-        comment = has_post(self, "comment", break_if_missing=False)
+        comment = has_post(self, "comment", "opmerking", break_if_missing=False)
 
         declaration = find_declaration(self, declaration_id)
         is_declaration_state(self, declaration, {"supervisor_approved_declaration"})
@@ -128,7 +128,7 @@ class ApproveByHumanResourcesHandler(BaseRequestHandler):
         declaration = find_declaration(self, declaration_id)
         is_declaration_state(self, declaration, {"supervisor_approved_declaration"})
 
-        comment = has_post(self, "comment", break_if_missing=False)
+        comment = has_post(self, "comment", "opmerking", break_if_missing=False)
 
         #Action
         declaration.class_name = "human_resources_approved_declaration"
