@@ -27,13 +27,17 @@ class CurrentUserSettingsHandler(BaseRequestHandler):
 class CurrentUserSupervisorsHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
-            supervisor = self.logged_in_person().supervisor
+            logged_in_person = self.logged_in_person()
+            supervisor = logged_in_person.supervisor
             if supervisor is None:
-                supervisor_query = Person.query(Person.class_name == "supervisor")
+                supervisor_query = Person.query(Person.class_name == "supervisor", logged_in_person.key != Person.key)
+                query_result = supervisor_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
             else:
-                supervisor_query = Person.query(Person.class_name == "supervisor").order(self.logged_in_person().supervisor == Person.key)
+                supervisor_query = Person.query(Person.class_name == "supervisor", supervisor == Person.key)
+                supervisor_query2 = Person.query(Person.class_name == "supervisor", supervisor != Person.key, logged_in_person.key != Person.key)
+                query_result = supervisor_query.fetch(limit=self.get_header_limit(), offset=self.get_header_offset()) + supervisor_query2.fetch(limit=self.get_header_limit(), offset=self.get_header_offset())
 
-            respond_with_object_collection_with_query(self, supervisor_query)
+            respond_with_existing_model_object_collection(self, query_result)
 
 
 class CurrentUserAssociatedDeclarationsHandler(BaseRequestHandler):
