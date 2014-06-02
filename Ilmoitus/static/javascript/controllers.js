@@ -506,6 +506,8 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
     });
     request.done(function (data) {
         $scope.supervisorList = data;
+        $scope.supervisorList.unshift(userData);
+
         $scope.$apply();
     });
 
@@ -547,7 +549,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
     $scope.forwardDeclarationBtn = function () {
         var new_supervisor_id = $scope.supervisorId;
         var new_supervisor_name = "";
-        if (new_supervisor_id != $scope.declaration.last_assigned_to) {
+        if (new_supervisor_id != $scope.declaration.last_assigned_to.id) {
             for (var i in $scope.supervisorList) {
                 var supervisor = $scope.supervisorList[i];
                 if (supervisor.id == new_supervisor_id) {
