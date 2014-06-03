@@ -299,6 +299,18 @@ class SpecificDeclarationHandler(BaseRequestHandler):
         data_dict = declaration.get_object_as_full_data_dict()
         give_response(self, json.dumps(data_dict))
 
+    def delete(self, declaration_id):
+        self.is_logged_in()
+        declaration = find_declaration(self, declaration_id)
+        is_declaration_creator(self, declaration, self.logged_in_person())
+        is_declaration_state(self, declaration, "open_declaration")
+
+        ndb.delete_multi(declaration.lines)
+        ndb.delete_multi(declaration.attachments)
+        declaration.key.delete()
+
+        give_response(self, json.dumps({'success': 'true'}))
+
 
 class CreateAttachmentTokenHandler(BaseRequestHandler):
     def get(self, attachment_id):
