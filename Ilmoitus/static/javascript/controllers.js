@@ -149,7 +149,7 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
 ilmoitusApp.controller('declarationFormController', function($scope, $state, $stateParams) {
 	
 	//Declaration fields
-	$scope.declaration = { comment: "", lines:[{}], attachments:[{}], last_assigned_to:{id: ""} };
+	$scope.declaration = { comment: "", lines:[{}], attachments:[{}] };
 	$scope.selectedattachment = null;
 	$scope.declarationamount = 0;
 	$scope.declarationAmountDisplay = "0,-";
