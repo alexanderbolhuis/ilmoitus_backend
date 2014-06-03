@@ -1,14 +1,9 @@
 <div>
     <div>
-        <div id="declarationSupervisorControls">
-            <td><input class="declarationSupervisorButtons" type="button" value="Goedkeuren" ng-disabled="!declaration"
-                       ng-click="approveDeclarationBtn();"/></td>
-            <td></td>
-            <td><input class="declarationSupervisorButtons" type="button" value="Doorsturen" ng-disabled="!declaration"
-                       ng-click="forwardDeclarationBtn();"/></td>
-            <td></td>
-            <td><input class="declarationSupervisorButtons" type="button" value="Afwijzen" ng-disabled="!declaration"
-                       ng-click="declineDeclarationBtn();"/></td>
+        <div id="declarationControls">
+            <input type="button" value="Goedkeuren" ng-disabled="!declaration" ng-click="approveDeclarationBtn();"/>
+            <input type="button" value="Doorsturen" ng-disabled="!declaration" ng-click="forwardDeclarationBtn();"/>
+            <input type="button" value="Afwijzen" ng-disabled="!declaration" ng-click="declineDeclarationBtn();"/>
         </div>
         <table>
             <tr>
@@ -33,6 +28,9 @@
                 </td>
             </tr>
         </table>
+        <div>
+
+        </div>
     </div>
 
     <br/>

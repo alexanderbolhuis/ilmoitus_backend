@@ -2,7 +2,7 @@
     <div>
         <table>
             <tr><td>Leidinggevende:</td><td>
-                <select ng-model="declaration.assigned_to" ng-options="n.id as (n.last_name + ', ' + n.first_name) for n in supervisorList"></select>
+                <select ng-model="declaration.last_assigned_to" ng-options="n.id as (n.last_name + ', ' + n.first_name) for n in supervisorList"></select>
             </td></tr>
             <tr><td>Personeelsnr</td><td>{{ getSupervisorByID(declaration.assigned_to).employee_number }}</td></tr>
         </table>

@@ -330,11 +330,11 @@ header {
 	background-color:#F88;
 }
 
-#declarationSupervisorControls{
+#declarationControls{
     float: right;
 }
 
-#declarationSupervisorControls input{
+#declarationControls input{
     margin-top: 3px;
     margin-right: 5px;
 }
