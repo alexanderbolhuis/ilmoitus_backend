@@ -381,6 +381,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #declaration attachments for declaration seven
         attachment_one = ilmoitus_model.Attachment()
+        attachment_one.declaration = declaration_seven.key
         attachment_one.name = "bon.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
@@ -388,6 +389,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaration_seven.put()
 
         attachment_two = ilmoitus_model.Attachment()
+        attachment_two.declaration = declaration_seven.key
         attachment_two.name = "declareer.pdf"
         attachment_two.file = attachment_pdf_base64
         attachment_two.put()
@@ -430,6 +432,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #declaration attachments for declaration eight
         attachment_one = ilmoitus_model.Attachment()
+        attachment_one.declaration = declaration_eight.key
         attachment_one.name = "bon.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
@@ -437,6 +440,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaration_eight.put()
 
         attachment_two = ilmoitus_model.Attachment()
+        attachment_two.declaration = declaration_eight.key
         attachment_two.name = "kosten.jpg"
         attachment_two.file = attachment_image_base64
         attachment_two.put()
@@ -472,6 +476,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #declaration attachments for declaration nine
         attachment_one = ilmoitus_model.Attachment()
+        attachment_one.declaration = declaration_nine.key
         attachment_one.name = "declareer.pdf"
         attachment_one.file = attachment_pdf_base64
         attachment_one.put()
@@ -515,6 +520,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #declaration attachments for declaration ten
         attachment_one = ilmoitus_model.Attachment()
+        attachment_one.declaration = declaration_ten.key
         attachment_one.name = "declareer.pdf"
         attachment_one.file = attachment_pdf_base64
         attachment_one.put()
@@ -522,6 +528,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaration_ten.put()
 
         attachment_two = ilmoitus_model.Attachment()
+        attachment_two.declaration = declaration_ten.key
         attachment_two.name = "kosten.jpg"
         attachment_two.file = attachment_image_base64
         attachment_two.put()
@@ -568,6 +575,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #declaration attachments for declaration eleven
         attachment_one = ilmoitus_model.Attachment()
+        attachment_one.declaration = declaration_eleven.key
         attachment_one.name = "bon.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
@@ -575,6 +583,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaration_eleven.put()
 
         attachment_two = ilmoitus_model.Attachment()
+        attachment_two.declaration = declaration_eleven.key
         attachment_two.name = "declareer.pdf"
         attachment_two.file = attachment_pdf_base64
         attachment_two.put()
@@ -614,6 +623,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #declaration attachments for declaration twelve
         attachment_one = ilmoitus_model.Attachment()
+        attachment_one.declaration = declaration_twelve.key
         attachment_one.name = "declareer.pdf"
         attachment_one.file = attachment_pdf_base64
         attachment_one.put()
@@ -649,6 +659,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #declaration attachments for declaration thirteen
         attachment_one = ilmoitus_model.Attachment()
+        attachment_one.declaration = declaration_thirteen.key
         attachment_one.name = "bon.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
@@ -684,6 +695,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #declaration attachments for declaration four
         attachment_one = ilmoitus_model.Attachment()
+        attachment_one.declaration = declaration_four.key
         attachment_one.name = "bon.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
@@ -691,6 +703,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
         declaration_four.put()
 
         attachment_two = ilmoitus_model.Attachment()
+        attachment_two.declaration = declaration_four.key
         attachment_two.name = "declareer.pdf"
         attachment_two.file = attachment_pdf_base64
         attachment_two.put()
@@ -720,6 +733,7 @@ class DataBootsTrapper(webapp2.RequestHandler):
 
         #declaration attachments for declaration five
         attachment_one = ilmoitus_model.Attachment()
+        attachment_one.declaration = declaration_five.key
         attachment_one.name = "kosten.jpg"
         attachment_one.file = attachment_image_base64
         attachment_one.put()
