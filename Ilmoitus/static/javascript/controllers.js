@@ -76,8 +76,12 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 
 	$scope.navBtnSelect = function (navBtnId) {
 		if($scope.selectedNavBtn) {$scope.selectedNavBtn.removeClass("selected");}
-		$("#"+navBtnId).addClass("selected");
-		$scope.selectedNavBtn = $("#"+navBtnId);
+		if(navBtnId != null) {
+			$("#"+navBtnId).addClass("selected");
+			$scope.selectedNavBtn = $("#"+navBtnId);
+		} else {
+			$scope.selectedNavBtn = null;
+		}
     }
 });
 
@@ -189,7 +193,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	request.done(function(data){
 		$scope.supervisorList = data;
 		if(data.length > 0){
-			$scope.declaration.assigned_to = data[0].id;
+			$scope.declaration.supervisor = data[0].id;
 		}
 		$scope.$apply();
 	});
@@ -214,7 +218,6 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	
 	$scope.postDeclaration = function() {
 		var declaration = $scope.declaration;
-		var today = new Date();
 		var errorReasons = [];
 
 		// Check if everything is correctly filled in. If not, show messagebox and don't submit anything.
@@ -227,11 +230,11 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 		}
 
 		for(var i = 0; i < declaration.lines.length - 1; i++){
-			if(!declaration.lines[i].receipt_date || new Date(declaration.lines[i].receipt_date) > today) {
-				errorReasons.push("Niet alle declaratie items hebben een geldige datum. Een datum kan niet in de toekomst liggen<br/>");
+			if(!declaration.lines[i].approvedate) {
+				errorReasons.push("Niet alle declaratie items hebben een geldige datum. Een datum mag niet in de toekomst liggen<br/>");
 			}
 
-			if(!declaration.lines[i].declaration_sub_type || declaration.lines[i].declaration_sub_type <= 0){
+			if(!declaration.lines[i].approvesubtype || declaration.lines[i].approvesubtype <= 0){
 				errorReasons.push("Niet alle declaratie items hebben een soort en subsoort.<br/>");
 			}
 
@@ -298,7 +301,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 		var request = $.ajax({
 			type: "GET",
 			headers: {"Authorization": sessionStorage.token},
-			url: baseurl + "/declarationsubtypes/" + $scope.declaration.lines[row].declaration_type,
+			url: baseurl + "/declarationtype/" + $scope.declaration.lines[row].declaration_type,
 			crossDomain: true,
 			error: function(jqXHR, textStatus, errorThrown){
 				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
@@ -309,20 +312,40 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 			$scope.declaration_sub_types[row].unshift({ id:0, name:"<selecteer>" });
 			$scope.declaration.lines[row].declaration_sub_type = $scope.declaration_sub_types[row][0].id;
 			$scope.$apply();
-			
-			$scope.checkPrice(row);
 		});
+	}
+
+	$scope.checkFields = function(row){
+		var today = new Date();
+
+		if(!$scope.declaration.lines[row].receipt_date || new Date($scope.declaration.lines[row].receipt_date) > today) {
+			$scope.declaration.lines[row].approvedate = false;
+		} else {
+			$scope.declaration.lines[row].approvedate = true;
+		}
+
+		if(!$scope.declaration.lines[row].declaration_type || $scope.declaration.lines[row].declaration_type <= 0){
+			$scope.declaration.lines[row].approvetype = false;
+			$scope.declaration.lines[row].approvesubtype = false;
+		} else if(!$scope.declaration.lines[row].declaration_sub_type || $scope.declaration.lines[row].declaration_sub_type <= 0){
+			$scope.declaration.lines[row].approvetype = true;
+			$scope.declaration.lines[row].approvesubtype = false;
+		} else {
+			$scope.declaration.lines[row].approvetype = true;
+			$scope.declaration.lines[row].approvesubtype = true;
+		}
+
+		$scope.checkPrice(row);
 	}
 	
 	//Check if the price is valid
 	$scope.checkPrice = function(row){
-		var cost = $scope.declaration.lines[row].cost.replace(",", ".");
-		var subtype = getSubtypeByID(row, $scope.declaration.lines[row].declaration_sub_type);
-		var maxcost = subtype != null && subtype.max_cost ? subtype.max_cost : 0;
-
-		if($scope.declaration.lines[row].cost == ""){
+		if($scope.declaration.lines[row].cost == undefined || $scope.declaration.lines[row].cost == ""){
 			$scope.declaration.lines[row].approvecosts = false;
 		} else {
+			var cost = $scope.declaration.lines[row].cost.replace(",", ".");
+			var subtype = getSubtypeByID(row, $scope.declaration.lines[row].declaration_sub_type);
+			var maxcost = subtype != null && subtype.max_cost ? subtype.max_cost : 0;
 			$scope.declaration.lines[row].approvecosts = isFinite(Number(cost)) && Number(cost) > 0 && (maxcost <= 0 || Number(cost) <= maxcost) && pricePattern.test(cost);
 		}
 
@@ -467,50 +490,250 @@ ilmoitusApp.controller('declarationsSubmittedController', function($scope, $stat
 
 });
 
-ilmoitusApp.controller('sentDeclarationDetailsController', function($scope, $stateParams) {
-	// Get declaration ID from url parameter.
-	$scope.declarationId = $stateParams.declarationId;
+ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $stateParams, $state) {
+    // Get declaration ID from url parameter.
+    $scope.declarationId = $stateParams.declarationId;
 
-	//Get declaration details
-	var request = $.ajax({
-		type: "GET",
-		headers: {"Authorization": sessionStorage.token},
-		url: baseurl + "/declaration/"+$scope.declarationId,
-		crossDomain: true,
-		error: function(jqXHR, textStatus, errorThrown){
+    //Get declaration details
+    var request = $.ajax({
+        type: "GET",
+        headers: {"Authorization": sessionStorage.token},
+        url: baseurl + "/declaration/" + $scope.declarationId,
+        crossDomain: true,
+        error: function (jqXHR, textStatus, errorThrown) {
             showMessage(jqXHR.responseJSON.user_message, "Error!");
-			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
-		}
-	});
+            console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+        }
+    });
 
-	request.done(function(data){
-		$scope.declaration = data;
-		$scope.supervisorId = data.last_assigned_to.id;
-		$scope.supervisor = data.last_assigned_to.first_name + " " + data.last_assigned_to.last_name;
-		if($scope.declaration.attachments.length > 0){
-			$scope.selectedattachment = $scope.declaration.attachments[0].id;
-		}
-		$scope.$apply();
-	});
+    request.done(function (data) {
+        $scope.declaration = data;
+        $scope.supervisorId = data.last_assigned_to.id;
+        $scope.supervisor = data.last_assigned_to.first_name + " " + data.last_assigned_to.last_name;
+        if ($scope.declaration.attachments.length > 0) {
+            $scope.selectedattachment = $scope.declaration.attachments[0].id;
+        }
+        $scope.$apply();
+    });
 
     //Preload supervisors
-	request = $.ajax({
-		type: "GET",
-		headers: {"Authorization": sessionStorage.token},
-		url: baseurl + "/current_user/supervisors",
-		crossDomain: true,
-		error: function(jqXHR, textStatus, errorThrown){
+    request = $.ajax({
+        type: "GET",
+        headers: {"Authorization": sessionStorage.token},
+        url: baseurl + "/current_user/supervisors",
+        crossDomain: true,
+        error: function (jqXHR, textStatus, errorThrown) {
             showMessage(jqXHR.responseJSON.user_message, "Error!");
-			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
-		}
-	});
-	request.done(function(data){
-		$scope.supervisorList = data;
-		$scope.$apply();
-	});
+            console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+        }
+    });
+    request.done(function (data) {
+        $scope.supervisorList = data;
+        $scope.supervisorList.unshift(userData);
 
-    $scope.openAttachment = function() {
-        window.open("/attachment/"+$scope.selectedattachment, '_blank');
+        $scope.$apply();
+    });
+
+    $scope.openAttachment = function () {
+        window.open("/attachment/" + $scope.selectedattachment, '_blank');
+    };
+
+    //Approve declaration button
+    $scope.approveDeclarationBtn = function () {
+        if (parseInt($scope.declaration.items_total_price) <= parseInt($scope.declaration.last_assigned_to.max_declaration_price)) {
+            showMessageInputForDeclarationAction(
+                "Declaratie goedkeuren",
+                "Goedkeuren",
+                "U heeft gekozen om de declaratie goed te keuren.<br /><br />Vul eventueel hieronder nog een opmerking in.",
+                function (data) {
+                    var comment = (data["comment"] == "") ? null : data["comment"]; //Comment is optional.
+
+                    var request_data = {};
+                    if (comment != null) {
+                        request_data["comment"] = comment;
+                    }
+
+                    handleSentDeclaration("/declaration/" + $scope.declaration.id + "/approve_by_supervisor", "PUT",
+                        request_data, function () {
+                            $state.go("template.declarationsSubmitted");
+                        });
+                }
+            );
+        } else {
+            showMessage("<p>U mag deze declaratie niet goedkeuren omdat het bedrag te hoog is!</p>" +
+                "<p>Uw maximaal goed te keuren bedrag is: &euro;" + $scope.declaration.last_assigned_to.max_declaration_price +
+                "</p><p>Terwijl deze declaratie een totaal bedrag heeft van: &euro;" +
+                $scope.declaration.items_total_price + "</p><p>U mag deze declaratie alleen doorsturen.</p>",
+                "Error!");
+        }
+    };
+
+    //Forward declaration button
+    $scope.forwardDeclarationBtn = function () {
+        var new_supervisor_id = $scope.supervisorId;
+        var new_supervisor_name = "";
+        if (new_supervisor_id != $scope.declaration.last_assigned_to.id) {
+            for (var i in $scope.supervisorList) {
+                var supervisor = $scope.supervisorList[i];
+                if (supervisor.id == new_supervisor_id) {
+                    new_supervisor_name = supervisor.last_name + ', ' + supervisor.first_name;
+                }
+            }
+        } else {
+            showMessage("U heeft een leidinggevende geselecteerd die al bij deze declaratie hoorde!", "Error!");
+            return;
+        }
+        showMessageInputForDeclarationAction(
+            "Declaratie doorsturen",
+            "Doorsturen",
+                "U heeft gekozen om de declaratie door te sturen naar: <br />\"" + new_supervisor_name +
+                "\".<br />Klopt dit? Selecteer anders een andere leidinggevende.<br /><br />Vul eventueel hieronder nog een opmerking in.",
+            function (data) {
+                var comment = (data["comment"] == "") ? null : data["comment"]; //Comment is optional.
+
+                var request_data = {};
+                if (comment != null) {
+                    request_data["comment"] = comment;
+                }
+                request_data["assigned_to"] = new_supervisor_id;
+
+                handleSentDeclaration("/declaration/" + $scope.declaration.id + "/forward_to_supervisor", "PUT",
+                    request_data, function () {
+                        $state.go("template.declarationsSubmitted");
+                    });
+            }
+        );
+    };
+
+    //Decline declaration button
+    $scope.declineDeclarationBtn = function () {
+        showMessageInputForDeclarationAction(
+            "Declaration afwijzen",
+            "Afwijzen",
+            "U heeft gekozen om de declaratie af te wijzen.<br /><br />Geef hieronder de reden van afwijzing op (verplicht).",
+            function (data) {
+                var comment = (data["comment"] == "") ? null : data["comment"];
+
+                var request_data = {};
+                if (comment != null) {
+                    request_data["comment"] = comment;
+                } else {
+                    //Comment is mandatory; show error text in the open dialog
+                    var errorArea = $("#sentDeclarationDialogErrorArea");
+                    if (errorArea != null) {
+                        errorArea.text("Er is geen opmerking ingevuld. Dit is verplicht bij het afwijzen van een declaratie!");
+                        errorArea.show();
+                        return;
+                    }
+                }
+
+                handleSentDeclaration("/declaration/" + $scope.declaration.id + "/decline_by_supervisor", "PUT",
+                    request_data, function () {
+                        $state.go("template.declarationsSubmitted");
+                    });
+            }
+        );
+    };
+
+    function handleSentDeclaration(target_url, request_type, request_data, callback_function, should_pass_data_into_callback) {
+        //Clear the error area since we don't want to give the impression it's not working
+        var errorArea = $("#sentDeclarationDialogErrorArea");
+        errorArea.text("");
+        errorArea.hide();
+
+        //Perform the wanted action
+        var request = $.ajax({
+            type: request_type,
+            headers: {"Authorization": sessionStorage.token},
+            url: baseurl + target_url,
+            data: JSON.stringify(request_data),
+            crossDomain: true,
+            error: function (jqXHR, textStatus, errorThrown) {
+                closeMessage();
+                setTimeout(function () {
+                    //TODO: find out and fix --> request body (data field above) is being appended to error response's responseText
+                    //Clean the message up because for some strange reason, we get the request data appended after the wanted response
+                    //This will fail if any text within this object contains a '}' character (escaped)
+                    var cleanMessage = jqXHR.responseText.substring(0, jqXHR.responseText.indexOf("}") + 1);
+                    showMessage(JSON.parse(cleanMessage).user_message, "Error!");
+                }, 601); // 1 millisecond more than the close message timer
+
+                console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+            }
+        });
+
+        request.done(function (data) {
+            closeMessage();
+            if (should_pass_data_into_callback) {
+                callback_function(data);
+            } else {
+                callback_function();
+            }
+        });
+    }
+
+    function showMessageInputForDeclarationAction(title, button_value, message, callback_function, should_show_date_selector) {
+        should_show_date_selector = (typeof should_show_date_selector === "undefined") ? false : should_show_date_selector;
+
+        var message_box = "<div class='coverBg' onclick='closeMessage();' id='coverBg' ></div>" +
+            "<div class='cover' id='messageCover'>" +
+            "<div class='header'>" + title +
+            "<div class='closeButton' onclick='closeMessage();'>X</div>" +
+            "</div>" +
+            "<div class='contentMessage'>" + message +
+            "<div id='payedOnSelectors'>" + "<br/>Wordt uitbetaald in:<br />Maand: <select id='payedOnMonth'/>" +
+            "Jaar: <select id='payedOnYear'/>" + "</div>" +
+            "<br /><br />Opmerking: <br /><input id='dialogActionComment' class='ng-pristine ng-valid' " +
+            "type='text'/> <input id='confirmButton' type='button' value='" + button_value + "'/>" +
+            "<br /><div id='sentDeclarationDialogErrorArea' class='errorArea' > </div>" +
+            "</div>" +
+            "</div>";
+
+        $("body").append(message_box);
+        if (should_show_date_selector) {
+            show_date_selector_in_dialog();
+        } else {
+            $("#payedOnSelectors").hide();
+        }
+        $("#sentDeclarationDialogErrorArea").hide();
+        $("#confirmButton").click(function () {
+            var data = {};
+            data["comment"] = $("#dialogActionComment").val();
+            if (should_show_date_selector) {
+                var year = $("#payedOnYear").val();
+                var month = $("#payedOnMonth").val();
+                //No checks needed: there is always a selected value by default
+                data["will_be_payed_out_on"] = month + "-" + year;
+            }
+            callback_function(data);
+
+        });
+        $("#messageCover").fadeIn();
+        $(".coverBg").fadeIn();
+    }
+
+    function show_date_selector_in_dialog() {
+        var months = {"01": "Januari", "02": "Februari", "03": "Maart", "04": "April", "05": "Mei", "06": "Juni", "07": "Juli", "08": "Augustus", "09": "September", "10": "Oktober", "11": "November",
+            "12": "December"};
+        var years = {"2013": 2013, "2014": 2014, "2015": 2015, "2016": 2016, "2017": 2017, "2018": 2018, "2019": 2019,
+            "2020": 2020, "2021": 2021, "2022": 2022, "2023": 2023, "2024": 2024, "2025": 2025, "2026": 2026};
+        var keys = Object.keys(months).sort(); //To correctly order the months, otherwise Oktober (10) would be first
+        for (var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            var value = months[key];
+            $('#payedOnMonth')
+                .append($('<option>', { value: key })
+                    .text(value));
+        }
+
+        $.each(years, function (key, value) {
+            $('#payedOnYear')
+                .append($('<option>', { value: key })
+                    .text(value));
+        });
+        var currentYear = new Date().getFullYear();
+        $("#payedOnYear").val(currentYear);
+        $("#payedOnSelectors").show();
     }
 });
 
@@ -585,6 +808,7 @@ ilmoitusApp.controller('declarationsHistoryController', function($scope, $state)
 });
 
 ilmoitusApp.controller('declarationDetailsController', function($scope, $stateParams) {
+	$scope.navBtnSelect(null);
 	// Get declaration ID from url parameter.
 	$scope.declarationId = $stateParams.declarationId;
 
