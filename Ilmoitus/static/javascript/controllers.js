@@ -263,8 +263,6 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 		var declaration = $scope.declaration;
 		var errorReasons = [];
 
-		console.log(declaration.lines);
-
 		// Check if everything is correctly filled in. If not, show messagebox and don't submit anything.
 		if(declaration.lines.length == 1) {
 			errorReasons.push("Geef minimaal 1 declaratie item op.<br/>");
@@ -302,14 +300,15 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 		declaration.lines.splice(declaration.lines.length - 1, 1);
 		
 		if (editMode) {
-			var url = "/declaration"
+			var type = "PUT";
+			var url = "/declaration"+declaration.id;
 		} else {
-			//TODO: Change to the correct url
-			var url = "/declarationEditOrWhateverThisUrlWillBe???";
+			var type = "POST";
+			var url = "/declaration/";
 		}
 
 		var request = $.ajax({
-			type: "POST",
+			type: type,
 			headers: {"Authorization": sessionStorage.token},
 			url: baseurl + url,
 			crossDomain: true,
