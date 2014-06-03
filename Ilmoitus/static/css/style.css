@@ -339,6 +339,20 @@ header {
     margin-right: 5px;
 }
 
+#dialogActionComment{
+    width: 75%;
+}
+
+#confirmButton{
+    float: right;
+}
+
+.errorArea {
+    color: #ff0000;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
 .tableColumnExtraPaddingRight{
     padding-right: 30px;
 }

@@ -31,7 +31,23 @@ class ForwardDeclarationHandler(BaseRequestHandler):
         self.is_logged_in()
         declaration = find_declaration(self, declaration_id)
 
-        #TODO: Implement this function
+        is_declaration_states(self, declaration, {"locked_declaration", "open_declaration"})
+        current_person = self.logged_in_person()
+
+        #Checks (break when fails)
+        is_declaration_assigned(self, declaration, current_person)
+        assigned_to = has_post(self, "assigned_to", "nieuwe supervisor", break_if_missing=True)
+
+        comment = has_post(self, "comment", "opmerking", break_if_missing=False)
+
+        #Action
+        new_supervisor = find_employee(self, assigned_to)
+        is_current_person_supervisor(self, new_supervisor)
+        declaration.assigned_to.append(new_supervisor.key)
+        declaration.supervisor_comment = comment
+        declaration.put()
+
+        give_response(self, json.dumps(declaration.get_object_as_data_dict()))
 
 
 class DeclineBySupervisorHandler(BaseRequestHandler):
@@ -44,14 +60,14 @@ class DeclineBySupervisorHandler(BaseRequestHandler):
         current_person = self.logged_in_person()
 
         #Checks (break when fails)
-        has_post(self, "comment")
+        comment = has_post(self, "comment", "opmerking", break_if_missing=True)
         is_declaration_assigned(self, declaration, current_person)
 
         #Action
         declaration.class_name = "supervisor_declined_declaration"
         declaration.submitted_to_human_resources_by = current_person.key
-        declaration.supervisor_approved_at = datetime.datetime.now()
-        declaration.supervisor_comment = str(self.request.POST["comment"])
+        declaration.supervisor_declined_at = datetime.datetime.now()
+        declaration.supervisor_comment = comment
         declaration.put()
 
         send_message_declaration_status_changed(self, declaration)
@@ -66,6 +82,7 @@ class ApproveBySupervisorHandler(BaseRequestHandler):
         is_declaration_states(self, declaration, {"locked_declaration", "open_declaration"})
 
         current_person = self.logged_in_person()
+        comment = has_post(self, "comment", "opmerking", break_if_missing=False)
 
         #Checks (break when fails)
         is_declaration_assigned(self, declaration, current_person)
@@ -76,8 +93,7 @@ class ApproveBySupervisorHandler(BaseRequestHandler):
         declaration.submitted_to_human_resources_by = current_person.key
         declaration.supervisor_approved_at = datetime.datetime.now()
 
-        if self.request.POST["comment"] is not None:
-            declaration.supervisor_comment = str(self.request.POST["comment"])
+        declaration.supervisor_comment = comment  # comment will be None if none is given
 
         declaration.put()
         mail_module.send_message_declaration_status_changed(self, declaration)
@@ -89,7 +105,7 @@ class DeclineByHumanResourcesHandler(BaseRequestHandler):
         #Checks (break when fails)
         self.is_logged_in()
         self.check_hr()
-        has_post(self, "comment")
+        comment = has_post(self, "comment", "opmerking", break_if_missing=False)
 
         declaration = find_declaration(self, declaration_id)
         is_declaration_state(self, declaration, {"supervisor_approved_declaration"})
@@ -97,7 +113,7 @@ class DeclineByHumanResourcesHandler(BaseRequestHandler):
         declaration.class_name = 'human_resources_declined_declaration'
         declaration.human_resources_declined_by = self.logged_in_person().key
         declaration.human_resources_declined_at = datetime.datetime.now()
-        declaration.human_resources_comment = str(self.request.POST["comment"])
+        declaration.human_resources_comment = comment  # comment will be None if none is given
         declaration.put()
 
         send_message_declaration_status_changed(self, declaration)
@@ -112,12 +128,13 @@ class ApproveByHumanResourcesHandler(BaseRequestHandler):
         declaration = find_declaration(self, declaration_id)
         is_declaration_state(self, declaration, {"supervisor_approved_declaration"})
 
+        comment = has_post(self, "comment", "opmerking", break_if_missing=False)
+
         #Action
         declaration.class_name = "human_resources_approved_declaration"
         declaration.human_resources_approved_by = self.logged_in_person().key
         declaration.human_resources_approved_at = datetime.datetime.now()
-        if self.request.POST["comment"] is not None:
-            declaration.human_resources_comment = str(self.request.POST["comment"])
+        declaration.human_resources_comment = comment  # comment will be None if none is given
         declaration.put()
 
         send_message_declaration_status_changed(self, declaration)
