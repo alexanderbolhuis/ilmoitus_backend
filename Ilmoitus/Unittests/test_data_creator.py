@@ -118,9 +118,11 @@ class DeclarationsDataCreator():
             attachment = ilmoitus_model.Attachment()
             attachment.name = "attachment "+str(i)
             attachment.file = files[(i % len(files))]
+            attachment.declaration = declaration.key
+            attachment.token = ''
             attachment.put()
-            declaration.attachments.append(attachment.key)
 
+            declaration.attachments.append(attachment.key)
             attachments.append(attachment)
 
         return attachments

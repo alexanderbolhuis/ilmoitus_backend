@@ -1285,9 +1285,9 @@ class GetAttachmentTest(BaseAuthorizationHandler):
     def test_get_attachment_positive(self):
         user_is_logged_in = True
         user_is_admin = '0'
-        path = "/attachment/(.*)"
+        path = "/attachment_token/(.*)"
 
-        setup_data = self.setup_server_with_user([(path, SpecificAttachmentHandler)],
+        setup_data = self.setup_server_with_user([(path, CreateAttachmentTokenHandler)],
                                                  user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
@@ -1299,18 +1299,18 @@ class GetAttachmentTest(BaseAuthorizationHandler):
         declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
         attachments = DeclarationsDataCreator.create_valid_declaration_attachments(declaration, 2)
 
-        path = "/attachment/"+str(attachments[0].key.integer_id())
-        self.positive_test_stub_handler(token, path, "get", expected_content_type="image/jpeg")
+        path = "/attachment_token/"+str(attachments[0].key.integer_id())
+        self.positive_test_stub_handler(token, path, "get", 200)
 
-        path = "/attachment/"+str(attachments[1].key.integer_id())
-        self.positive_test_stub_handler(token, path, "get", expected_content_type="application/pdf")
+        path = "/attachment_token/"+str(attachments[1].key.integer_id())
+        self.positive_test_stub_handler(token, path, "get", 200)
 
     def test_get_attachment_negative_wrong_id(self):
         user_is_logged_in = True
         user_is_admin = '0'
-        path = "/attachment/(.*)"
+        path = "/attachment_token/(.*)"
 
-        setup_data = self.setup_server_with_user([(path, SpecificAttachmentHandler)],
+        setup_data = self.setup_server_with_user([(path, CreateAttachmentTokenHandler)],
                                                  user_is_logged_in)
 
         logged_in_person = setup_data["random_person"]
@@ -1322,10 +1322,10 @@ class GetAttachmentTest(BaseAuthorizationHandler):
         declaration = DeclarationsDataCreator.create_valid_open_declaration(logged_in_person, supervisor)
         DeclarationsDataCreator.create_valid_declaration_attachments(declaration, 2)
 
-        path = "/attachment/9999999999"
+        path = "/attachment_token/9999999999"
         self.negative_test_stub_handler(token, path, "get", 404)
 
-        path = "/attachment/asdf"
+        path = "/attachment_token/asdf"
         self.negative_test_stub_handler(token, path, "get", 400)
 
 
