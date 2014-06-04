@@ -211,7 +211,7 @@ class SpecificDeclarationHandler(BaseRequestHandler):
         give_response(self, json.dumps(data_dict))
 
     #TODO: Unittest
-    # def delete(self, declaration_id):
+    def delete(self, declaration_id):
         self.is_logged_in()
         declaration = find_declaration(self, declaration_id)
         is_declaration_creator(self, declaration, self.logged_in_person())
