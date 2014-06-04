@@ -456,7 +456,7 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 		fileReader.onload = function(fileLoadedEvent) 
 		{
 			//Remove the first empty element that keeps apearing the first time.
-			if($scope.declaration.attachments[0] && !$scope.declaration.attachments[0].file){
+			if($scope.declaration.attachments[0] && !$scope.declaration.attachments[0].name){
 				$scope.declaration.attachments.splice(0, 1);
 			}
 			$scope.declaration.attachments.push({name: files[i].name, file: fileLoadedEvent.target.result}); 
