@@ -128,7 +128,7 @@ def convert_to_float(handler, string):
     try:
         safe_id = float(string)
     except ValueError:
-        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(string) + ")")
+        give_error_response(handler, 400, "Bedrag heeft geen correcte waarde (" + str(string) + ")")
 
     return safe_id
 

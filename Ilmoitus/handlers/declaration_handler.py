@@ -183,6 +183,8 @@ class NewDeclarationHandler(BaseRequestHandler):
             newline.cost = convert_to_float(self, line["cost"])
             newline.receipt_date = dateutil.parser.parse(line["receipt_date"])
             newline.declaration_sub_type = DeclarationSubType.get_by_id(long(line["declaration_sub_type"])).key
+            if "comment" in line.keys():
+                newline.comment = line["comment"]
             newline.put()
 
             declaration.items_count += 1
@@ -274,6 +276,9 @@ class SpecificDeclarationHandler(BaseRequestHandler):
             newline.cost = convert_to_float(self, line["cost"])
             newline.receipt_date = dateutil.parser.parse(line["receipt_date"])
             newline.declaration_sub_type = DeclarationSubType.get_by_id(long(line["declaration_sub_type"])).key
+            if "comment" in line.keys():
+                newline.comment = line["comment"]
+
             newline.put()
 
             declaration.items_count += 1
