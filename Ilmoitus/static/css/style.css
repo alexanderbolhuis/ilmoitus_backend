@@ -103,6 +103,7 @@ table.styledTable tbody tr:nth-child(even)
 
 table.styledTable tr.selected {
     background-color: #cc0066 !important;
+    color: white;
 }
 
 /* Outer wrap */

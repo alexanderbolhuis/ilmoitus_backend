@@ -47,7 +47,7 @@ def find_declaration_type(handler, declaration_type_id):
 
 
 def is_declaration_creator(handler, declaration, employee):
-    if declaration.created_by.key.integer_id() != employee.key.integer_id():
+    if declaration.created_by.integer_id() != employee.key.integer_id():
         give_error_response(handler, 401, "Declaratie kan niet worden aangepast.",
                                           "User is not the owner")
 
@@ -128,7 +128,7 @@ def convert_to_float(handler, string):
     try:
         safe_id = float(string)
     except ValueError:
-        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(string) + ")")
+        give_error_response(handler, 400, "Bedrag heeft geen correcte waarde (" + str(string) + ")")
 
     return safe_id
 

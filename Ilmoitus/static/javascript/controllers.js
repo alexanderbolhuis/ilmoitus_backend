@@ -306,13 +306,17 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 		
 		//Remove the last empty line and send the declaration data
 		declaration.lines.splice(declaration.lines.length - 1, 1);
+		//replace all comma's with dots.
+		for (var i = 0; i < declaration.lines.length; i++) {
+			declaration.lines[i].cost = declaration.lines[i].cost.replace(",", ".");
+		};
 		
 		if (editMode) {
 			var type = "PUT";
 			var url = "/declaration/"+declaration.id;
 		} else {
 			var type = "POST";
-			var url = "/declaration/";
+			var url = "/declaration";
 		}
 
 		var request = $.ajax({
