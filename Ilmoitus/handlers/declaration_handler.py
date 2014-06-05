@@ -145,9 +145,8 @@ class NewDeclarationHandler(BaseRequestHandler):
     def post(self):
         self.is_logged_in()
         declaration_data = has_post(self, "declaration", "declaratie", True, False)
-        is_complete_dict(self, declaration_data, ["comment", "lines", "supervisor"], "declaration")
+        is_complete_dict(self, declaration_data, ["lines", "supervisor"], "declaration")
 
-        comment = declaration_data["comment"]
         declaration_lines_data = declaration_data["lines"]
         assigned_to = find_employee(self, declaration_data["supervisor"])
         if_employee_is_supervisor(self, assigned_to)
@@ -172,7 +171,10 @@ class NewDeclarationHandler(BaseRequestHandler):
         declaration.class_name = "open_declaration"
         declaration.assigned_to = [assigned_to.key]
         declaration.created_by = self.logged_in_person().key
-        declaration.comment = comment
+        if "comment" in declaration_data.keys():
+            declaration.comment = declaration_data["comment"]
+        else:
+            declaration.comment = ""
         declaration.items_count = 0
         declaration.items_total_price = 0
         declaration.put()
@@ -237,11 +239,10 @@ class SpecificDeclarationHandler(BaseRequestHandler):
 
         #Check received declaration data
         declaration_data = has_post(self, "declaration", "declaratie", True, False)
-        is_complete_dict(self, declaration_data, ["comment", "lines", "supervisor"], "declaration")
+        is_complete_dict(self, declaration_data, ["lines", "supervisor"], "declaration")
         assigned_to = find_employee(self, declaration_data["supervisor"])
         if_employee_is_supervisor(self, assigned_to)
 
-        comment = declaration_data["comment"]
         declaration_lines_data = declaration_data["lines"]
         if "attachments" in declaration_data.keys():
             declaration_attachments_data = declaration_data["attachments"]
@@ -262,7 +263,10 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                 is_complete_dict(self, attachment_data, ["name", "id"], "declaration attachment")
 
         # Reset declaration
-        declaration.comment = comment
+        if "comment" in declaration_data.keys():
+            declaration.comment = declaration_data["comment"]
+        else:
+            declaration.comment = ""
         declaration.items_count = 0
         declaration.items_total_price = 0
         declaration.assigned_to = [assigned_to.key]
