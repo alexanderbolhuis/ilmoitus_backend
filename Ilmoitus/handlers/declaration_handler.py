@@ -294,7 +294,7 @@ class SpecificDeclarationHandler(BaseRequestHandler):
         for attachment_id in declaration.attachments:
             found = False
             for attachment_data in declaration_attachments_data:
-                if "id" in attachment_data.keys() and attachment_data["id"] == str(attachment_id.integer_id()):
+                if "id" in attachment_data.keys() and str(attachment_data["id"]) == str(attachment_id.integer_id()):
                     found = True
 
             if not found:
@@ -338,6 +338,10 @@ class SpecificAttachmentHandler(BaseRequestHandler):
         if check_secret(token, attachment.token):
             base64_string = attachment.file.split(",")[1]
             mime = attachment.file.split(":")[1].split(";")[0]
+
+            #clear token
+            attachment.token = ""
+            attachment.put()
 
             self.response.headers['Content-Type'] = str(mime)
             self.response.headers['Access-Control-Allow-Origin'] = '*'
