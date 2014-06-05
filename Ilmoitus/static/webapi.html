@@ -1,0 +1,2344 @@
+
+<!DOCTYPE HTML>
+ 	<html>
+	<head>
+	  <title>WebApi</title>
+	  <link rel="stylesheet" href="style.css">
+	  <script>
+	  	function hasClass(ele,cls){ if(ele!=null&&cls!=null){return ele.className.match(new RegExp('(\\s|^)'+cls+'(\\s|$)'));}return false; }
+		function AddClassName(ele,cls) { if (!this.hasClass(ele,cls)){ele.className += " "+cls; }}
+		function RemoveClassName(ele,cls) {	if (hasClass(ele,cls)) {   	var reg = new RegExp('(\\s|^)'+cls+'(\\s|$)'); ele.className=ele.className.replace(reg,' ').replace(/^\s|\s$/,'');	}}
+
+      	function ToggleCollapse(id){
+			var el = document.getElementById("detail_" + id);
+			if(el){
+				if(el.style.display == 'none'){
+					el.style.display = ''
+				}else{
+					el.style.display = 'none'
+				}
+			}
+		}
+      	function ShowView(id, view){
+			var el1 = document.getElementById("detail_1_" + id);
+			var el2 = document.getElementById("detail_2_" + id);
+			var el3 = document.getElementById("detail_3_" + id);
+			
+			if(el1){ 
+				if(view == 1){ el1.style.display = ''; AddClassName(document.getElementById("btn_1_" + id), "Select"); }
+				else{ el1.style.display = 'none'; RemoveClassName(document.getElementById("btn_1_" + id), "Select");  } 
+			}
+			if(el2){ 
+				if(view == 2){ el2.style.display = ''; AddClassName(document.getElementById("btn_2_" + id), "Select"); }
+				else{ el2.style.display = 'none'; RemoveClassName(document.getElementById("btn_2_" + id), "Select");  } 
+			}
+			if(el3){ 
+				if(view == 3){ el3.style.display = ''; AddClassName(document.getElementById("btn_3_" + id), "Select"); }
+				else{ el3.style.display = 'none'; RemoveClassName(document.getElementById("btn_3_" + id), "Select");  } 
+			}
+		}
+      </script>
+	</head>
+	<body>
+    
+    <div class="ContainerDiv">
+	        <h2>Employee<span>/employee</span></h2>
+        
+                    <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(3);">
+                <div class="TypeDiv">GET</div>
+                /employee/{id}                <div class="NameDiv">Details of employee</div>
+            </div>
+            <div id="detail_3" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_3" type="button" class="OutputButton Select" value="Output" onClick="ShowView(3, 2);">
+                <input id="btn_3_3" type="button" class="ErrorButton" value="Errors" onClick="ShowView(3, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_3" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br /></div><div class="code">{
+    <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+    <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+    <span class="string">"class_name"</span>: <span class="string">"employee"</span>,
+    <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+    <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+    <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+    <span class="string">"employee_number"</span>: <span class="number">2</span>,
+    <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>
+}</div></pre>                </div>
+                <div id="detail_3_3" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized as HR								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd als HR                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Person does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Person [1] bestaat niet                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(2);">
+                <div class="TypeDiv">GET</div>
+                /employee/{id}/total_declarations                <div class="NameDiv">Declarations of employee</div>
+            </div>
+            <div id="detail_2" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_2" type="button" class="OutputButton Select" value="Output" onClick="ShowView(2, 2);">
+                <input id="btn_3_2" type="button" class="ErrorButton" value="Errors" onClick="ShowView(2, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_2" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br /></div><div class="code">[
+    {
+        <span class="string">"submitted_to_human_resources_by"</span>: <span class="number">6067380039974912</span>,
+        <span class="string">"created_at"</span>: <span class="string">"2014-04-13 22: 12: 09.712000"</span>,
+        <span class="string">"items_total_price"</span>: <span class="string">"140"</span>,
+        <span class="string">"human_resources_approved_by"</span>: <span class="number">6278486272507904</span>,
+        <span class="string">"locked_at"</span>: <span class="string">"2014-04-17 22: 12: 09.712000"</span>,
+        <span class="string">"state"</span>: <span class="string">"Goedgekeurd"</span>,
+        <span class="string">"human_resources_approved_at"</span>: <span class="string">"2014-04-26 22: 12: 09.712000"</span>,
+        <span class="string">"assigned_to"</span>: 
+        [
+            <span class="number">6067380039974912</span>
+        ],
+        <span class="string">"sent_to_human_resources_at"</span>: <span class="string">"2014-04-18 22: 12: 09.712000"</span>,
+        <span class="string">"created_by"</span>: 
+        {
+            <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+            <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+            <span class="string">"employee_number"</span>: <span class="string">"2"</span>,
+            <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+            <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+            <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>,
+            <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+            <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+        },
+        <span class="string">"comment"</span>: <span class="string">"Verblijfskosten Januari."</span>,
+        <span class="string">"id"</span>: <span class="number">5609983202820096</span>,
+        <span class="string">"will_be_payed_out_on"</span>: <span class="string">"2014-04-30"</span>,
+        <span class="string">"supervisor_approved_at"</span>: <span class="string">"2014-04-18 22: 12: 09.712000"</span>,
+        <span class="string">"items_count"</span>: <span class="string">"2"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"human_resources_approved_declaration"</span>,
+        <span class="string">"supervisor_approved_by"</span>: <span class="number">6067380039974912</span>
+    },{
+        <span class="string">"submitted_to_human_resources_by"</span>: <span class="number">4941480133132288</span>,
+        <span class="string">"supervisor_approved_at"</span>: <span class="string">"2014-05-14 22: 12: 09.534000"</span>,
+        <span class="string">"items_total_price"</span>: <span class="string">"85"</span>,
+        <span class="string">"locked_at"</span>: <span class="string">"2014-05-12 22: 12: 09.534000"</span>,
+        <span class="string">"state"</span>: <span class="string">"Goedgekeurd leidinggevende"</span>,
+        <span class="string">"assigned_to"</span>: 
+        [
+            <span class="number">6067380039974912</span>,
+            <span class="number">4941480133132288</span>
+        ],
+        <span class="string">"sent_to_human_resources_at"</span>: <span class="string">"2014-05-14 22: 12: 09.534000"</span>,
+        <span class="string">"created_by"</span>: 
+        {
+            <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+            <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+            <span class="string">"employee_number"</span>: <span class="string">"2"</span>,
+            <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+            <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+            <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>,
+            <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+            <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+        },
+        <span class="string">"created_at"</span>: <span class="string">"2014-05-11 22: 12: 09.534000"</span>,
+        <span class="string">"comment"</span>: <span class="string">"Belkosten klanten voor project INTEGRITY."</span>,
+        <span class="string">"id"</span>: <span class="number">5750720691175424</span>,
+        <span class="string">"supervisor_comment"</span>: <span class="string">"Prioriteit &amp; classificatie:  ALPHA."</span>,
+        <span class="string">"items_count"</span>: <span class="string">"2"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"supervisor_approved_declaration"</span>,
+        <span class="string">"supervisor_approved_by"</span>: <span class="number">4941480133132288</span>
+    }
+]</div></pre>                </div>
+                <div id="detail_3_2" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Person does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Person [1] bestaat niet                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(1);">
+                <div class="TypeDiv">GET</div>
+                /employees                <div class="NameDiv">All employees</div>
+            </div>
+            <div id="detail_1" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_1" type="button" class="OutputButton Select" value="Output" onClick="ShowView(1, 2);">
+                <input id="btn_3_1" type="button" class="ErrorButton" value="Errors" onClick="ShowView(1, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_1" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br /></div><div class="code">[ 
+    {
+        <span class="string">"id"</span>: <span class="number">4589636412243968</span>,
+        <span class="string">"employee_number"</span>: <span class="number">3</span>,
+        <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+        <span class="string">"supervisor"</span>: <span class="number">4941480133132288</span>,
+        <span class="string">"last_name"</span>: <span class="string">"Klein"</span>,
+        <span class="string">"email"</span>: <span class="string">"axel_klein@gmail.com"</span>,
+        <span class="string">"first_name"</span>: <span class="string">"Axel"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+    },{
+        <span class="string">"id"</span>: <span class="number">4941480133132288</span>,
+        <span class="string">"employee_number"</span>: <span class="number">1</span>,
+        <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+        <span class="string">"last_name"</span>: <span class="string">"Meredonk"</span>,
+        <span class="string">"email"</span>: <span class="string">"wjm.meredonk1@gmail.com"</span>,
+        <span class="string">"first_name"</span>: <span class="string">"Wim"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"supervisor"</span>
+    }
+]</div></pre>                </div>
+                <div id="detail_3_1" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized as HR								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd als HR                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                    <h2>Current user<span>/current_user</span></h2>
+        
+                    <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(11);">
+                <div class="TypeDiv">GET</div>
+                /current_user/declarations                <div class="NameDiv">Declarations of current employee</div>
+            </div>
+            <div id="detail_11" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_11" type="button" class="OutputButton Select" value="Output" onClick="ShowView(11, 2);">
+                <input id="btn_3_11" type="button" class="ErrorButton" value="Errors" onClick="ShowView(11, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_11" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br /></div><div class="code">[
+    {
+        <span class="string">"submitted_to_human_resources_by"</span>: <span class="number">6067380039974912</span>,
+        <span class="string">"created_at"</span>: <span class="string">"2014-04-13 22: 12: 09.712000"</span>,
+        <span class="string">"items_total_price"</span>: <span class="string">"140"</span>,
+        <span class="string">"human_resources_approved_by"</span>: <span class="number">6278486272507904</span>,
+        <span class="string">"locked_at"</span>: <span class="string">"2014-04-17 22: 12: 09.712000"</span>,
+        <span class="string">"state"</span>: <span class="string">"Goedgekeurd"</span>,
+        <span class="string">"human_resources_approved_at"</span>: <span class="string">"2014-04-26 22: 12: 09.712000"</span>,
+        <span class="string">"assigned_to"</span>: 
+        [
+            <span class="number">6067380039974912</span>
+        ],
+        <span class="string">"sent_to_human_resources_at"</span>: <span class="string">"2014-04-18 22: 12: 09.712000"</span>,
+        <span class="string">"created_by"</span>: 
+        {
+            <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+            <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+            <span class="string">"employee_number"</span>: <span class="string">"2"</span>,
+            <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+            <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+            <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>,
+            <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+            <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+        },
+        <span class="string">"comment"</span>: <span class="string">"Verblijfskosten Januari."</span>,
+        <span class="string">"id"</span>: <span class="number">5609983202820096</span>,
+        <span class="string">"will_be_payed_out_on"</span>: <span class="string">"2014-04-30"</span>,
+        <span class="string">"supervisor_approved_at"</span>: <span class="string">"2014-04-18 22: 12: 09.712000"</span>,
+        <span class="string">"items_count"</span>: <span class="string">"2"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"human_resources_approved_declaration"</span>,
+        <span class="string">"supervisor_approved_by"</span>: <span class="number">6067380039974912</span>
+    },{
+        <span class="string">"submitted_to_human_resources_by"</span>: <span class="number">4941480133132288</span>,
+        <span class="string">"supervisor_approved_at"</span>: <span class="string">"2014-05-14 22: 12: 09.534000"</span>,
+        <span class="string">"items_total_price"</span>: <span class="string">"85"</span>,
+        <span class="string">"locked_at"</span>: <span class="string">"2014-05-12 22: 12: 09.534000"</span>,
+        <span class="string">"state"</span>: <span class="string">"Goedgekeurd leidinggevende"</span>,
+        <span class="string">"assigned_to"</span>: 
+        [
+            <span class="number">6067380039974912</span>,
+            <span class="number">4941480133132288</span>
+        ],
+        <span class="string">"sent_to_human_resources_at"</span>: <span class="string">"2014-05-14 22: 12: 09.534000"</span>,
+        <span class="string">"created_by"</span>: 
+        {
+            <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+            <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+            <span class="string">"employee_number"</span>: <span class="string">"2"</span>,
+            <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+            <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+            <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>,
+            <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+            <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+        },
+        <span class="string">"created_at"</span>: <span class="string">"2014-05-11 22: 12: 09.534000"</span>,
+        <span class="string">"comment"</span>: <span class="string">"Belkosten klanten voor project INTEGRITY."</span>,
+        <span class="string">"id"</span>: <span class="number">5750720691175424</span>,
+        <span class="string">"supervisor_comment"</span>: <span class="string">"Prioriteit &amp; classificatie:  ALPHA."</span>,
+        <span class="string">"items_count"</span>: <span class="string">"2"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"supervisor_approved_declaration"</span>,
+        <span class="string">"supervisor_approved_by"</span>: <span class="number">4941480133132288</span>
+    }
+]</div></pre>                </div>
+                <div id="detail_3_11" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(12);">
+                <div class="TypeDiv">GET</div>
+                /current_user/declarations/assigned                <div class="NameDiv">Open assigned declarations of current supervisor</div>
+            </div>
+            <div id="detail_12" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_12" type="button" class="OutputButton Select" value="Output" onClick="ShowView(12, 2);">
+                <input id="btn_3_12" type="button" class="ErrorButton" value="Errors" onClick="ShowView(12, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_12" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br /></div><div class="code">[
+    {
+        <span class="string">"submitted_to_human_resources_by"</span>: <span class="number">6067380039974912</span>,
+        <span class="string">"created_at"</span>: <span class="string">"2014-04-13 22: 12: 09.712000"</span>,
+        <span class="string">"items_total_price"</span>: <span class="string">"140"</span>,
+        <span class="string">"human_resources_approved_by"</span>: <span class="number">6278486272507904</span>,
+        <span class="string">"locked_at"</span>: <span class="string">"2014-04-17 22: 12: 09.712000"</span>,
+        <span class="string">"state"</span>: <span class="string">"Goedgekeurd"</span>,
+        <span class="string">"human_resources_approved_at"</span>: <span class="string">"2014-04-26 22: 12: 09.712000"</span>,
+        <span class="string">"assigned_to"</span>: 
+        [
+            <span class="number">6067380039974912</span>
+        ],
+        <span class="string">"sent_to_human_resources_at"</span>: <span class="string">"2014-04-18 22: 12: 09.712000"</span>,
+        <span class="string">"created_by"</span>: 
+        {
+            <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+            <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+            <span class="string">"employee_number"</span>: <span class="string">"2"</span>,
+            <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+            <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+            <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>,
+            <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+            <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+        },
+        <span class="string">"comment"</span>: <span class="string">"Verblijfskosten Januari."</span>,
+        <span class="string">"id"</span>: <span class="number">5609983202820096</span>,
+        <span class="string">"will_be_payed_out_on"</span>: <span class="string">"2014-04-30"</span>,
+        <span class="string">"supervisor_approved_at"</span>: <span class="string">"2014-04-18 22: 12: 09.712000"</span>,
+        <span class="string">"items_count"</span>: <span class="string">"2"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"human_resources_approved_declaration"</span>,
+        <span class="string">"supervisor_approved_by"</span>: <span class="number">6067380039974912</span>
+    },{
+        <span class="string">"submitted_to_human_resources_by"</span>: <span class="number">4941480133132288</span>,
+        <span class="string">"supervisor_approved_at"</span>: <span class="string">"2014-05-14 22: 12: 09.534000"</span>,
+        <span class="string">"items_total_price"</span>: <span class="string">"85"</span>,
+        <span class="string">"locked_at"</span>: <span class="string">"2014-05-12 22: 12: 09.534000"</span>,
+        <span class="string">"state"</span>: <span class="string">"Goedgekeurd leidinggevende"</span>,
+        <span class="string">"assigned_to"</span>: 
+        [
+            <span class="number">6067380039974912</span>,
+            <span class="number">4941480133132288</span>
+        ],
+        <span class="string">"sent_to_human_resources_at"</span>: <span class="string">"2014-05-14 22: 12: 09.534000"</span>,
+        <span class="string">"created_by"</span>: 
+        {
+            <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+            <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+            <span class="string">"employee_number"</span>: <span class="string">"2"</span>,
+            <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+            <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+            <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>,
+            <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+            <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+        },
+        <span class="string">"created_at"</span>: <span class="string">"2014-05-11 22: 12: 09.534000"</span>,
+        <span class="string">"comment"</span>: <span class="string">"Belkosten klanten voor project INTEGRITY."</span>,
+        <span class="string">"id"</span>: <span class="number">5750720691175424</span>,
+        <span class="string">"supervisor_comment"</span>: <span class="string">"Prioriteit &amp; classificatie:  ALPHA."</span>,
+        <span class="string">"items_count"</span>: <span class="string">"2"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"supervisor_approved_declaration"</span>,
+        <span class="string">"supervisor_approved_by"</span>: <span class="number">4941480133132288</span>
+    }
+]</div></pre>                </div>
+                <div id="detail_3_12" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(13);">
+                <div class="TypeDiv">GET</div>
+                /current_user/declarations/assigned_history                <div class="NameDiv">Assigned declarations of current supervisor</div>
+            </div>
+            <div id="detail_13" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_13" type="button" class="OutputButton Select" value="Output" onClick="ShowView(13, 2);">
+                <input id="btn_3_13" type="button" class="ErrorButton" value="Errors" onClick="ShowView(13, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_13" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br /></div><div class="code">[
+    {
+        <span class="string">"submitted_to_human_resources_by"</span>: <span class="number">6067380039974912</span>,
+        <span class="string">"created_at"</span>: <span class="string">"2014-04-13 22: 12: 09.712000"</span>,
+        <span class="string">"items_total_price"</span>: <span class="string">"140"</span>,
+        <span class="string">"human_resources_approved_by"</span>: <span class="number">6278486272507904</span>,
+        <span class="string">"locked_at"</span>: <span class="string">"2014-04-17 22: 12: 09.712000"</span>,
+        <span class="string">"state"</span>: <span class="string">"Goedgekeurd"</span>,
+        <span class="string">"human_resources_approved_at"</span>: <span class="string">"2014-04-26 22: 12: 09.712000"</span>,
+        <span class="string">"assigned_to"</span>: 
+        [
+            <span class="number">6067380039974912</span>
+        ],
+        <span class="string">"sent_to_human_resources_at"</span>: <span class="string">"2014-04-18 22: 12: 09.712000"</span>,
+        <span class="string">"created_by"</span>: 
+        {
+            <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+            <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+            <span class="string">"employee_number"</span>: <span class="string">"2"</span>,
+            <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+            <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+            <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>,
+            <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+            <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+        },
+        <span class="string">"comment"</span>: <span class="string">"Verblijfskosten Januari."</span>,
+        <span class="string">"id"</span>: <span class="number">5609983202820096</span>,
+        <span class="string">"will_be_payed_out_on"</span>: <span class="string">"2014-04-30"</span>,
+        <span class="string">"supervisor_approved_at"</span>: <span class="string">"2014-04-18 22: 12: 09.712000"</span>,
+        <span class="string">"items_count"</span>: <span class="string">"2"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"human_resources_approved_declaration"</span>,
+        <span class="string">"supervisor_approved_by"</span>: <span class="number">6067380039974912</span>
+    },{
+        <span class="string">"submitted_to_human_resources_by"</span>: <span class="number">4941480133132288</span>,
+        <span class="string">"supervisor_approved_at"</span>: <span class="string">"2014-05-14 22: 12: 09.534000"</span>,
+        <span class="string">"items_total_price"</span>: <span class="string">"85"</span>,
+        <span class="string">"locked_at"</span>: <span class="string">"2014-05-12 22: 12: 09.534000"</span>,
+        <span class="string">"state"</span>: <span class="string">"Goedgekeurd leidinggevende"</span>,
+        <span class="string">"assigned_to"</span>: 
+        [
+            <span class="number">6067380039974912</span>,
+            <span class="number">4941480133132288</span>
+        ],
+        <span class="string">"sent_to_human_resources_at"</span>: <span class="string">"2014-05-14 22: 12: 09.534000"</span>,
+        <span class="string">"created_by"</span>: 
+        {
+            <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+            <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+            <span class="string">"employee_number"</span>: <span class="string">"2"</span>,
+            <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+            <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+            <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>,
+            <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+            <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+        },
+        <span class="string">"created_at"</span>: <span class="string">"2014-05-11 22: 12: 09.534000"</span>,
+        <span class="string">"comment"</span>: <span class="string">"Belkosten klanten voor project INTEGRITY."</span>,
+        <span class="string">"id"</span>: <span class="number">5750720691175424</span>,
+        <span class="string">"supervisor_comment"</span>: <span class="string">"Prioriteit &amp; classificatie:  ALPHA."</span>,
+        <span class="string">"items_count"</span>: <span class="string">"2"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"supervisor_approved_declaration"</span>,
+        <span class="string">"supervisor_approved_by"</span>: <span class="number">4941480133132288</span>
+    }
+]</div></pre>                </div>
+                <div id="detail_3_13" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(4);">
+                <div class="TypeDiv">GET</div>
+                /current_user/details                <div class="NameDiv">Details of current employee</div>
+            </div>
+            <div id="detail_4" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_4" type="button" class="OutputButton Select" value="Output" onClick="ShowView(4, 2);">
+                <input id="btn_3_4" type="button" class="ErrorButton" value="Errors" onClick="ShowView(4, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_4" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br /></div><div class="code">{
+    <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+    <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+    <span class="string">"class_name"</span>: <span class="string">"employee"</span>,
+    <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+    <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+    <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+    <span class="string">"employee_number"</span>: <span class="number">2</span>,
+    <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>
+}</div></pre>                </div>
+                <div id="detail_3_4" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(5);">
+                <div class="TypeDiv">GET</div>
+                /current_user/settings                <div class="NameDiv">Settings of current employee</div>
+            </div>
+            <div id="detail_5" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_5" type="button" class="OutputButton Select" value="Output" onClick="ShowView(5, 2);">
+                <input id="btn_3_5" type="button" class="ErrorButton" value="Errors" onClick="ShowView(5, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_5" style="  text-align:left;">
+                	<div class="ErrorDiv">Geen output gevonden</div>                </div>
+                <div id="detail_3_5" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_PUT" onClick="ToggleCollapse(6);">
+                <div class="TypeDiv">PUT</div>
+                /current_user/settings                <div class="NameDiv">Settings of current employee</div>
+            </div>
+            <div id="detail_6" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_6" type="button" class="OutputButton Select" value="Output" onClick="ShowView(6, 2);">
+                <input id="btn_3_6" type="button" class="ErrorButton" value="Errors" onClick="ShowView(6, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_6" style="  text-align:left;">
+                	<div class="ErrorDiv">Geen output gevonden</div>                </div>
+                <div id="detail_3_6" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(7);">
+                <div class="TypeDiv">GET</div>
+                /current_user/supervisors                <div class="NameDiv">Supervisors of current employee</div>
+            </div>
+            <div id="detail_7" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_7" type="button" class="OutputButton Select" value="Output" onClick="ShowView(7, 2);">
+                <input id="btn_3_7" type="button" class="ErrorButton" value="Errors" onClick="ShowView(7, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_7" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br /></div><div class="code">[
+    {
+        <span class="string">"id"</span>: <span class="number">4941480133132288</span>,
+        <span class="string">"class_name"</span>: <span class="string">"supervisor"</span>,
+        <span class="string">"employee_number"</span>: <span class="number">1</span>,
+        <span class="string">"first_name"</span>: <span class="string">"Wim"</span>,
+        <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+        <span class="string">"last_name"</span>: <span class="string">"Meredonk"</span>,
+        <span class="string">"email"</span>: <span class="string">"wjm.meredonk1@gmail.com"</span>
+    },{
+        <span class="string">"id"</span>: <span class="number">5504430086553600</span>,
+        <span class="string">"class_name"</span>: <span class="string">"supervisor"</span>,
+        <span class="string">"employee_number"</span>: <span class="number">7</span>,
+        <span class="string">"first_name"</span>: <span class="string">"Wout"</span>,
+        <span class="string">"department"</span>: <span class="number">5222955109842944</span>,
+        <span class="string">"last_name"</span>: <span class="string">"van Diesen"</span>,
+        <span class="string">"email"</span>: <span class="string">"wout_van_diesen@gmail.com"</span>
+    }
+]</div></pre>                </div>
+                <div id="detail_3_7" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                    <h2>Declaration<span>/declaration</span></h2>
+        
+                    <div class="ApiRow ApiRow_POST" onClick="ToggleCollapse(16);">
+                <div class="TypeDiv">POST</div>
+                /declaration                <div class="NameDiv">Submit declaration</div>
+            </div>
+            <div id="detail_16" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_16" type="button" class="OutputButton Select" value="Output" onClick="ShowView(16, 2);">
+                <input id="btn_3_16" type="button" class="ErrorButton" value="Errors" onClick="ShowView(16, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_16" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br />65<br />66<br />67<br />68<br />69<br />70<br />71<br />72<br />73<br /></div><div class="code">{
+    <span class="string">"state"</span>: <span class="string">"Open"</span>, 
+    <span class="string">"assigned_to"</span>: [<span class="number">5</span>], 
+    <span class="string">"id"</span>: <span class="number">6</span>,
+    <span class="string">"comment"</span>: <span class="string">"Thanks for taking care of this for me!"</span>, 
+    <span class="string">"created_by"</span>: 
+    {
+        <span class="string">"first_name"</span>: <span class="string">"Rogier"</span>, 
+        <span class="string">"last_name"</span>: <span class="string">"Boleij"</span>, 
+        <span class="string">"supervisor"</span>: <span class="number">5</span>, 
+        <span class="string">"class_name"</span>: <span class="string">"employee"</span>, 
+        <span class="string">"email"</span>: <span class="string">"r.boleij1@gmail.com"</span>, 
+        <span class="string">"id"</span>: <span class="number">2</span>
+    }, 
+    <span class="string">"last_assigned_to"</span>: 
+    {
+        <span class="string">"class_name"</span>: <span class="string">"supervisor"</span>, 
+        <span class="string">"department"</span>: <span class="number">4</span>, 
+        <span class="string">"employee_number"</span>: <span class="string">"1234567"</span>, 
+        <span class="string">"id"</span>: <span class="number">5</span>, 
+        <span class="string">"max_declaration_price"</span>: <span class="string">"-1"</span>
+    }, 
+    <span class="string">"attachments"</span>: 
+    [
+        {
+            <span class="string">"id"</span>: <span class="number">14</span>, 
+            <span class="string">"name"</span>: <span class="string">"attachment 0"</span>
+        },{
+            <span class="string">"id"</span>: <span class="number">15</span>,
+            <span class="string">"name"</span>: <span class="string">"attachment 1"</span>
+        }
+     ], 
+     <span class="string">"class_name"</span>: <span class="string">"open_declaration"</span>, 
+     <span class="string">"created_at"</span>: <span class="string">"2014-05-25 17:13:13.761000"</span>, 
+     <span class="string">"lines"</span>: 
+     [
+        {
+            <span class="string">"id"</span>: <span class="number">10</span>,
+            <span class="string">"comment"</span>: <span class="string">"line comment"</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.029000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">18</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            } 
+        },{
+            <span class="string">"id"</span>: <span class="number">11</span>,
+            <span class="string">"comment"</span>: <span class="keyword literal">null</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.075000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">64</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            }
+        }
+    ]
+}</div></pre>                </div>
+                <div id="detail_3_16" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 No post value received								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Geen post ontvangen                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 Price not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Bedrag heeft geen correcte waarde (abcd)                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_DELETE" onClick="ToggleCollapse(19);">
+                <div class="TypeDiv">DELETE</div>
+                /declaration/{id}                <div class="NameDiv">Delete declaration</div>
+            </div>
+            <div id="detail_19" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_19" type="button" class="OutputButton Select" value="Output" onClick="ShowView(19, 2);">
+                <input id="btn_3_19" type="button" class="ErrorButton" value="Errors" onClick="ShowView(19, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_19" style="  text-align:left;">
+                	<div class="ErrorDiv">Geen output gevonden</div>                </div>
+                <div id="detail_3_19" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Declaration does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie [1] niet gevonden                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 User is not the owner								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie kan niet worden aangepast                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 Action not allowed with current state								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie heeft niet de jusite status voor deze actie                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(18);">
+                <div class="TypeDiv">GET</div>
+                /declaration/{id}                <div class="NameDiv">Details of declaration</div>
+            </div>
+            <div id="detail_18" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_18" type="button" class="OutputButton Select" value="Output" onClick="ShowView(18, 2);">
+                <input id="btn_3_18" type="button" class="ErrorButton" value="Errors" onClick="ShowView(18, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_18" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br />65<br />66<br />67<br />68<br />69<br />70<br />71<br />72<br />73<br /></div><div class="code">{
+    <span class="string">"state"</span>: <span class="string">"Open"</span>, 
+    <span class="string">"assigned_to"</span>: [<span class="number">5</span>], 
+    <span class="string">"id"</span>: <span class="number">6</span>,
+    <span class="string">"comment"</span>: <span class="string">"Thanks for taking care of this for me!"</span>, 
+    <span class="string">"created_by"</span>: 
+    {
+        <span class="string">"first_name"</span>: <span class="string">"Rogier"</span>, 
+        <span class="string">"last_name"</span>: <span class="string">"Boleij"</span>, 
+        <span class="string">"supervisor"</span>: <span class="number">5</span>, 
+        <span class="string">"class_name"</span>: <span class="string">"employee"</span>, 
+        <span class="string">"email"</span>: <span class="string">"r.boleij1@gmail.com"</span>, 
+        <span class="string">"id"</span>: <span class="number">2</span>
+    }, 
+    <span class="string">"last_assigned_to"</span>: 
+    {
+        <span class="string">"class_name"</span>: <span class="string">"supervisor"</span>, 
+        <span class="string">"department"</span>: <span class="number">4</span>, 
+        <span class="string">"employee_number"</span>: <span class="string">"1234567"</span>, 
+        <span class="string">"id"</span>: <span class="number">5</span>, 
+        <span class="string">"max_declaration_price"</span>: <span class="string">"-1"</span>
+    }, 
+    <span class="string">"attachments"</span>: 
+    [
+        {
+            <span class="string">"id"</span>: <span class="number">14</span>, 
+            <span class="string">"name"</span>: <span class="string">"attachment 0"</span>
+        },{
+            <span class="string">"id"</span>: <span class="number">15</span>,
+            <span class="string">"name"</span>: <span class="string">"attachment 1"</span>
+        }
+     ], 
+     <span class="string">"class_name"</span>: <span class="string">"open_declaration"</span>, 
+     <span class="string">"created_at"</span>: <span class="string">"2014-05-25 17:13:13.761000"</span>, 
+     <span class="string">"lines"</span>: 
+     [
+        {
+            <span class="string">"id"</span>: <span class="number">10</span>,
+            <span class="string">"comment"</span>: <span class="string">"line comment"</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.029000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">18</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            } 
+        },{
+            <span class="string">"id"</span>: <span class="number">11</span>,
+            <span class="string">"comment"</span>: <span class="keyword literal">null</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.075000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">64</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            }
+        }
+    ]
+}</div></pre>                </div>
+                <div id="detail_3_18" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Declaration does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie [1] niet gevonden                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 User does not have view rights for declaration								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U heeft niet de juiste rechten om deze declaratie te openen                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_PUT" onClick="ToggleCollapse(17);">
+                <div class="TypeDiv">PUT</div>
+                /declaration/{id}                <div class="NameDiv">Edit declaration</div>
+            </div>
+            <div id="detail_17" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_17" type="button" class="OutputButton Select" value="Output" onClick="ShowView(17, 2);">
+                <input id="btn_3_17" type="button" class="ErrorButton" value="Errors" onClick="ShowView(17, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_17" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br />65<br />66<br />67<br />68<br />69<br />70<br />71<br />72<br />73<br /></div><div class="code">{
+    <span class="string">"state"</span>: <span class="string">"Open"</span>, 
+    <span class="string">"assigned_to"</span>: [<span class="number">5</span>], 
+    <span class="string">"id"</span>: <span class="number">6</span>,
+    <span class="string">"comment"</span>: <span class="string">"Thanks for taking care of this for me!"</span>, 
+    <span class="string">"created_by"</span>: 
+    {
+        <span class="string">"first_name"</span>: <span class="string">"Rogier"</span>, 
+        <span class="string">"last_name"</span>: <span class="string">"Boleij"</span>, 
+        <span class="string">"supervisor"</span>: <span class="number">5</span>, 
+        <span class="string">"class_name"</span>: <span class="string">"employee"</span>, 
+        <span class="string">"email"</span>: <span class="string">"r.boleij1@gmail.com"</span>, 
+        <span class="string">"id"</span>: <span class="number">2</span>
+    }, 
+    <span class="string">"last_assigned_to"</span>: 
+    {
+        <span class="string">"class_name"</span>: <span class="string">"supervisor"</span>, 
+        <span class="string">"department"</span>: <span class="number">4</span>, 
+        <span class="string">"employee_number"</span>: <span class="string">"1234567"</span>, 
+        <span class="string">"id"</span>: <span class="number">5</span>, 
+        <span class="string">"max_declaration_price"</span>: <span class="string">"-1"</span>
+    }, 
+    <span class="string">"attachments"</span>: 
+    [
+        {
+            <span class="string">"id"</span>: <span class="number">14</span>, 
+            <span class="string">"name"</span>: <span class="string">"attachment 0"</span>
+        },{
+            <span class="string">"id"</span>: <span class="number">15</span>,
+            <span class="string">"name"</span>: <span class="string">"attachment 1"</span>
+        }
+     ], 
+     <span class="string">"class_name"</span>: <span class="string">"open_declaration"</span>, 
+     <span class="string">"created_at"</span>: <span class="string">"2014-05-25 17:13:13.761000"</span>, 
+     <span class="string">"lines"</span>: 
+     [
+        {
+            <span class="string">"id"</span>: <span class="number">10</span>,
+            <span class="string">"comment"</span>: <span class="string">"line comment"</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.029000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">18</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            } 
+        },{
+            <span class="string">"id"</span>: <span class="number">11</span>,
+            <span class="string">"comment"</span>: <span class="keyword literal">null</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.075000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">64</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            }
+        }
+    ]
+}</div></pre>                </div>
+                <div id="detail_3_17" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Declaration does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie [1] niet gevonden                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 User is not the owner								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie kan niet worden aangepast                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 Action not allowed with current state								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie heeft niet de jusite status voor deze actie                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 No post value received								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Geen post ontvangen                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 Price not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Bedrag heeft geen correcte waarde (abcd)                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_PUT" onClick="ToggleCollapse(21);">
+                <div class="TypeDiv">PUT</div>
+                /declaration/{id}/approve_by_hr                <div class="NameDiv">Approve declaration hr</div>
+            </div>
+            <div id="detail_21" style="display:none;" class="DescriptionDiv">
+            	                	<input id="btn_1_21" type="button" class="InputButton Select" value="Input" onClick="ShowView(21, 1);">
+                                
+                <input id="btn_2_21" type="button" class="OutputButton" value="Output" onClick="ShowView(21, 2);">
+                <input id="btn_3_21" type="button" class="ErrorButton" value="Errors" onClick="ShowView(21, 3);">
+                
+                <hr />
+                
+                                <div id="detail_1_21" style=" text-align:left;">
+					                            <div class="ApiRow ApiRow_POST">
+                                <div class="TypeDiv">POST PARAM</div>
+                                comment (optional)                                <div class="NameDiv">Comment</div>
+                            </div>
+                            
+                                            </div>
+                                
+                <div id="detail_2_21" style=" display:none; text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br />65<br />66<br />67<br />68<br />69<br />70<br />71<br />72<br />73<br /></div><div class="code">{
+    <span class="string">"state"</span>: <span class="string">"Open"</span>, 
+    <span class="string">"assigned_to"</span>: [<span class="number">5</span>], 
+    <span class="string">"id"</span>: <span class="number">6</span>,
+    <span class="string">"comment"</span>: <span class="string">"Thanks for taking care of this for me!"</span>, 
+    <span class="string">"created_by"</span>: 
+    {
+        <span class="string">"first_name"</span>: <span class="string">"Rogier"</span>, 
+        <span class="string">"last_name"</span>: <span class="string">"Boleij"</span>, 
+        <span class="string">"supervisor"</span>: <span class="number">5</span>, 
+        <span class="string">"class_name"</span>: <span class="string">"employee"</span>, 
+        <span class="string">"email"</span>: <span class="string">"r.boleij1@gmail.com"</span>, 
+        <span class="string">"id"</span>: <span class="number">2</span>
+    }, 
+    <span class="string">"last_assigned_to"</span>: 
+    {
+        <span class="string">"class_name"</span>: <span class="string">"supervisor"</span>, 
+        <span class="string">"department"</span>: <span class="number">4</span>, 
+        <span class="string">"employee_number"</span>: <span class="string">"1234567"</span>, 
+        <span class="string">"id"</span>: <span class="number">5</span>, 
+        <span class="string">"max_declaration_price"</span>: <span class="string">"-1"</span>
+    }, 
+    <span class="string">"attachments"</span>: 
+    [
+        {
+            <span class="string">"id"</span>: <span class="number">14</span>, 
+            <span class="string">"name"</span>: <span class="string">"attachment 0"</span>
+        },{
+            <span class="string">"id"</span>: <span class="number">15</span>,
+            <span class="string">"name"</span>: <span class="string">"attachment 1"</span>
+        }
+     ], 
+     <span class="string">"class_name"</span>: <span class="string">"open_declaration"</span>, 
+     <span class="string">"created_at"</span>: <span class="string">"2014-05-25 17:13:13.761000"</span>, 
+     <span class="string">"lines"</span>: 
+     [
+        {
+            <span class="string">"id"</span>: <span class="number">10</span>,
+            <span class="string">"comment"</span>: <span class="string">"line comment"</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.029000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">18</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            } 
+        },{
+            <span class="string">"id"</span>: <span class="number">11</span>,
+            <span class="string">"comment"</span>: <span class="keyword literal">null</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.075000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">64</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            }
+        }
+    ]
+}</div></pre>                </div>
+                <div id="detail_3_21" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Declaration does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie [1] niet gevonden                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 Action not allowed with current state								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie heeft niet de jusite status voor deze actie                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized as HR								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd als HR                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_PUT" onClick="ToggleCollapse(15);">
+                <div class="TypeDiv">PUT</div>
+                /declaration/{id}/approve_by_supervisor                <div class="NameDiv">Approve declaration supervisor</div>
+            </div>
+            <div id="detail_15" style="display:none;" class="DescriptionDiv">
+            	                	<input id="btn_1_15" type="button" class="InputButton Select" value="Input" onClick="ShowView(15, 1);">
+                                
+                <input id="btn_2_15" type="button" class="OutputButton" value="Output" onClick="ShowView(15, 2);">
+                <input id="btn_3_15" type="button" class="ErrorButton" value="Errors" onClick="ShowView(15, 3);">
+                
+                <hr />
+                
+                                <div id="detail_1_15" style=" text-align:left;">
+					                            <div class="ApiRow ApiRow_POST">
+                                <div class="TypeDiv">POST PARAM</div>
+                                comment (optional)                                <div class="NameDiv">Comment</div>
+                            </div>
+                            
+                                            </div>
+                                
+                <div id="detail_2_15" style=" display:none; text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br />65<br />66<br />67<br />68<br />69<br />70<br />71<br />72<br />73<br /></div><div class="code">{
+    <span class="string">"state"</span>: <span class="string">"Open"</span>, 
+    <span class="string">"assigned_to"</span>: [<span class="number">5</span>], 
+    <span class="string">"id"</span>: <span class="number">6</span>,
+    <span class="string">"comment"</span>: <span class="string">"Thanks for taking care of this for me!"</span>, 
+    <span class="string">"created_by"</span>: 
+    {
+        <span class="string">"first_name"</span>: <span class="string">"Rogier"</span>, 
+        <span class="string">"last_name"</span>: <span class="string">"Boleij"</span>, 
+        <span class="string">"supervisor"</span>: <span class="number">5</span>, 
+        <span class="string">"class_name"</span>: <span class="string">"employee"</span>, 
+        <span class="string">"email"</span>: <span class="string">"r.boleij1@gmail.com"</span>, 
+        <span class="string">"id"</span>: <span class="number">2</span>
+    }, 
+    <span class="string">"last_assigned_to"</span>: 
+    {
+        <span class="string">"class_name"</span>: <span class="string">"supervisor"</span>, 
+        <span class="string">"department"</span>: <span class="number">4</span>, 
+        <span class="string">"employee_number"</span>: <span class="string">"1234567"</span>, 
+        <span class="string">"id"</span>: <span class="number">5</span>, 
+        <span class="string">"max_declaration_price"</span>: <span class="string">"-1"</span>
+    }, 
+    <span class="string">"attachments"</span>: 
+    [
+        {
+            <span class="string">"id"</span>: <span class="number">14</span>, 
+            <span class="string">"name"</span>: <span class="string">"attachment 0"</span>
+        },{
+            <span class="string">"id"</span>: <span class="number">15</span>,
+            <span class="string">"name"</span>: <span class="string">"attachment 1"</span>
+        }
+     ], 
+     <span class="string">"class_name"</span>: <span class="string">"open_declaration"</span>, 
+     <span class="string">"created_at"</span>: <span class="string">"2014-05-25 17:13:13.761000"</span>, 
+     <span class="string">"lines"</span>: 
+     [
+        {
+            <span class="string">"id"</span>: <span class="number">10</span>,
+            <span class="string">"comment"</span>: <span class="string">"line comment"</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.029000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">18</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            } 
+        },{
+            <span class="string">"id"</span>: <span class="number">11</span>,
+            <span class="string">"comment"</span>: <span class="keyword literal">null</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.075000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">64</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            }
+        }
+    ]
+}</div></pre>                </div>
+                <div id="detail_3_15" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Declaration does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie [1] niet gevonden                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 User is not the owner								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie kan niet worden aangepast                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 User is not last assigned								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Kan de declaratie niet goedkeuren. Deze declaratie is niet aan u toegewezen                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 Declaration amout to high to approve								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	De huidige persoon mag deze declaratie niet goedkeuren. Bedrag te hoog                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 Action not allowed with current state								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie heeft niet de jusite status voor deze actie                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_PUT" onClick="ToggleCollapse(20);">
+                <div class="TypeDiv">PUT</div>
+                /declaration/{id}/decline_by_hr                <div class="NameDiv">Decline declaration hr</div>
+            </div>
+            <div id="detail_20" style="display:none;" class="DescriptionDiv">
+            	                	<input id="btn_1_20" type="button" class="InputButton Select" value="Input" onClick="ShowView(20, 1);">
+                                
+                <input id="btn_2_20" type="button" class="OutputButton" value="Output" onClick="ShowView(20, 2);">
+                <input id="btn_3_20" type="button" class="ErrorButton" value="Errors" onClick="ShowView(20, 3);">
+                
+                <hr />
+                
+                                <div id="detail_1_20" style=" text-align:left;">
+					                            <div class="ApiRow ApiRow_POST">
+                                <div class="TypeDiv">POST PARAM</div>
+                                comment                                <div class="NameDiv">Comment</div>
+                            </div>
+                            
+                                            </div>
+                                
+                <div id="detail_2_20" style=" display:none; text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br />65<br />66<br />67<br />68<br />69<br />70<br />71<br />72<br />73<br /></div><div class="code">{
+    <span class="string">"state"</span>: <span class="string">"Open"</span>, 
+    <span class="string">"assigned_to"</span>: [<span class="number">5</span>], 
+    <span class="string">"id"</span>: <span class="number">6</span>,
+    <span class="string">"comment"</span>: <span class="string">"Thanks for taking care of this for me!"</span>, 
+    <span class="string">"created_by"</span>: 
+    {
+        <span class="string">"first_name"</span>: <span class="string">"Rogier"</span>, 
+        <span class="string">"last_name"</span>: <span class="string">"Boleij"</span>, 
+        <span class="string">"supervisor"</span>: <span class="number">5</span>, 
+        <span class="string">"class_name"</span>: <span class="string">"employee"</span>, 
+        <span class="string">"email"</span>: <span class="string">"r.boleij1@gmail.com"</span>, 
+        <span class="string">"id"</span>: <span class="number">2</span>
+    }, 
+    <span class="string">"last_assigned_to"</span>: 
+    {
+        <span class="string">"class_name"</span>: <span class="string">"supervisor"</span>, 
+        <span class="string">"department"</span>: <span class="number">4</span>, 
+        <span class="string">"employee_number"</span>: <span class="string">"1234567"</span>, 
+        <span class="string">"id"</span>: <span class="number">5</span>, 
+        <span class="string">"max_declaration_price"</span>: <span class="string">"-1"</span>
+    }, 
+    <span class="string">"attachments"</span>: 
+    [
+        {
+            <span class="string">"id"</span>: <span class="number">14</span>, 
+            <span class="string">"name"</span>: <span class="string">"attachment 0"</span>
+        },{
+            <span class="string">"id"</span>: <span class="number">15</span>,
+            <span class="string">"name"</span>: <span class="string">"attachment 1"</span>
+        }
+     ], 
+     <span class="string">"class_name"</span>: <span class="string">"open_declaration"</span>, 
+     <span class="string">"created_at"</span>: <span class="string">"2014-05-25 17:13:13.761000"</span>, 
+     <span class="string">"lines"</span>: 
+     [
+        {
+            <span class="string">"id"</span>: <span class="number">10</span>,
+            <span class="string">"comment"</span>: <span class="string">"line comment"</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.029000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">18</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            } 
+        },{
+            <span class="string">"id"</span>: <span class="number">11</span>,
+            <span class="string">"comment"</span>: <span class="keyword literal">null</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.075000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">64</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            }
+        }
+    ]
+}</div></pre>                </div>
+                <div id="detail_3_20" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Declaration does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie [1] niet gevonden                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 Action not allowed with current state								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie heeft niet de jusite status voor deze actie                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 No post value received								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Geen post ontvangen                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized as HR								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd als HR                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_PUT" onClick="ToggleCollapse(10);">
+                <div class="TypeDiv">PUT</div>
+                /declaration/{id}/decline_by_supervisor                <div class="NameDiv">Decline declaration supervisor</div>
+            </div>
+            <div id="detail_10" style="display:none;" class="DescriptionDiv">
+            	                	<input id="btn_1_10" type="button" class="InputButton Select" value="Input" onClick="ShowView(10, 1);">
+                                
+                <input id="btn_2_10" type="button" class="OutputButton" value="Output" onClick="ShowView(10, 2);">
+                <input id="btn_3_10" type="button" class="ErrorButton" value="Errors" onClick="ShowView(10, 3);">
+                
+                <hr />
+                
+                                <div id="detail_1_10" style=" text-align:left;">
+					                            <div class="ApiRow ApiRow_POST">
+                                <div class="TypeDiv">POST PARAM</div>
+                                comment                                <div class="NameDiv">Comment</div>
+                            </div>
+                            
+                                            </div>
+                                
+                <div id="detail_2_10" style=" display:none; text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br />65<br />66<br />67<br />68<br />69<br />70<br />71<br />72<br />73<br /></div><div class="code">{
+    <span class="string">"state"</span>: <span class="string">"Open"</span>, 
+    <span class="string">"assigned_to"</span>: [<span class="number">5</span>], 
+    <span class="string">"id"</span>: <span class="number">6</span>,
+    <span class="string">"comment"</span>: <span class="string">"Thanks for taking care of this for me!"</span>, 
+    <span class="string">"created_by"</span>: 
+    {
+        <span class="string">"first_name"</span>: <span class="string">"Rogier"</span>, 
+        <span class="string">"last_name"</span>: <span class="string">"Boleij"</span>, 
+        <span class="string">"supervisor"</span>: <span class="number">5</span>, 
+        <span class="string">"class_name"</span>: <span class="string">"employee"</span>, 
+        <span class="string">"email"</span>: <span class="string">"r.boleij1@gmail.com"</span>, 
+        <span class="string">"id"</span>: <span class="number">2</span>
+    }, 
+    <span class="string">"last_assigned_to"</span>: 
+    {
+        <span class="string">"class_name"</span>: <span class="string">"supervisor"</span>, 
+        <span class="string">"department"</span>: <span class="number">4</span>, 
+        <span class="string">"employee_number"</span>: <span class="string">"1234567"</span>, 
+        <span class="string">"id"</span>: <span class="number">5</span>, 
+        <span class="string">"max_declaration_price"</span>: <span class="string">"-1"</span>
+    }, 
+    <span class="string">"attachments"</span>: 
+    [
+        {
+            <span class="string">"id"</span>: <span class="number">14</span>, 
+            <span class="string">"name"</span>: <span class="string">"attachment 0"</span>
+        },{
+            <span class="string">"id"</span>: <span class="number">15</span>,
+            <span class="string">"name"</span>: <span class="string">"attachment 1"</span>
+        }
+     ], 
+     <span class="string">"class_name"</span>: <span class="string">"open_declaration"</span>, 
+     <span class="string">"created_at"</span>: <span class="string">"2014-05-25 17:13:13.761000"</span>, 
+     <span class="string">"lines"</span>: 
+     [
+        {
+            <span class="string">"id"</span>: <span class="number">10</span>,
+            <span class="string">"comment"</span>: <span class="string">"line comment"</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.029000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">18</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            } 
+        },{
+            <span class="string">"id"</span>: <span class="number">11</span>,
+            <span class="string">"comment"</span>: <span class="keyword literal">null</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.075000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">64</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            }
+        }
+    ]
+}</div></pre>                </div>
+                <div id="detail_3_10" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Declaration does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie [1] niet gevonden                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 User is not the owner								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie kan niet worden aangepast                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 User is not last assigned								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Kan de declaratie niet goedkeuren. Deze declaratie is niet aan u toegewezen                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 Action not allowed with current state								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie heeft niet de jusite status voor deze actie                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 No post value received								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Geen post ontvangen                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_PUT" onClick="ToggleCollapse(9);">
+                <div class="TypeDiv">PUT</div>
+                /declaration/{id}/forward_to_supervisor                <div class="NameDiv">Forward declaration</div>
+            </div>
+            <div id="detail_9" style="display:none;" class="DescriptionDiv">
+            	                	<input id="btn_1_9" type="button" class="InputButton Select" value="Input" onClick="ShowView(9, 1);">
+                                
+                <input id="btn_2_9" type="button" class="OutputButton" value="Output" onClick="ShowView(9, 2);">
+                <input id="btn_3_9" type="button" class="ErrorButton" value="Errors" onClick="ShowView(9, 3);">
+                
+                <hr />
+                
+                                <div id="detail_1_9" style=" text-align:left;">
+					                            <div class="ApiRow ApiRow_POST">
+                                <div class="TypeDiv">POST PARAM</div>
+                                assigned_to                                <div class="NameDiv">Supervisor id</div>
+                            </div>
+                            
+                                            </div>
+                                
+                <div id="detail_2_9" style=" display:none; text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br />65<br />66<br />67<br />68<br />69<br />70<br />71<br />72<br />73<br /></div><div class="code">{
+    <span class="string">"state"</span>: <span class="string">"Open"</span>, 
+    <span class="string">"assigned_to"</span>: [<span class="number">5</span>], 
+    <span class="string">"id"</span>: <span class="number">6</span>,
+    <span class="string">"comment"</span>: <span class="string">"Thanks for taking care of this for me!"</span>, 
+    <span class="string">"created_by"</span>: 
+    {
+        <span class="string">"first_name"</span>: <span class="string">"Rogier"</span>, 
+        <span class="string">"last_name"</span>: <span class="string">"Boleij"</span>, 
+        <span class="string">"supervisor"</span>: <span class="number">5</span>, 
+        <span class="string">"class_name"</span>: <span class="string">"employee"</span>, 
+        <span class="string">"email"</span>: <span class="string">"r.boleij1@gmail.com"</span>, 
+        <span class="string">"id"</span>: <span class="number">2</span>
+    }, 
+    <span class="string">"last_assigned_to"</span>: 
+    {
+        <span class="string">"class_name"</span>: <span class="string">"supervisor"</span>, 
+        <span class="string">"department"</span>: <span class="number">4</span>, 
+        <span class="string">"employee_number"</span>: <span class="string">"1234567"</span>, 
+        <span class="string">"id"</span>: <span class="number">5</span>, 
+        <span class="string">"max_declaration_price"</span>: <span class="string">"-1"</span>
+    }, 
+    <span class="string">"attachments"</span>: 
+    [
+        {
+            <span class="string">"id"</span>: <span class="number">14</span>, 
+            <span class="string">"name"</span>: <span class="string">"attachment 0"</span>
+        },{
+            <span class="string">"id"</span>: <span class="number">15</span>,
+            <span class="string">"name"</span>: <span class="string">"attachment 1"</span>
+        }
+     ], 
+     <span class="string">"class_name"</span>: <span class="string">"open_declaration"</span>, 
+     <span class="string">"created_at"</span>: <span class="string">"2014-05-25 17:13:13.761000"</span>, 
+     <span class="string">"lines"</span>: 
+     [
+        {
+            <span class="string">"id"</span>: <span class="number">10</span>,
+            <span class="string">"comment"</span>: <span class="string">"line comment"</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.029000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">18</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            } 
+        },{
+            <span class="string">"id"</span>: <span class="number">11</span>,
+            <span class="string">"comment"</span>: <span class="keyword literal">null</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.075000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">64</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            }
+        }
+    ]
+}</div></pre>                </div>
+                <div id="detail_3_9" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Declaration does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie [1] niet gevonden                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 User is not last assigned								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Kan de declaratie niet goedkeuren. Deze declaratie is niet aan u toegewezen                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 Action not allowed with current state								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie heeft niet de jusite status voor deze actie                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_PUT" onClick="ToggleCollapse(8);">
+                <div class="TypeDiv">PUT</div>
+                /declaration/{id}/lock                <div class="NameDiv">Lock declaration</div>
+            </div>
+            <div id="detail_8" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_8" type="button" class="OutputButton Select" value="Output" onClick="ShowView(8, 2);">
+                <input id="btn_3_8" type="button" class="ErrorButton" value="Errors" onClick="ShowView(8, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_8" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br />65<br />66<br />67<br />68<br />69<br />70<br />71<br />72<br />73<br /></div><div class="code">{
+    <span class="string">"state"</span>: <span class="string">"Open"</span>, 
+    <span class="string">"assigned_to"</span>: [<span class="number">5</span>], 
+    <span class="string">"id"</span>: <span class="number">6</span>,
+    <span class="string">"comment"</span>: <span class="string">"Thanks for taking care of this for me!"</span>, 
+    <span class="string">"created_by"</span>: 
+    {
+        <span class="string">"first_name"</span>: <span class="string">"Rogier"</span>, 
+        <span class="string">"last_name"</span>: <span class="string">"Boleij"</span>, 
+        <span class="string">"supervisor"</span>: <span class="number">5</span>, 
+        <span class="string">"class_name"</span>: <span class="string">"employee"</span>, 
+        <span class="string">"email"</span>: <span class="string">"r.boleij1@gmail.com"</span>, 
+        <span class="string">"id"</span>: <span class="number">2</span>
+    }, 
+    <span class="string">"last_assigned_to"</span>: 
+    {
+        <span class="string">"class_name"</span>: <span class="string">"supervisor"</span>, 
+        <span class="string">"department"</span>: <span class="number">4</span>, 
+        <span class="string">"employee_number"</span>: <span class="string">"1234567"</span>, 
+        <span class="string">"id"</span>: <span class="number">5</span>, 
+        <span class="string">"max_declaration_price"</span>: <span class="string">"-1"</span>
+    }, 
+    <span class="string">"attachments"</span>: 
+    [
+        {
+            <span class="string">"id"</span>: <span class="number">14</span>, 
+            <span class="string">"name"</span>: <span class="string">"attachment 0"</span>
+        },{
+            <span class="string">"id"</span>: <span class="number">15</span>,
+            <span class="string">"name"</span>: <span class="string">"attachment 1"</span>
+        }
+     ], 
+     <span class="string">"class_name"</span>: <span class="string">"open_declaration"</span>, 
+     <span class="string">"created_at"</span>: <span class="string">"2014-05-25 17:13:13.761000"</span>, 
+     <span class="string">"lines"</span>: 
+     [
+        {
+            <span class="string">"id"</span>: <span class="number">10</span>,
+            <span class="string">"comment"</span>: <span class="string">"line comment"</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.029000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">18</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            } 
+        },{
+            <span class="string">"id"</span>: <span class="number">11</span>,
+            <span class="string">"comment"</span>: <span class="keyword literal">null</span>, 
+            <span class="string">"receipt_date"</span>: <span class="string">"2014-05-25 19:13:14.075000"</span>, 
+            <span class="string">"cost"</span>: <span class="number">64</span>, 
+            <span class="string">"declaration_sub_type"</span>: 
+            {
+                <span class="string">"declaration_type"</span>: <span class="number">7</span>, 
+                <span class="string">"id"</span>: <span class="number">8</span>, 
+                <span class="string">"name"</span>: <span class="string">"tanken"</span>
+            }, 
+            <span class="string">"declaration_type"</span>: 
+            {
+                <span class="string">"sub_types"</span>: [<span class="number">8</span>, <span class="number">9</span>], 
+                <span class="string">"id"</span>: <span class="number">7</span>, 
+                <span class="string">"name"</span>: <span class="string">"reiskosten"</span>
+            }
+        }
+    ]
+}</div></pre>                </div>
+                <div id="detail_3_8" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Declaration does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie [1] niet gevonden                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 User is not the owner								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie kan niet worden aangepast                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									400 Action not allowed with current state								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie heeft niet de jusite status voor deze actie                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                    <h2>Declaration list<span>/declarations</span></h2>
+        
+                    <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(14);">
+                <div class="TypeDiv">GET</div>
+                /declarations/hr                <div class="NameDiv">Open HR declarations</div>
+            </div>
+            <div id="detail_14" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_14" type="button" class="OutputButton Select" value="Output" onClick="ShowView(14, 2);">
+                <input id="btn_3_14" type="button" class="ErrorButton" value="Errors" onClick="ShowView(14, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_14" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br /></div><div class="code">[
+    {
+        <span class="string">"submitted_to_human_resources_by"</span>: <span class="number">6067380039974912</span>,
+        <span class="string">"created_at"</span>: <span class="string">"2014-04-13 22: 12: 09.712000"</span>,
+        <span class="string">"items_total_price"</span>: <span class="string">"140"</span>,
+        <span class="string">"human_resources_approved_by"</span>: <span class="number">6278486272507904</span>,
+        <span class="string">"locked_at"</span>: <span class="string">"2014-04-17 22: 12: 09.712000"</span>,
+        <span class="string">"state"</span>: <span class="string">"Goedgekeurd"</span>,
+        <span class="string">"human_resources_approved_at"</span>: <span class="string">"2014-04-26 22: 12: 09.712000"</span>,
+        <span class="string">"assigned_to"</span>: 
+        [
+            <span class="number">6067380039974912</span>
+        ],
+        <span class="string">"sent_to_human_resources_at"</span>: <span class="string">"2014-04-18 22: 12: 09.712000"</span>,
+        <span class="string">"created_by"</span>: 
+        {
+            <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+            <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+            <span class="string">"employee_number"</span>: <span class="string">"2"</span>,
+            <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+            <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+            <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>,
+            <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+            <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+        },
+        <span class="string">"comment"</span>: <span class="string">"Verblijfskosten Januari."</span>,
+        <span class="string">"id"</span>: <span class="number">5609983202820096</span>,
+        <span class="string">"will_be_payed_out_on"</span>: <span class="string">"2014-04-30"</span>,
+        <span class="string">"supervisor_approved_at"</span>: <span class="string">"2014-04-18 22: 12: 09.712000"</span>,
+        <span class="string">"items_count"</span>: <span class="string">"2"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"human_resources_approved_declaration"</span>,
+        <span class="string">"supervisor_approved_by"</span>: <span class="number">6067380039974912</span>
+    },{
+        <span class="string">"submitted_to_human_resources_by"</span>: <span class="number">4941480133132288</span>,
+        <span class="string">"supervisor_approved_at"</span>: <span class="string">"2014-05-14 22: 12: 09.534000"</span>,
+        <span class="string">"items_total_price"</span>: <span class="string">"85"</span>,
+        <span class="string">"locked_at"</span>: <span class="string">"2014-05-12 22: 12: 09.534000"</span>,
+        <span class="string">"state"</span>: <span class="string">"Goedgekeurd leidinggevende"</span>,
+        <span class="string">"assigned_to"</span>: 
+        [
+            <span class="number">6067380039974912</span>,
+            <span class="number">4941480133132288</span>
+        ],
+        <span class="string">"sent_to_human_resources_at"</span>: <span class="string">"2014-05-14 22: 12: 09.534000"</span>,
+        <span class="string">"created_by"</span>: 
+        {
+            <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+            <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+            <span class="string">"employee_number"</span>: <span class="string">"2"</span>,
+            <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+            <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+            <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>,
+            <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+            <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+        },
+        <span class="string">"created_at"</span>: <span class="string">"2014-05-11 22: 12: 09.534000"</span>,
+        <span class="string">"comment"</span>: <span class="string">"Belkosten klanten voor project INTEGRITY."</span>,
+        <span class="string">"id"</span>: <span class="number">5750720691175424</span>,
+        <span class="string">"supervisor_comment"</span>: <span class="string">"Prioriteit &amp; classificatie:  ALPHA."</span>,
+        <span class="string">"items_count"</span>: <span class="string">"2"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"supervisor_approved_declaration"</span>,
+        <span class="string">"supervisor_approved_by"</span>: <span class="number">4941480133132288</span>
+    }
+]</div></pre>                </div>
+                <div id="detail_3_14" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized as HR								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd als HR                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(23);">
+                <div class="TypeDiv">GET</div>
+                /declarations/hr_history                <div class="NameDiv">HR declarations</div>
+            </div>
+            <div id="detail_23" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_23" type="button" class="OutputButton Select" value="Output" onClick="ShowView(23, 2);">
+                <input id="btn_3_23" type="button" class="ErrorButton" value="Errors" onClick="ShowView(23, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_23" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br />28<br />29<br />30<br />31<br />32<br />33<br />34<br />35<br />36<br />37<br />38<br />39<br />40<br />41<br />42<br />43<br />44<br />45<br />46<br />47<br />48<br />49<br />50<br />51<br />52<br />53<br />54<br />55<br />56<br />57<br />58<br />59<br />60<br />61<br />62<br />63<br />64<br /></div><div class="code">[
+    {
+        <span class="string">"submitted_to_human_resources_by"</span>: <span class="number">6067380039974912</span>,
+        <span class="string">"created_at"</span>: <span class="string">"2014-04-13 22: 12: 09.712000"</span>,
+        <span class="string">"items_total_price"</span>: <span class="string">"140"</span>,
+        <span class="string">"human_resources_approved_by"</span>: <span class="number">6278486272507904</span>,
+        <span class="string">"locked_at"</span>: <span class="string">"2014-04-17 22: 12: 09.712000"</span>,
+        <span class="string">"state"</span>: <span class="string">"Goedgekeurd"</span>,
+        <span class="string">"human_resources_approved_at"</span>: <span class="string">"2014-04-26 22: 12: 09.712000"</span>,
+        <span class="string">"assigned_to"</span>: 
+        [
+            <span class="number">6067380039974912</span>
+        ],
+        <span class="string">"sent_to_human_resources_at"</span>: <span class="string">"2014-04-18 22: 12: 09.712000"</span>,
+        <span class="string">"created_by"</span>: 
+        {
+            <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+            <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+            <span class="string">"employee_number"</span>: <span class="string">"2"</span>,
+            <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+            <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+            <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>,
+            <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+            <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+        },
+        <span class="string">"comment"</span>: <span class="string">"Verblijfskosten Januari."</span>,
+        <span class="string">"id"</span>: <span class="number">5609983202820096</span>,
+        <span class="string">"will_be_payed_out_on"</span>: <span class="string">"2014-04-30"</span>,
+        <span class="string">"supervisor_approved_at"</span>: <span class="string">"2014-04-18 22: 12: 09.712000"</span>,
+        <span class="string">"items_count"</span>: <span class="string">"2"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"human_resources_approved_declaration"</span>,
+        <span class="string">"supervisor_approved_by"</span>: <span class="number">6067380039974912</span>
+    },{
+        <span class="string">"submitted_to_human_resources_by"</span>: <span class="number">4941480133132288</span>,
+        <span class="string">"supervisor_approved_at"</span>: <span class="string">"2014-05-14 22: 12: 09.534000"</span>,
+        <span class="string">"items_total_price"</span>: <span class="string">"85"</span>,
+        <span class="string">"locked_at"</span>: <span class="string">"2014-05-12 22: 12: 09.534000"</span>,
+        <span class="string">"state"</span>: <span class="string">"Goedgekeurd leidinggevende"</span>,
+        <span class="string">"assigned_to"</span>: 
+        [
+            <span class="number">6067380039974912</span>,
+            <span class="number">4941480133132288</span>
+        ],
+        <span class="string">"sent_to_human_resources_at"</span>: <span class="string">"2014-05-14 22: 12: 09.534000"</span>,
+        <span class="string">"created_by"</span>: 
+        {
+            <span class="string">"last_name"</span>: <span class="string">"Hein"</span>,
+            <span class="string">"email"</span>: <span class="string">"developers.42IN11EWa@gmail.com"</span>,
+            <span class="string">"employee_number"</span>: <span class="string">"2"</span>,
+            <span class="string">"first_name"</span>: <span class="string">"Piet"</span>,
+            <span class="string">"department"</span>: <span class="number">5785905063264256</span>,
+            <span class="string">"supervisor"</span>: <span class="number">6067380039974912</span>,
+            <span class="string">"id"</span>: <span class="number">6630329993396224</span>,
+            <span class="string">"class_name"</span>: <span class="string">"employee"</span>
+        },
+        <span class="string">"created_at"</span>: <span class="string">"2014-05-11 22: 12: 09.534000"</span>,
+        <span class="string">"comment"</span>: <span class="string">"Belkosten klanten voor project INTEGRITY."</span>,
+        <span class="string">"id"</span>: <span class="number">5750720691175424</span>,
+        <span class="string">"supervisor_comment"</span>: <span class="string">"Prioriteit &amp; classificatie:  ALPHA."</span>,
+        <span class="string">"items_count"</span>: <span class="string">"2"</span>,
+        <span class="string">"class_name"</span>: <span class="string">"supervisor_approved_declaration"</span>,
+        <span class="string">"supervisor_approved_by"</span>: <span class="number">4941480133132288</span>
+    }
+]</div></pre>                </div>
+                <div id="detail_3_23" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized as HR								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd als HR                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                    <h2>Attachment<span>/attachment</span></h2>
+        
+                    <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(22);">
+                <div class="TypeDiv">GET</div>
+                /attachment/{id}                <div class="NameDiv">Attachment token</div>
+            </div>
+            <div id="detail_22" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_22" type="button" class="OutputButton Select" value="Output" onClick="ShowView(22, 2);">
+                <input id="btn_3_22" type="button" class="ErrorButton" value="Errors" onClick="ShowView(22, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_22" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br /></div><div class="code">{
+    <span class="identifier">token</span>: <span class="string">"Hduya237JIsdh"</span>
+}</div></pre>                </div>
+                <div id="detail_3_22" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 User does not have view rights for declaration								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U heeft niet de juiste rechten om deze declaratie te openen                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Attachment does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Attachment [1] niet gevonden                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(30);">
+                <div class="TypeDiv">GET</div>
+                /attachment/{id}/{token}                <div class="NameDiv">Attachment binary</div>
+            </div>
+            <div id="detail_30" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_30" type="button" class="OutputButton Select" value="Output" onClick="ShowView(30, 2);">
+                <input id="btn_3_30" type="button" class="ErrorButton" value="Errors" onClick="ShowView(30, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_30" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br /></div><div class="code"><span class="identifier">iVBORw0KGgoAAAANSUhEUgAAABEAAAAgCAIAAAB7KQSlAAAAAXNSR0IArs4c6QAAAARnQU1BAACx</span>
+<span class="identifier">jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAxSURBVDhPY</span>/<span class="identifier">zy8y8DiYAJSpMCRvWM6gGBwayH</span>
+<span class="number">8</span><span class="identifier">f</span><span class="comment doc">///1Am0WA03Eb1gMCoHnL0MDAAAAubBiah69TBAAAAAElFTkSuQmCC</span></div></pre>                </div>
+                <div id="detail_3_30" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Attachment does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Attachment [1] niet gevonden                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                    <h2>Authencatie<span>/auth</span></h2>
+        
+                    <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(24);">
+                <div class="TypeDiv">GET</div>
+                /auth                <div class="NameDiv">Login status</div>
+            </div>
+            <div id="detail_24" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_24" type="button" class="OutputButton Select" value="Output" onClick="ShowView(24, 2);">
+                <input id="btn_3_24" type="button" class="ErrorButton" value="Errors" onClick="ShowView(24, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_24" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br /></div><div class="code">{
+    <span class="string">"person_id"</span>: <span class="number">6630329993396224</span>,
+    <span class="string">"is_logged_in"</span>: <span class="keyword literal">true</span>
+}</div></pre>                </div>
+                <div id="detail_3_24" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_POST" onClick="ToggleCollapse(25);">
+                <div class="TypeDiv">POST</div>
+                /auth/login                <div class="NameDiv">Login</div>
+            </div>
+            <div id="detail_25" style="display:none;" class="DescriptionDiv">
+            	                	<input id="btn_1_25" type="button" class="InputButton Select" value="Input" onClick="ShowView(25, 1);">
+                                
+                <input id="btn_2_25" type="button" class="OutputButton" value="Output" onClick="ShowView(25, 2);">
+                <input id="btn_3_25" type="button" class="ErrorButton" value="Errors" onClick="ShowView(25, 3);">
+                
+                <hr />
+                
+                                <div id="detail_1_25" style=" text-align:left;">
+					                            <div class="ApiRow ApiRow_POST">
+                                <div class="TypeDiv">POST PARAM</div>
+                                email                                <div class="NameDiv">Email of employee</div>
+                            </div>
+                            
+                                                        <div class="ApiRow ApiRow_POST">
+                                <div class="TypeDiv">POST PARAM</div>
+                                password                                <div class="NameDiv">Password of employee</div>
+                            </div>
+                            
+                                            </div>
+                                
+                <div id="detail_2_25" style=" display:none; text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br /></div><div class="code">{
+    <span class="string">"person_id"</span>: <span class="number">6630329993396224</span>,
+    <span class="string">"token"</span>: <span class="string">"6630329993396224,UcpQ2bZgSXueHFMJ"</span>,
+    <span class="string">"is_logged_in"</span>: <span class="keyword literal">true</span>
+}</div></pre>                </div>
+                <div id="detail_3_25" style=" display:none; text-align:left;">
+                	<div class="ErrorDiv">Geen errors gevonden</div>                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(26);">
+                <div class="TypeDiv">GET</div>
+                /auth/logout                <div class="NameDiv">Logout</div>
+            </div>
+            <div id="detail_26" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_26" type="button" class="OutputButton Select" value="Output" onClick="ShowView(26, 2);">
+                <input id="btn_3_26" type="button" class="ErrorButton" value="Errors" onClick="ShowView(26, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_26" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br /></div><div class="code">{
+    <span class="string">"person_id"</span>: <span class="number">0</span>,
+    <span class="string">"is_logged_in"</span>: <span class="keyword literal">false</span>
+}</div></pre>                </div>
+                <div id="detail_3_26" style=" display:none; text-align:left;">
+                	<div class="ErrorDiv">Geen errors gevonden</div>                </div>
+                
+            </div>
+            
+                    <h2>Declaration types<span>/declarationtypes</span></h2>
+        
+                    <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(29);">
+                <div class="TypeDiv">GET</div>
+                /declarationsubtypes                <div class="NameDiv">Declaration subtype list</div>
+            </div>
+            <div id="detail_29" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_29" type="button" class="OutputButton Select" value="Output" onClick="ShowView(29, 2);">
+                <input id="btn_3_29" type="button" class="ErrorButton" value="Errors" onClick="ShowView(29, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_29" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br /></div><div class="code">[
+    {
+        <span class="string">"name"</span>: <span class="string">"Zakelijke lunch/Diner met relaties"</span>,
+        <span class="string">"id"</span>: <span class="number">5997011295797248</span>
+    },{
+        <span class="string">"name"</span>:<span class="string">"Logies/Verblijfskosten (eventueel incl. maaltijd)"</span>,
+        <span class="string">"id"</span>:<span class="number">5434061342375936</span>
+    }
+]</div></pre>                </div>
+                <div id="detail_3_29" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(28);">
+                <div class="TypeDiv">GET</div>
+                /declarationtype/{id}                <div class="NameDiv">Declaration subtype list of type</div>
+            </div>
+            <div id="detail_28" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_28" type="button" class="OutputButton Select" value="Output" onClick="ShowView(28, 2);">
+                <input id="btn_3_28" type="button" class="ErrorButton" value="Errors" onClick="ShowView(28, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_28" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br /></div><div class="code">[
+    {
+        <span class="string">"name"</span>: <span class="string">"Zakelijke lunch/Diner met relaties"</span>,
+        <span class="string">"id"</span>: <span class="number">5997011295797248</span>
+    },{
+        <span class="string">"name"</span>:<span class="string">"Logies/Verblijfskosten (eventueel incl. maaltijd)"</span>,
+        <span class="string">"id"</span>:<span class="number">5434061342375936</span>
+    }
+]</div></pre>                </div>
+                <div id="detail_3_28" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									400 Id not correct								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Id is geen correcte waarde (abcdef)                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+																<div class="ApiRow" style="padding-left:10px;">
+									404 Declaration type does not exist								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	Declaratie type [1] bestaat niet                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                        <div class="ApiRow ApiRow_GET" onClick="ToggleCollapse(27);">
+                <div class="TypeDiv">GET</div>
+                /declarationtypes                <div class="NameDiv">Declaration type list</div>
+            </div>
+            <div id="detail_27" style="display:none;" class="DescriptionDiv">
+            	                
+                <input id="btn_2_27" type="button" class="OutputButton Select" value="Output" onClick="ShowView(27, 2);">
+                <input id="btn_3_27" type="button" class="ErrorButton" value="Errors" onClick="ShowView(27, 3);">
+                
+                <hr />
+                
+                                
+                <div id="detail_2_27" style="  text-align:left;">
+                	<pre class="source-code java"><div class="lines">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20<br />21<br />22<br />23<br />24<br />25<br />26<br />27<br /></div><div class="code">[
+    {
+        <span class="string">"id"</span>: <span class="number">4871111388954624</span>
+        <span class="string">"name"</span>: <span class="string">"Maaltijd/Consumpties/Verblijf"</span>,
+        <span class="string">"sub_types"</span>: 
+        [
+            <span class="number">5997011295797248</span>,
+            <span class="number">5434061342375936</span>,
+            <span class="number">6559961249218560</span>,
+            <span class="number">4730373900599296</span>,
+            <span class="number">5856273807441920</span>,
+            <span class="number">5293323854020608</span>
+        ],
+    },{
+        <span class="string">"id"</span>: <span class="number">4871111388954625</span>
+        <span class="string">"name"</span>: <span class="string">"Reiskosten"</span>,
+        <span class="string">"sub_types"</span>: 
+        [
+            <span class="number">5997011295797248</span>,
+            <span class="number">5434061342375936</span>,
+            <span class="number">6559961249218560</span>,
+            <span class="number">4730373900599296</span>,
+            <span class="number">5856273807441920</span>,
+            <span class="number">5293323854020608</span>
+        ],
+    }
+]</div></pre>                </div>
+                <div id="detail_3_27" style=" display:none; text-align:left;">
+                									<div class="ApiRow" style="padding-left:10px;">
+									401 Not authorized								</div>
+								<div class="ApiRow" style="border:none; margin-bottom:10px; color:#555;">
+                                	U bent niet ingelogd                                </div>
+                                
+                                
+								                </div>
+                
+            </div>
+            
+                </div>
+    <br /><br /><br />
+    </body>
+</html>
