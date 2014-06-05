@@ -151,6 +151,16 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
 				showMessage("Kan de declaratie niet annuleren vanwege een onbekende fout.", "Error!");
 			}
 		});
+
+		request.done(function(){
+			for(var i = 0 ; i < $scope.declarationList.length ; i++){
+				if($scope.declarationList[i].id == $scope.currentdeclaration.id) {
+					$scope.declarationList.splice(i, 1);
+					$scope.$apply();
+					break;
+				}
+			}
+		});
   	}
 });
 
