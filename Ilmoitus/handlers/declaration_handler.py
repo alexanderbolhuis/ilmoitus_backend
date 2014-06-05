@@ -143,150 +143,62 @@ class ApproveByHumanResourcesHandler(BaseRequestHandler):
 
 class NewDeclarationHandler(BaseRequestHandler):
     def post(self):
-        #Checks (break when fails)
         self.is_logged_in()
+        declaration_data = has_post(self, "declaration", "declaratie", True, False)
+        is_complete_dict(self, declaration_data, ["comment", "lines", "supervisor"], "declaration")
 
-        # Check if body is set
-        post_data = None
-        try:
-            post_data = json.loads(self.request.body)
-        except ValueError:
-            if self.request.body is None or len(self.request.body) <= 0:
-                give_error_response(self, 400, "Er is geen declaratie opgegeven om aan te maken.",
-                                    "Request body was None.")
+        comment = declaration_data["comment"]
+        declaration_lines_data = declaration_data["lines"]
+        assigned_to = find_employee(self, declaration_data["supervisor"])
+        if_employee_is_supervisor(self, assigned_to)
 
-        if post_data is None:
-            give_error_response(self, 400, "Er is geen declaratie opgegeven om aan te maken.",
-                                "Request.body did not contain valid json data")
+        if "attachments" in declaration_data.keys():
+            declaration_attachments_data = declaration_data["attachments"]
+        else:
+            declaration_attachments_data = []
 
-        # Check if body contains declaration data
-        declaration_data = None
-        try:
-            declaration_data = post_data["declaration"]
-        except ValueError:
-            give_error_response(self, 400, "Er is geen declaratie opgegeven om aan te maken.",
-                                    "Request body was None.")
+        #Check lines and attachments
+        for line in declaration_lines_data:
+            is_complete_dict(self, line, ["receipt_date", "cost", "declaration_sub_type"], "declaration line")
+            convert_to_float(self, line["cost"])
+            find_declaration_sub_type(self, line["declaration_sub_type"])
 
-        # Check if body contains declarationlines
-        declarationlines_data = None
-        try:
-            declarationlines_data = declaration_data["lines"]
-        except ValueError:
-            give_error_response(self, 400, "Er zijn geen declaratieitems opgegeven om aan te maken.",
-                                    "Request body was None.")
-
-        # Check if declaration has owner and assigned to values (mandatory)
-        try:
-            assigned_to = declaration_data["supervisor"]
-        except Exception:
-            give_error_response(self, 400, "De opgegeven data mist waardes voor een declaratie.",
-                                "The body misses keys.")
-
-
-        # Check if assigned_to is a valid user
-        try:
-            assigned_to = Person.get_by_id(int(assigned_to))
-        except Exception:
-            give_error_response(self, 400, "De supervisor is niet bekent in het systeem.",
-                                "The supervisor is unknown.")
-
-        # Check if assigned_to is a supervisor
-        if assigned_to.class_name != "supervisor":
-            give_error_response(self, 400, "De supervisor is niet bekent in het systeem.",
-                                "The supervisor is unknown.")
-
-        # Check if each declarationline has a receipt_date, a cost, and a declaration_sub_type
-        try:
-            for line in declarationlines_data:
-                line["receipt_date"]
-                line["cost"]
-                line["declaration_sub_type"]
-        except Exception:
-            give_error_response(self, 400, "De opgegeven data mist waardes voor een declaratieline.",
-                                "The body misses keys.")
-
-        # Check if declaration subtypes exist
-        for line in declarationlines_data:
-            sub_type = DeclarationSubType.get_by_id(int(line["declaration_sub_type"]))
-            if sub_type is None:
-                give_error_response(self, 400, "De declaratie_sub_type bestaat niet.",
-                                    "The declaration_sub_type is unknown.")
-
-        if "attachments" in declaration_data:
-            try:
-                for attachment_data in declaration_data["attachments"]:
-                    attachment_data["name"]
-                    attachment_data["file"]
-            except KeyError:
-                give_error_response(self, 400, "Kan geen declaratie toevoegen. De opgestuurde bijlage gegevens "
-                                               "kloppen niet.",
-                                    "The body misses keys at an attachment.")
-
-            for attachment_data in declaration_data["attachments"]:
-                data = attachment_data["file"].split(":")[0]
-                mime = attachment_data["file"].split(":")[1].split(";")[0]
-                base = attachment_data["file"].split(":")[1].split(";")[1].split(",")[0]
-
-                if data != "data" or base != "base64":
-                    give_error_response(self, 400, "Kan geen declaratie toevoegen. De opgestuurde bijlage gegevens "
-                                                       "kloppen niet.",
-                                        "The base64 string is incorrect.")
-
-                if mime != "application/pdf" and mime.split("/")[0] != "image":
-                    give_error_response(self, 400, "Kan geen declaratie toevoegen. Alleen pdf's of images zijn toegestaan.",
-                                        "MimeType does not equal application/pdf or image/*", more_info=mime)
+        for attachment_data in declaration_attachments_data:
+            is_complete_dict(self, attachment_data, ["name", "file"], "declaration attachment")
+            is_valid_declaration_attachment(self, attachment_data)
 
         # Post declaration
         declaration = Declaration()
         declaration.class_name = "open_declaration"
         declaration.assigned_to = [assigned_to.key]
         declaration.created_by = self.logged_in_person().key
-        declaration.comment = declaration_data["comment"]
+        declaration.comment = comment
         declaration.items_count = 0
         declaration.items_total_price = 0
         declaration.put()
 
-        posted_lines = []
-        # Post declarationlines
-        for line in declarationlines_data:
+        #Save lines / attachments
+        for line in declaration_lines_data:
             newline = DeclarationLine()
-
-            try:
-                newline.cost = int(line["cost"])
-                declaration.items_count += 1
-                declaration.items_total_price += newline.cost
-            except Exception:
-                give_error_response(self, 400, "De opgegeven data bevat foute waardes voor een declaratieline.",
-                                "The body contains wrong values.")
-
+            newline.cost = convert_to_float(self, line["cost"])
             newline.receipt_date = dateutil.parser.parse(line["receipt_date"])
-            newline.declaration_sub_type = DeclarationSubType.get_by_id(int(line["declaration_sub_type"])).key
+            newline.declaration_sub_type = DeclarationSubType.get_by_id(long(line["declaration_sub_type"])).key
             newline.put()
-            posted_lines.append(newline)
 
-        declaration.lines = map(lambda line: line.key, posted_lines)
+            declaration.items_count += 1
+            declaration.items_total_price += newline.cost
+            declaration.lines.append(newline.key)
+
+        for attachment_data in declaration_attachments_data:
+            attachment = Attachment()
+            attachment.declaration = declaration.key
+            attachment.name = attachment_data["name"]
+            attachment.file = attachment_data["file"]
+            attachment.put()
+            declaration.attachments.append(attachment.key)
+
         declaration.put()
-
-        posted_attachments = []
-        if "attachments" in declaration_data:
-            try:
-                for attachment_data in declaration_data["attachments"]:
-                    attachment = Attachment()
-                    attachment.declaration = declaration.key
-                    attachment.name = attachment_data["name"]
-                    attachment.file = attachment_data["file"]
-                    attachment.put()
-                    posted_attachments.append(attachment)
-            except Exception:
-                give_error_response(self, 400, "Kan geen declaratie toevoegen. De opgestuurde data bevat foute "
-                                               "waardes voor een bijlage.",
-                                    "The body contains wrong values.")
-
-        declaration.attachments = map(lambda attachment: attachment.key, posted_attachments)
-        declaration.put()
-
-        data_dict = declaration.get_object_as_full_data_dict()
-        give_response(self, json.dumps(data_dict))
+        give_response(self, json.dumps(declaration.get_object_as_full_data_dict()))
 
 
 class SpecificDeclarationHandler(BaseRequestHandler):
@@ -299,6 +211,7 @@ class SpecificDeclarationHandler(BaseRequestHandler):
         data_dict = declaration.get_object_as_full_data_dict()
         give_response(self, json.dumps(data_dict))
 
+    #TODO: Unittest
     def delete(self, declaration_id):
         self.is_logged_in()
         declaration = find_declaration(self, declaration_id)
@@ -310,6 +223,88 @@ class SpecificDeclarationHandler(BaseRequestHandler):
         declaration.key.delete()
 
         give_response(self, json.dumps({'success': 'true'}))
+
+    #TODO: Unittest
+    def put(self, declaration_id):
+        self.is_logged_in()
+
+        #Check requested declaration
+        declaration = find_declaration(self, declaration_id)
+        is_declaration_creator(self, declaration, self.logged_in_person())
+        is_declaration_state(self, declaration, "open_declaration")
+
+        #Check received declaration data
+        declaration_data = has_post(self, "declaration", "declaratie", True, False)
+        is_complete_dict(self, declaration_data, ["comment", "lines", "supervisor"], "declaration")
+        assigned_to = find_employee(self, declaration_data["supervisor"])
+        if_employee_is_supervisor(self, assigned_to)
+
+        comment = declaration_data["comment"]
+        declaration_lines_data = declaration_data["lines"]
+        if "attachments" in declaration_data.keys():
+            declaration_attachments_data = declaration_data["attachments"]
+        else:
+            declaration_attachments_data = []
+
+        #Check lines and attachments
+        for line in declaration_lines_data:
+            is_complete_dict(self, line, ["receipt_date", "cost", "declaration_sub_type"], "declaration line")
+            find_declaration_sub_type(self, line["declaration_sub_type"])
+            convert_to_float(self, line["cost"])
+
+        for attachment_data in declaration_attachments_data:
+            if "id" not in attachment_data.keys() or attachment_data["id"] == "0":
+                is_complete_dict(self, attachment_data, ["name", "file"], "declaration attachment")
+                is_valid_declaration_attachment(self, attachment_data)
+            else:
+                is_complete_dict(self, attachment_data, ["name", "id"], "declaration attachment")
+
+        # Reset declaration
+        declaration.comment = comment
+        declaration.items_count = 0
+        declaration.items_total_price = 0
+        declaration.assigned_to = [assigned_to.key]
+        declaration.lines = []
+        declaration.put()
+
+        # Lines (Delete all / Add)
+        ndb.delete_multi(declaration.lines)
+        for line in declaration_lines_data:
+            newline = DeclarationLine()
+            newline.cost = convert_to_float(self, line["cost"])
+            newline.receipt_date = dateutil.parser.parse(line["receipt_date"])
+            newline.declaration_sub_type = DeclarationSubType.get_by_id(long(line["declaration_sub_type"])).key
+            newline.put()
+
+            declaration.items_count += 1
+            declaration.items_total_price += newline.cost
+            declaration.lines.append(newline.key)
+
+        # Attachments (Add / Delete)
+        attachments = []
+        for attachment_id in declaration.attachments:
+            found = False
+            for attachment_data in declaration_attachments_data:
+                if "id" in attachment_data.keys() and attachment_data["id"] == str(attachment_id.integer_id()):
+                    found = True
+
+            if not found:
+                ndb.delete(attachment_id)
+            else:
+                attachments.append(attachment_id)
+
+        for attachment_data in declaration_attachments_data:
+            if "file" in attachment_data.keys() and attachment_data["file"] != "":
+                attachment = Attachment()
+                attachment.declaration = declaration.key
+                attachment.name = attachment_data["name"]
+                attachment.file = attachment_data["file"]
+                attachment.put()
+                attachments.append(attachment.key)
+
+        declaration.attachments = attachments
+        declaration.put()
+        give_response(self, json.dumps(declaration.get_object_as_full_data_dict()))
 
 
 class CreateAttachmentTokenHandler(BaseRequestHandler):

@@ -79,7 +79,7 @@ class Declaration(ndb.Model):
     attachments = ndb.KeyProperty(kind="Attachment", repeated=True)
     comment = ndb.StringProperty()
     items_count = ndb.IntegerProperty()
-    items_total_price = ndb.IntegerProperty()
+    items_total_price = ndb.FloatProperty()
     supervisor_comment = ndb.StringProperty()
     human_resources_comment = ndb.StringProperty()
     declined_by = ndb.KeyProperty(kind=Person)
@@ -258,7 +258,7 @@ class DeclarationType(ndb.Model):
 # DeclarationLine Model class
 class DeclarationLine(ndb.Model):
     receipt_date = ndb.DateTimeProperty()
-    cost = ndb.IntegerProperty()
+    cost = ndb.FloatProperty()
     declaration_sub_type = ndb.KeyProperty(kind=DeclarationSubType)
     comment = ndb.StringProperty()
 

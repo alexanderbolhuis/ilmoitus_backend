@@ -3,12 +3,7 @@ from ilmoitus_auth import *
 
 
 def find_declaration(handler, declaration_id):
-    safe_id = 0
-    try:
-        safe_id = long(declaration_id)
-    except ValueError:
-        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(declaration_id) + ")")
-
+    safe_id = convert_to_long(handler, declaration_id)
     declaration = Declaration.get_by_id(safe_id)
     if declaration is None:
         give_error_response(handler, 404, "Declaratie ["+str(safe_id)+"] niet gevonden",
@@ -18,12 +13,7 @@ def find_declaration(handler, declaration_id):
 
 
 def find_employee(handler, employee_id):
-    safe_id = 0
-    try:
-        safe_id = long(employee_id)
-    except ValueError:
-        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(employee_id) + ")")
-
+    safe_id = convert_to_long(handler, employee_id)
     employee = Person.get_by_id(safe_id)
     if employee is None:
         give_error_response(handler, 404, "Werknemer ["+str(safe_id)+"] niet gevonden",
@@ -33,12 +23,7 @@ def find_employee(handler, employee_id):
 
 
 def find_attachment(handler, attachment_id):
-    safe_id = 0
-    try:
-        safe_id = long(attachment_id)
-    except ValueError:
-        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(attachment_id) + ")")
-
+    safe_id = convert_to_long(handler, attachment_id)
     attachment = Attachment.get_by_id(safe_id)
     if attachment is None:
         give_error_response(handler, 404, "Attachment ["+str(safe_id)+"] niet gevonden",
@@ -48,12 +33,7 @@ def find_attachment(handler, attachment_id):
 
 
 def find_declaration_type(handler, declaration_type_id):
-    safe_id = 0
-    try:
-        safe_id = long(declaration_type_id)
-    except ValueError:
-        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(declaration_type_id) + ")")
-
+    safe_id = convert_to_long(handler, declaration_type_id)
     declaration = DeclarationType.get_by_id(safe_id)
     if declaration is None:
         give_error_response(handler, 404, "Declaratie type ["+str(safe_id)+"] niet gevonden",
@@ -67,7 +47,7 @@ def find_declaration_type(handler, declaration_type_id):
 
 
 def is_declaration_creator(handler, declaration, employee):
-    if declaration.created_by != employee:
+    if declaration.created_by.key.integer_id() != employee.key.integer_id():
         give_error_response(handler, 401, "Declaratie kan niet worden aangepast.",
                                           "User is not the owner")
 
@@ -91,11 +71,14 @@ def is_declaration_state(handler, declaration, class_name):
                                           "Expected state: " + class_name + " Received state: " + declaration.class_name)
 
 
-def has_post(handler, post, readable_post, break_if_missing=False):
+def has_post(handler, post, readable_post, break_if_missing=False, stringify=True):
     if handler.request.body is not None:
         request_body = json.loads(handler.request.body)
         if post in request_body.keys() and request_body[post] is not None and request_body[post] != "":
-            return str(request_body[post])
+            if stringify:
+                return str(request_body[post])
+            else:
+                return request_body[post]
     if break_if_missing:
         give_error_response(handler, 400, "Geen " + readable_post + " ontvangen.", post + " is None")
 
@@ -122,3 +105,58 @@ def is_allowed_declaration_viewer(handler, declaration, current_user):
        current_user.class_name != 'human_resources':
 
         give_error_response(handler, 401, "U heeft niet de juiste rechten om deze declaratie te openen")
+
+
+def if_employee_is_supervisor(handler, current_person):
+    if current_person.class_name != "supervisor":
+        give_error_response(handler, 401, "Kan de declaratie niet doorsturen. Deze persoon is geen leidinggevende",
+                                          "current_person_object's id is not an supervisor")
+
+
+def convert_to_long(handler, string):
+    safe_id = 0
+    try:
+        safe_id = long(string)
+    except ValueError:
+        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(string) + ")")
+
+    return safe_id
+
+
+def convert_to_float(handler, string):
+    safe_id = 0
+    try:
+        safe_id = float(string)
+    except ValueError:
+        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(string) + ")")
+
+    return safe_id
+
+
+def find_declaration_sub_type(handler, sub_id):
+    safe_id = convert_to_long(handler, sub_id)
+    sub_type = DeclarationSubType.get_by_id(safe_id)
+    if sub_type is None:
+        give_error_response(handler, 404, "sub type ["+str(safe_id)+"] niet gevonden", "sub_type is None")
+    return sub_type
+
+
+def is_complete_dict(handler, dictcoll, elements, list_name):
+    for key in elements:
+        if key not in dictcoll.keys() or dictcoll[key] is None or dictcoll[key] == "":
+            give_error_response(handler, 400, "Key "+key+" niet gevonden in " + list_name,
+                                              "Key "+key+" not found")
+
+
+def is_valid_declaration_attachment(handler, attachment):
+    data = attachment["file"].split(":")[0]
+    mime = attachment["file"].split(":")[1].split(";")[0]
+    base = attachment["file"].split(":")[1].split(";")[1].split(",")[0]
+
+    if data != "data" or base != "base64":
+        give_error_response(handler, 400, "Kan geen declaratie toevoegen. De opgestuurde bijlage gegevens kloppen niet.",
+                                          "The base64 string is incorrect.")
+
+    if mime != "application/pdf" and mime.split("/")[0] != "image":
+        give_error_response(handler, 400, "Kan geen declaratie toevoegen. Alleen pdf's of images zijn toegestaan.",
+                                          "MimeType does not equal application/pdf or image/*", more_info=mime)
