@@ -141,8 +141,16 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
 	
 	//Delete declaration button
 	$scope.deleteDeclarationDetailsBtn = function(declarationid){
- 		//TODO: bind DELETE handler
-		alert('Consider declaration "'+$scope.currentdeclaration.id+'" deleted.');
+		var request = $.ajax({
+			type: "DELETE",
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/declaration/"+$scope.currentdeclaration.id,
+			crossDomain: true,
+			error: function(jqXHR, textStatus, errorThrown){
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+				showMessage("Kan de declaratie niet annuleren vanwege een onbekende fout.", "Error!");
+			}
+		});
   	}
 });
 
