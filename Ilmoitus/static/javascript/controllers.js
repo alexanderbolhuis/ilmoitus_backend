@@ -70,8 +70,12 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 		$state.go('login');
 	}
 
-	$scope.navBtnClick = function(targetState) {
-		$state.go(targetState);
+	$scope.navBtnClick = function(targetState, params) {
+		if(targetState == "template.declarationForm") {
+			$state.go(targetState, {action: "new", declarationId: ""});
+		} else {
+			$state.go(targetState);
+		}
 	}
 
 	$scope.navBtnSelect = function (navBtnId) {
@@ -142,9 +146,7 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
   	}
 });
 
-ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
-	$scope.navBtnSelect("newDeclarationBtn");
-	$(".datepicker").datepicker();
+ilmoitusApp.controller('declarationFormController', function($scope, $state, $stateParams) {
 	
 	//Declaration fields
 	$scope.declaration = { comment: "", lines:[{}], attachments:[{}] };
@@ -155,6 +157,83 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 	//Declaration type fields
 	$scope.declaration_types = [];
 	$scope.declaration_sub_types = [];
+	
+	// Get declaration information if we need to edit a declaration. 
+	editMode = $stateParams.action == "edit";
+	if(editMode) {
+		$scope.declarationId = $stateParams.declarationId;
+		//Get declaration details
+		var declarationRequest = $.ajax({
+			type: "GET",
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/declaration/"+$scope.declarationId,
+			crossDomain: true,
+			error: function(jqXHR, textStatus, errorThrown){
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			}
+		});
+
+		declarationRequest.done(function(data){
+			//Change all the received declaration data to the way the form needs them.
+			$scope.declaration = data;
+			$scope.declaration.supervisor = $scope.declaration.last_assigned_to.id;
+			if($scope.declaration.attachments.length > 0){
+				$scope.selectedattachment = $scope.declaration.attachments[0];
+			}
+			for(var i = 0; i < $scope.declaration.lines.length; i++){ 
+				$scope.declaration.lines[i].receipt_date = new Date($scope.declaration.lines[i].receipt_date).toISOString().substring(0, 10);
+				$scope.declaration.lines[i].cost = $scope.declaration.lines[i].cost+"";
+				$scope.declaration.lines[i].declaration_type = $scope.declaration.lines[i].declaration_type.id;
+				$scope.loadSubList(i);
+				$scope.declaration.lines[i].declaration_sub_type = $scope.declaration.lines[i].declaration_sub_type.id;
+				$scope.checkFields(i);
+			}
+			//Add extra empty line so new lines can be added.
+			$scope.addRow();
+			$scope.$apply();
+		});
+	} else {
+		$scope.navBtnSelect("newDeclarationBtn");
+	}
+
+	//Preload supervisors
+	var supervisorRequest = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/current_user/supervisors",
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+	supervisorRequest.done(function(data){
+		$scope.supervisorList = data;
+		if(data.length > 0){
+			if(!editMode) {
+				$scope.declaration.supervisor = data[0].id;
+			}
+		}
+		$scope.$apply();
+	});
+	
+	//Preload declaration types
+	var declarationtypeRequest = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/declarationtypes",
+		crossDomain: true,
+		error: function(jqXHR, textStatus, errorThrown){
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+		}
+	});
+	declarationtypeRequest.done(function(data){
+		$scope.declaration_types = data;
+		$scope.declaration_types.unshift({ id:0, name:"<selecteer>" });
+		if(!editMode) {
+			$scope.declaration.lines[0].declaration_type = $scope.declaration_types[0].id;
+		}
+		$scope.$apply();
+	});
 	
 	var getSubtypeByID = function(row, id){
 		if($scope.declaration_sub_types[row]){
@@ -179,42 +258,6 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 		
 		return null;
 	}
-	
-	//Preload supervisors
-	var request = $.ajax({
-		type: "GET",
-		headers: {"Authorization": sessionStorage.token},
-		url: baseurl + "/current_user/supervisors",
-		crossDomain: true,
-		error: function(jqXHR, textStatus, errorThrown){
-			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
-		}
-	});
-	request.done(function(data){
-		$scope.supervisorList = data;
-		if(data.length > 0){
-			$scope.declaration.supervisor = data[0].id;
-		}
-		$scope.$apply();
-	});
-	
-	//Preload declaration types
-	var request = $.ajax({
-		type: "GET",
-		headers: {"Authorization": sessionStorage.token},
-		url: baseurl + "/declarationtypes",
-		crossDomain: true,
-		error: function(jqXHR, textStatus, errorThrown){
-			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
-		}
-	});
-	request.done(function(data){
-		$scope.declaration_types = data;
-		$scope.declaration_types.unshift({ id:0, name:"<selecteer>" });
-		$scope.declaration.lines[0].declaration_type = $scope.declaration_types[0].id;
-		$scope.$apply();
-	});
-	
 	
 	$scope.postDeclaration = function() {
 		var declaration = $scope.declaration;
@@ -252,23 +295,35 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 			showMessage(errorMessage, "Fout");
 			return;
 		}
-
+		
 		//Remove the last empty line and send the declaration data
 		declaration.lines.splice(declaration.lines.length - 1, 1);
 		
+		if (editMode) {
+			var type = "PUT";
+			var url = "/declaration/"+declaration.id;
+		} else {
+			var type = "POST";
+			var url = "/declaration/";
+		}
+
 		var request = $.ajax({
-			type: "POST",
+			type: type,
 			headers: {"Authorization": sessionStorage.token},
-			url: baseurl + "/declaration",
+			url: baseurl + url,
 			crossDomain: true,
 			data: JSON.stringify({ 'declaration':declaration }),
 			error: function(jqXHR, textStatus, errorThrown){
 				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+				showMessage("Kan de declaratie niet verzenden vanwege een onbekende fout.", "Fout");
 			}
 		});
 		request.done(function(data){
-			//TODO: check succes
-			$state.go('template.declarations');
+			if(editMode) {
+				$state.go('template.declarationDetails', {declarationId: declaration.id});
+			} else {
+				$state.go('template.declarations');
+			}
 		});
 	}
 	
@@ -310,7 +365,9 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 		request.done(function(data){
 			$scope.declaration_sub_types[row] = data;
 			$scope.declaration_sub_types[row].unshift({ id:0, name:"<selecteer>" });
-			$scope.declaration.lines[row].declaration_sub_type = $scope.declaration_sub_types[row][0].id;
+			if(!editMode) {
+				$scope.declaration.lines[row].declaration_sub_type = $scope.declaration_sub_types[row][0].id;
+			}
 			$scope.$apply();
 		});
 	}
@@ -399,7 +456,7 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 		fileReader.onload = function(fileLoadedEvent) 
 		{
 			//Remove the first empty element that keeps apearing the first time.
-			if($scope.declaration.attachments[0] && !$scope.declaration.attachments[0].file){
+			if($scope.declaration.attachments[0] && !$scope.declaration.attachments[0].name){
 				$scope.declaration.attachments.splice(0, 1);
 			}
 			$scope.declaration.attachments.push({name: files[i].name, file: fileLoadedEvent.target.result}); 
@@ -445,8 +502,8 @@ ilmoitusApp.controller('newDeclarationController', function($scope, $state) {
 });
 
 
-ilmoitusApp.controller('declarationsSubmittedController', function($scope, $state) {
-	$scope.navBtnSelect("declarationsSubmittedBtn");
+ilmoitusApp.controller('sentDeclarationsController', function($scope, $state) {
+	$scope.navBtnSelect("sentDeclarationsBtn");
 
 	if (userData.class_name == "human_resources") {
 		var url = "/declarations/hr"
@@ -807,8 +864,9 @@ ilmoitusApp.controller('declarationsHistoryController', function($scope, $state)
 	};
 });
 
-ilmoitusApp.controller('declarationDetailsController', function($scope, $stateParams) {
+ilmoitusApp.controller('declarationDetailsController', function($scope, $state, $stateParams) {
 	$scope.navBtnSelect(null);
+
 	// Get declaration ID from url parameter.
 	$scope.declarationId = $stateParams.declarationId;
 
@@ -850,6 +908,10 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $statePa
 			var token = data["attachment_token"];
 			window.open(baseurl + "/attachment/"+$scope.selectedattachment+"/"+token, '_blank');
 		});
+    }
+
+    $scope.editDeclarationBtn = function() {
+    	$state.go('template.declarationForm', {action: "edit", declarationId: $scope.declarationId});
     }
     
 });

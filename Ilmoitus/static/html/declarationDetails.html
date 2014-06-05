@@ -1,5 +1,8 @@
 <div>
     <div>
+        <div id="declarationControls">
+                <input type="button" value="Aanpassen" ng-disabled="declaration.state != 'Open'" ng-click="editDeclarationBtn();"/>
+        </div>
         <table>
             <tr><td>Leidinggevende:</td><td title="{{declaration.last_assigned_to.email}}">{{declaration.last_assigned_to.first_name + " " + declaration.last_assigned_to.last_name}}</td></tr>
             <tr><td>Personeelsnr:</td><td>{{declaration.last_assigned_to.employee_number}}</td></tr>
