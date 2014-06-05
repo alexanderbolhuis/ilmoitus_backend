@@ -3,12 +3,7 @@ from ilmoitus_auth import *
 
 
 def find_declaration(handler, declaration_id):
-    safe_id = 0
-    try:
-        safe_id = long(declaration_id)
-    except ValueError:
-        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(declaration_id) + ")")
-
+    safe_id = convert_to_long(handler, declaration_id)
     declaration = Declaration.get_by_id(safe_id)
     if declaration is None:
         give_error_response(handler, 404, "Declaratie ["+str(safe_id)+"] niet gevonden",
@@ -18,12 +13,7 @@ def find_declaration(handler, declaration_id):
 
 
 def find_employee(handler, employee_id):
-    safe_id = 0
-    try:
-        safe_id = long(employee_id)
-    except ValueError:
-        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(employee_id) + ")")
-
+    safe_id = convert_to_long(handler, employee_id)
     employee = Person.get_by_id(safe_id)
     if employee is None:
         give_error_response(handler, 404, "Werknemer ["+str(safe_id)+"] niet gevonden",
@@ -33,12 +23,7 @@ def find_employee(handler, employee_id):
 
 
 def find_attachment(handler, attachment_id):
-    safe_id = 0
-    try:
-        safe_id = long(attachment_id)
-    except ValueError:
-        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(attachment_id) + ")")
-
+    safe_id = convert_to_long(handler, attachment_id)
     attachment = Attachment.get_by_id(safe_id)
     if attachment is None:
         give_error_response(handler, 404, "Attachment ["+str(safe_id)+"] niet gevonden",
@@ -48,12 +33,7 @@ def find_attachment(handler, attachment_id):
 
 
 def find_declaration_type(handler, declaration_type_id):
-    safe_id = 0
-    try:
-        safe_id = long(declaration_type_id)
-    except ValueError:
-        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(declaration_type_id) + ")")
-
+    safe_id = convert_to_long(handler, declaration_type_id)
     declaration = DeclarationType.get_by_id(safe_id)
     if declaration is None:
         give_error_response(handler, 404, "Declaratie type ["+str(safe_id)+"] niet gevonden",
@@ -67,7 +47,7 @@ def find_declaration_type(handler, declaration_type_id):
 
 
 def is_declaration_creator(handler, declaration, employee):
-    if declaration.created_by != employee:
+    if declaration.created_by.key.integer_id() != employee.key.integer_id():
         give_error_response(handler, 401, "Declaratie kan niet worden aangepast.",
                                           "User is not the owner")
 
@@ -133,13 +113,28 @@ def if_employee_is_supervisor(handler, current_person):
                                           "current_person_object's id is not an supervisor")
 
 
-def find_declaration_sub_type(handler, sub_id):
+def convert_to_long(handler, string):
     safe_id = 0
     try:
-        safe_id = long(sub_id)
+        safe_id = long(string)
     except ValueError:
-        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(sub_id) + ")")
+        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(string) + ")")
 
+    return safe_id
+
+
+def convert_to_float(handler, string):
+    safe_id = 0
+    try:
+        safe_id = float(string)
+    except ValueError:
+        give_error_response(handler, 400, "Id is geen correcte waarde (" + str(string) + ")")
+
+    return safe_id
+
+
+def find_declaration_sub_type(handler, sub_id):
+    safe_id = convert_to_long(handler, sub_id)
     sub_type = DeclarationSubType.get_by_id(safe_id)
     if sub_type is None:
         give_error_response(handler, 404, "sub type ["+str(safe_id)+"] niet gevonden", "sub_type is None")

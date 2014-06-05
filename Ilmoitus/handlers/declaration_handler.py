@@ -160,6 +160,7 @@ class NewDeclarationHandler(BaseRequestHandler):
         #Check lines and attachments
         for line in declaration_lines_data:
             is_complete_dict(self, line, ["receipt_date", "cost", "declaration_sub_type"], "declaration line")
+            convert_to_float(self, line["cost"])
             find_declaration_sub_type(self, line["declaration_sub_type"])
 
         for attachment_data in declaration_attachments_data:
@@ -179,9 +180,9 @@ class NewDeclarationHandler(BaseRequestHandler):
         #Save lines / attachments
         for line in declaration_lines_data:
             newline = DeclarationLine()
-            newline.cost = int(line["cost"])
+            newline.cost = convert_to_float(self, line["cost"])
             newline.receipt_date = dateutil.parser.parse(line["receipt_date"])
-            newline.declaration_sub_type = DeclarationSubType.get_by_id(int(line["declaration_sub_type"])).key
+            newline.declaration_sub_type = DeclarationSubType.get_by_id(long(line["declaration_sub_type"])).key
             newline.put()
 
             declaration.items_count += 1
@@ -249,6 +250,7 @@ class SpecificDeclarationHandler(BaseRequestHandler):
         for line in declaration_lines_data:
             is_complete_dict(self, line, ["receipt_date", "cost", "declaration_sub_type"], "declaration line")
             find_declaration_sub_type(self, line["declaration_sub_type"])
+            convert_to_float(self, line["cost"])
 
         for attachment_data in declaration_attachments_data:
             if "id" not in attachment_data.keys() or attachment_data["id"] == "0":
@@ -269,7 +271,7 @@ class SpecificDeclarationHandler(BaseRequestHandler):
         ndb.delete_multi(declaration.lines)
         for line in declaration_lines_data:
             newline = DeclarationLine()
-            newline.cost = int(line["cost"])
+            newline.cost = convert_to_float(self, line["cost"])
             newline.receipt_date = dateutil.parser.parse(line["receipt_date"])
             newline.declaration_sub_type = DeclarationSubType.get_by_id(long(line["declaration_sub_type"])).key
             newline.put()

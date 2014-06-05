@@ -1445,7 +1445,7 @@ class AddNewDeclarationHandlerTest(BaseAuthorizationHandler):
 
         items_total_price = 0
         for line in lines:
-            items_total_price += int(line["cost"])
+            items_total_price += float(line["cost"])
 
         response = self.positive_test_stub_handler(token, path,
                                                    "post",
