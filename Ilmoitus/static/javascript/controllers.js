@@ -301,7 +301,7 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 		
 		if (editMode) {
 			var type = "PUT";
-			var url = "/declaration"+declaration.id;
+			var url = "/declaration/"+declaration.id;
 		} else {
 			var type = "POST";
 			var url = "/declaration/";
@@ -315,10 +315,10 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 			data: JSON.stringify({ 'declaration':declaration }),
 			error: function(jqXHR, textStatus, errorThrown){
 				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+				showMessage("Kan de declaratie niet verzenden vanwege een onbekende fout.", "Fout");
 			}
 		});
 		request.done(function(data){
-			//TODO: check succes
 			if(editMode) {
 				$state.go('template.declarationDetails', {declarationId: declaration.id});
 			} else {
