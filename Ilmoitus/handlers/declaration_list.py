@@ -6,7 +6,7 @@ from handlers.error_checks import *
 class AllDeclarationsForEmployeeHandler(BaseRequestHandler):
     def get(self):
         if self.is_logged_in():
-            query = Declaration.query(Declaration.created_by == self.logged_in_person().key).order(Declaration.created_at)
+            query = Declaration.query(Declaration.created_by == self.logged_in_person().key).order(-Declaration.created_at)
             respond_with_object_collection_with_query(self, query)
 
 
