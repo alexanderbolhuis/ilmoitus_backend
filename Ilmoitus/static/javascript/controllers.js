@@ -17,12 +17,12 @@ ilmoitusApp.controller('loginController', function($scope, $state) {
 				crossDomain: true,
 				data: jsonData,
 				error: function(jqXHR, textStatus, errorThrown){
-					if(jqXHR.responseJSON.user_message) {
+					console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+					if(jqXHR.responseJSON && jqXHR.responseJSON.user_message) {
 						showMessage(jqXHR.responseJSON.user_message, "Fout");
 					} else {
 						showMessage("Inloggen niet gelukt vanwege een onbekende fout.", "Fout");
 					}
-					console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 				}
 			});
 
@@ -57,12 +57,12 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 		url: baseurl + "/current_user/details",
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
-			if(jqXHR.responseJSON.user_message) {
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			if(jqXHR.responseJSON && jqXHR.responseJSON.user_message) {
 				showMessage(jqXHR.responseJSON.user_message, "Fout");
 			} else {
 				showMessage("Inloggen niet gelukt. Kan geen gebruikersgegevens ophalen.", "Fout");
 			}
-			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 			$state.go('login');
 		}
 	});
@@ -158,12 +158,12 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
 			url: baseurl + "/declaration/"+$scope.currentdeclaration.id,
 			crossDomain: true,
 			error: function(jqXHR, textStatus, errorThrown){
-				if(jqXHR.responseJSON.user_message) {
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+				if(jqXHR.responseJSON && jqXHR.responseJSON.user_message) {
 					showMessage(jqXHR.responseJSON.user_message, "Fout");
 				} else {
 					showMessage("Kan de declaratie niet annuleren vanwege een onbekende fout.", "Fout");
 				}
-				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 			}
 		});
 
@@ -202,13 +202,13 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 			url: baseurl + "/declaration/"+$scope.declarationId,
 			crossDomain: true,
 			error: function(jqXHR, textStatus, errorThrown){
-				if(jqXHR.responseJSON.user_message) {
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+				if(jqXHR.responseJSON && jqXHR.responseJSON.user_message) {
 					showMessage(jqXHR.responseJSON.user_message, "Fout");
 				} else {
 					showMessage("Kan de declaratie gegevens niet ophalen vanwege een onbekende fout.", "Fout");
 				}
 				$state.go('template.declarations');
-				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 			}
 		});
 
@@ -357,12 +357,12 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 			crossDomain: true,
 			data: JSON.stringify({ 'declaration':declaration }),
 			error: function(jqXHR, textStatus, errorThrown){
-				if(jqXHR.responseJSON.user_message) {
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+				if(jqXHR.responseJSON && jqXHR.responseJSON.user_message) {
 					showMessage(jqXHR.responseJSON.user_message, "Fout");
 				} else {
 					showMessage("Kan de declaratie niet verzenden vanwege een onbekende fout.", "Fout");
 				}
-				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 			}
 		});
 		request.done(function(data){
@@ -924,12 +924,12 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $state, 
 		url: baseurl + "/declaration/"+$scope.declarationId,
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
-			if(jqXHR.responseJSON.user_message) {
+			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			if(jqXHR.responseJSON && jqXHR.responseJSON.user_message) {
 				showMessage(jqXHR.responseJSON.user_message, "Fout");
 			} else {
 				showMessage("Kan de declaratie gegevens niet ophalen vanwege een onbekende fout.", "Fout");
 			}
-			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 		}
 	});
 
@@ -952,12 +952,12 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $state, 
 			url: baseurl + "/attachment_token/"+$scope.selectedattachment,
 			crossDomain: true,
 			error: function(jqXHR, textStatus, errorThrown){
-				if(jqXHR.responseJSON.user_message) {
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+				if(jqXHR.responseJSON && jqXHR.responseJSON.user_message) {
 					showMessage(jqXHR.responseJSON.user_message, "Fout");
 				} else {
 					showMessage("Kan de attachment niet ophalen vanwege een onbekende fout.", "Fout");
 				}
-				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 			}
 		});	
 		
