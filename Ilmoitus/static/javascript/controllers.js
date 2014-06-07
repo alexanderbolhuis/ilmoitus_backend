@@ -930,6 +930,7 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $state, 
 			} else {
 				showMessage("Kan de declaratie gegevens niet ophalen vanwege een onbekende fout.", "Fout");
 			}
+			$state.go('template.declarations');
 		}
 	});
 
