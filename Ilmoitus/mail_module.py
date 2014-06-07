@@ -35,7 +35,17 @@ def create_begin_of_the_body(name):
 
 
 def create_ending_of_the_body():
-    return "With kind regards,\n\nIlmoitus team"
+    return "\n\nWith kind regards,\n\nIlmoitus team"
+
+
+def send_mail_new_declaration_submitted(request_handler, declaration):
+    person = Person.get_by_id(declaration.assigned_to[len(declaration.assigned_to)-1].integer_id())
+    to = person.email
+    body = create_body(person.last_name,
+                       "We send you this email to inform you that a new declaration has just been submitted and " +
+                       "is awaiting your approval.")
+
+    send_email_to_user(request_handler, default_sender, to, "A new declaration awaits your approval.", body)
 
 
 def send_message_declaration_status_changed(request_handler, declaration):
@@ -44,8 +54,7 @@ def send_message_declaration_status_changed(request_handler, declaration):
     body = create_body(person.last_name,
                        "We send you this email to inform you that the status of your declaration (submitted on " +
                        declaration.created_at.strftime('%Y-%m-%d %H:%M') +
-                       "). Has changed to \"" + declaration.readable_state() + "\".\n\n" + create_ending_of_the_body()
-                       + "\n")
+                       "). Has changed to \"" + declaration.readable_state() + "\".")
 
     send_email_to_user(request_handler, default_sender, to, "The status or your declaration has changed.", body)
 
@@ -53,12 +62,11 @@ def send_message_declaration_status_changed(request_handler, declaration):
 def send_mail_declaration_approved(request_handler, declaration):
     person_to = Person.get_by_id(declaration.created_by.integer_id())
 
-    body = create_body(person_to.last_name, "We send this email because your submitted declaration (submitted on " + \
-           declaration.created_at.strftime('%Y-%m-%d %H:%M') + " is completely approved and it will be payed out on: "+\
-           str(declaration.will_be_payed_out_on) + "\n")
+    body = create_body(person_to.last_name, "We send this email because your submitted declaration (submitted on " +
+           declaration.created_at.strftime('%Y-%m-%d %H:%M') + " is completely approved and it will be payed out on: " +
+           str(declaration.will_be_payed_out_on))
 
     send_email_to_user(request_handler, default_sender, person_to.email, "Your declaration is approved", body)
-
 
 
 def create_body(name, middle_body):
