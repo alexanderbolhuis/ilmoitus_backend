@@ -647,7 +647,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
                 if (will_be_payed_out_on) {
                     request_data["will_be_payed_out_on"] = will_be_payed_out_on;
                 } else {
-                    showMessage("Er is geen datum opgegeven waarin de declaratie wordt uitbetaald!", "Error!")
+                    showMessage("Er is geen datum opgegeven waarin de declaratie wordt uitbetaald!", "Error!");
                     return;
                 }
                 handleSentDeclaration("/declaration/" + $scope.declaration.id + "/approve_by_hr", "PUT",
@@ -763,6 +763,8 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
             data: JSON.stringify(request_data),
             crossDomain: true,
             error: function (jqXHR, textStatus, errorThrown) {
+                console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+
                 closeMessage();
                 setTimeout(function () {
                     //TODO: find out and fix --> request body (data field above) is being appended to error response's responseText
@@ -772,7 +774,6 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
                     showMessage(JSON.parse(cleanMessage).user_message, "Error!");
                 }, 601); // 1 millisecond more than the close message timer
 
-                console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
             }
         });
 
