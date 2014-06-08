@@ -108,7 +108,7 @@ class DeclineByHumanResourcesHandler(BaseRequestHandler):
         comment = has_post(self, "comment", "opmerking", break_if_missing=False)
 
         declaration = find_declaration(self, declaration_id)
-        is_declaration_state(self, declaration, {"supervisor_approved_declaration"})
+        is_declaration_state(self, declaration, "supervisor_approved_declaration")
 
         declaration.class_name = 'human_resources_declined_declaration'
         declaration.human_resources_declined_by = self.logged_in_person().key
@@ -126,15 +126,17 @@ class ApproveByHumanResourcesHandler(BaseRequestHandler):
         self.is_logged_in()
         self.check_hr()
         declaration = find_declaration(self, declaration_id)
-        is_declaration_state(self, declaration, {"supervisor_approved_declaration"})
+        is_declaration_state(self, declaration, "supervisor_approved_declaration")
 
         comment = has_post(self, "comment", "opmerking", break_if_missing=False)
-
+        will_be_payed_out_on = has_post(self, "will_be_payed_out_on", "datum van uitbetaling", break_if_missing=True)
+        will_be_payed_out_on_date = datetime.datetime.strptime(will_be_payed_out_on, "%m-%Y")
         #Action
         declaration.class_name = "human_resources_approved_declaration"
         declaration.human_resources_approved_by = self.logged_in_person().key
         declaration.human_resources_approved_at = datetime.datetime.now()
         declaration.human_resources_comment = comment  # comment will be None if none is given
+        declaration.will_be_payed_out_on = will_be_payed_out_on_date
         declaration.put()
 
         send_message_declaration_status_changed(self, declaration)

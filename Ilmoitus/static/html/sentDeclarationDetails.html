@@ -1,9 +1,15 @@
 <div>
     <div>
         <div id="declarationControls">
-            <input type="button" value="Goedkeuren" ng-disabled="!declaration" ng-click="approveDeclarationBtn();"/>
-            <input type="button" value="Doorsturen" ng-disabled="!declaration" ng-click="forwardDeclarationBtn();"/>
-            <input type="button" value="Afwijzen" ng-disabled="!declaration" ng-click="declineDeclarationBtn();"/>
+            <div ng-hide="userClass != 'human_resources'">
+                <input type="button" value="Afwijzen" ng-disabled="!declaration" ng-click="declineDeclarationHRBtn();"/>
+                <input type="button" value="Goedkeuren" ng-disabled="!declaration" ng-click="approveDeclarationHRBtn();"/>
+            </div>
+            <div ng-hide="userClass != 'supervisor'">
+                <input type="button" value="Afwijzen" ng-disabled="!declaration" ng-click="declineDeclarationSupervisorBtn();"/>
+                <input type="button" value="Doorsturen" ng-disabled="!declaration" ng-click="forwardDeclarationSupervisorBtn();"/>
+                <input type="button" value="Goedkeuren" ng-disabled="!declaration" ng-click="approveDeclarationSupervisorBtn();"/>
+            </div>
         </div>
         <table>
             <tr>
@@ -12,9 +18,14 @@
                     {{declaration.created_by.first_name + " " + declaration.created_by.last_name}}
                 </td>
                 <td>Leidinggevende:</td>
-                <td>
-                    <select ng-model="supervisorId"
-                            ng-options="n.id as (n.last_name + ', ' + n.first_name) for n in supervisorList"></select>
+                <td ng-hide="userClass != 'human_resources'">
+                    {{declaration.last_assigned_to.last_name + ", " + declaration.last_assigned_to.first_name}}
+                </td>
+                <td  ng-hide="userClass != 'supervisor'" >
+                    <label>
+                        <select ng-model="supervisorId"
+                                ng-options="n.id as (n.last_name + ', ' + n.first_name) for n in supervisorList"></select>
+                    </label>
                 </td>
             </tr>
             <tr>
