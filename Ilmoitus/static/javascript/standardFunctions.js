@@ -1,40 +1,13 @@
-// Add a row to a table. Is a direct copy of the final row. Execute just before filling in forms in the final row. (onkeydown)
-function addTableRow(tableId) {
-	var table = $("#"+tableId);
-	$("#"+tableId+" tbody tr").last().clone().appendTo("#"+tableId+" tbody").find('input').not(':button').val('');
-    $(".datepicker").last().removeAttr("id");
-    $(".datepicker").last().removeClass("hasDatepicker");
-    $(".datepicker").datepicker();
-}
-
-function removeTableRow(tableId, rowIndex) {
-	if($("#"+tableId+" tbody tr").length > 1) {
-		$("#"+tableId+" tbody tr").eq(rowIndex).remove();
-	} else {
-		//If only one row left, clear row input fields
-        $("#"+tableId+" tbody tr").find('input').not(':button').val('');
-	}
-}
-
-//An array to support multiple selectable tables on a single page. Key is the table ID. 
-var currentlySelected = Array();
-function SetTableSelectable(tableId) {
-	//Makes it possible to select an item in the table.
-    $("#"+tableId+" tbody tr").click(function() {
-    	var table = $(this).parent().parent();
-        $(currentlySelected[table.attr("id")]).removeClass("selected");
-        currentlySelected[table.attr("id")] = this;
-        $(this).addClass("selected")
-    });
-}
-
-function getTableSelectedItem(tableId) {
-	if (typeof currentlySelected[tableId].id === 'undefined') {
-        return -1;
-    } else {
-        return currentlySelected[tableId].id;
-    }
-}
+Number.prototype.formatMoney = function(c, d, t){
+var n = this, 
+    c = isNaN(c = Math.abs(c)) ? 2 : c, 
+    d = d == undefined ? "." : d, 
+    t = t == undefined ? "," : t, 
+    s = n < 0 ? "-" : "", 
+    i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "", 
+    j = (j = i.length) > 3 ? j % 3 : 0;
+   return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+ };
 
 /**
  * Show an error message with the given message and title.
@@ -69,7 +42,6 @@ function closeMessage() {
         $("#messageCover").remove();
         $("#coverBg").remove();
     }, 600);
-    
 }
 
 $(function() {
