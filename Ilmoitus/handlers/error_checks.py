@@ -67,7 +67,7 @@ def is_declaration_price_allowed_supervisor(handler, declaration, current_person
 
 def is_declaration_state(handler, declaration, class_name):
     if declaration.class_name != class_name:
-        give_error_response(handler, 400, "Declaratie heeft niet de jusite status voor deze actie",
+        give_error_response(handler, 400, "Declaratie heeft niet de juiste status voor deze actie",
                                           "Expected state: " + class_name + " Received state: " + declaration.class_name)
 
 

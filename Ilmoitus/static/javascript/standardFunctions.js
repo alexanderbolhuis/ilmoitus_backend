@@ -36,6 +36,16 @@ function getTableSelectedItem(tableId) {
     }
 }
 
+function showServerMessage(jqXHR, alternativeMessage, title){
+    var actualMessage;
+    if(jqXHR.responseJSON && jqXHR.responseJSON.user_message) {
+        actualMessage = jqXHR.responseJSON.user_message;
+    } else {
+        actualMessage = alternativeMessage;
+    }
+    showMessage(actualMessage, title);
+}
+
 /**
  * Show an error message with the given message and title.
  * 
