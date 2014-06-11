@@ -9,6 +9,16 @@ var n = this,
    return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
  };
 
+function showServerMessage(jqXHR, alternativeMessage, title){
+    var actualMessage;
+    if(jqXHR.responseJSON && jqXHR.responseJSON.user_message) {
+        actualMessage = jqXHR.responseJSON.user_message;
+    } else {
+        actualMessage = alternativeMessage;
+    }
+    showMessage(actualMessage, title);
+}
+
 /**
  * Show an error message with the given message and title.
  * 
