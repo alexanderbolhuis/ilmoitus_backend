@@ -16,12 +16,15 @@ class OpenToLockedDeclarationHandler(BaseRequestHandler):
         #Checks (break when fails)
         self.is_logged_in()
         declaration = find_declaration(self, declaration_id)
-        is_declaration_creator(self, declaration, self.logged_in_person())
+        is_declaration_assigned(self, declaration, self.logged_in_person())
         is_declaration_state(self, declaration, "open_declaration")
 
         #Action
         declaration.locked_at = datetime.datetime.now()
+        declaration.class_name = "locked_declaration"
         declaration.put()
+        send_message_declaration_status_changed(self, declaration)
+
         give_response(self, declaration.get_object_json_data())
 
 
@@ -69,6 +72,7 @@ class DeclineBySupervisorHandler(BaseRequestHandler):
         declaration.supervisor_declined_at = datetime.datetime.now()
         declaration.supervisor_comment = comment
         declaration.put()
+        send_message_declaration_status_changed(self, declaration)
 
         send_message_declaration_status_changed(self, declaration)
         give_response(self, json.dumps(declaration.get_object_as_data_dict()))
@@ -92,11 +96,10 @@ class ApproveBySupervisorHandler(BaseRequestHandler):
         declaration.class_name = "supervisor_approved_declaration"
         declaration.submitted_to_human_resources_by = current_person.key
         declaration.supervisor_approved_at = datetime.datetime.now()
-
         declaration.supervisor_comment = comment  # comment will be None if none is given
-
         declaration.put()
         mail_module.send_message_declaration_status_changed(self, declaration)
+
         give_response(self, json.dumps(declaration.get_object_as_data_dict()))
 
 
@@ -115,8 +118,8 @@ class DeclineByHumanResourcesHandler(BaseRequestHandler):
         declaration.human_resources_declined_at = datetime.datetime.now()
         declaration.human_resources_comment = comment  # comment will be None if none is given
         declaration.put()
-
         send_message_declaration_status_changed(self, declaration)
+
         give_response(self, declaration.get_object_json_data())
 
 
@@ -138,8 +141,8 @@ class ApproveByHumanResourcesHandler(BaseRequestHandler):
         declaration.human_resources_comment = comment  # comment will be None if none is given
         declaration.will_be_payed_out_on = will_be_payed_out_on_date
         declaration.put()
+        send_mail_declaration_approved(self, declaration)
 
-        send_message_declaration_status_changed(self, declaration)
         give_response(self, json.dumps(declaration.get_object_as_data_dict()))
 
 
@@ -204,6 +207,8 @@ class NewDeclarationHandler(BaseRequestHandler):
             declaration.attachments.append(attachment.key)
 
         declaration.put()
+        send_mail_new_declaration_submitted(self, declaration)
+
         give_response(self, json.dumps(declaration.get_object_as_full_data_dict()))
 
 

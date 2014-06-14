@@ -18,7 +18,7 @@
 			<input type="button" value="Declaratie tonen" ng-disabled="!currentdeclaration;" ng-click="openDeclarationDetailsBtn();" />
 		</div>
 	</div>
-	<table id="declarationTable" class="styledTable">
+	<table ng-show="(declarationList | filter:searchFilter).length > 0" id="declarationTable" class="styledTable">
 		<thead>
 			<th>Ingediend op</th>
 			<th>Aanvrager</th>
@@ -39,4 +39,6 @@
 				<td>{{ declaration.state }}</td>
 		</tbody>
 	</table>
+    
+    <h2 ng-hide="(declarationList | filter:searchFilter).length > 0" class="EmptyTblMsg">Geen declaraties gevonden</h2>
 </div>
