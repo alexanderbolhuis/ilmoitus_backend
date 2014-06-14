@@ -16,7 +16,7 @@ class OpenToLockedDeclarationHandler(BaseRequestHandler):
         #Checks (break when fails)
         self.is_logged_in()
         declaration = find_declaration(self, declaration_id)
-        is_declaration_creator(self, declaration, self.logged_in_person())
+        is_declaration_assigned(self, declaration, self.logged_in_person())
         is_declaration_state(self, declaration, "open_declaration")
 
         #Action
