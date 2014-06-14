@@ -554,6 +554,7 @@ ilmoitusApp.controller('sentDeclarationsController', function($scope, $state) {
 ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $stateParams, $state) {
     // Get declaration ID from url parameter.
     $scope.declarationId = $stateParams.declarationId;
+    $scope.isAllowedToApprove = false;
 
     //Get declaration details
     var request = $.ajax({
@@ -575,6 +576,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
             $scope.selectedattachment = $scope.declaration.attachments[0].id;
         }
         $scope.$apply();
+        checkIfCanApprove();
     });
 
     //Preload supervisors
@@ -599,38 +601,13 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
         window.open("/attachment/" + $scope.selectedattachment, '_blank');
     };
 
-    //Approve Supervisor declaration button
-    $scope.approveDeclarationSupervisorBtn = function () {
-        if (parseInt($scope.declaration.items_total_price) <= parseInt($scope.declaration.last_assigned_to.max_declaration_price)) {
-            showMessageInputForDeclarationAction(
-                "Declaratie goedkeuren",
-                "Goedkeuren",
-                "U heeft gekozen om de declaratie goed te keuren.<br /><br />Vul eventueel hieronder nog een opmerking in.",
-                function (data) {
-                    var comment = (data["comment"] == "") ? null : data["comment"]; //Comment is optional.
+    function checkIfCanApprove() {
+        $scope.isAllowedToApprove = (parseInt($scope.declaration.items_total_price) <= parseInt(userData.max_declaration_price));
+        $scope.max_declaration_price = userData.max_declaration_price;
+        $scope.$apply();
+    }
 
-                    var request_data = {};
-                    if (comment != null) {
-                        request_data["comment"] = comment;
-                    }
-
-                    handleSentDeclaration("/declaration/" + $scope.declaration.id + "/approve_by_supervisor", "PUT",
-                        request_data, function () {
-                            $state.go("template.sentDeclarations");
-                        });
-                }
-            );
-        } else {
-            showMessage("<p>U mag deze declaratie niet goedkeuren omdat het bedrag te hoog is!</p>" +
-                "<p>Uw maximaal goed te keuren bedrag is: &euro;" + $scope.declaration.last_assigned_to.max_declaration_price +
-                "</p><p>Terwijl deze declaratie een totaal bedrag heeft van: &euro;" +
-                $scope.declaration.items_total_price + "</p><p>U mag deze declaratie alleen doorsturen.</p>",
-                "Error!");
-        }
-    };
-
-    //Approve HR declaration button
-    $scope.approveDeclarationHRBtn = function () {
+    function approveDeclarationHR() {
         showMessageInputForDeclarationAction(
             "Declaratie goedkeuren",
             "Goedkeuren",
@@ -657,11 +634,39 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
             },
             true
         );
-    };
+    }
 
-    //Forward declaration button
-    $scope.forwardDeclarationSupervisorBtn = function () {
-        var new_supervisor_id = $scope.supervisorId;
+    function approveDeclarationSupervisor() {
+        if (parseInt($scope.declaration.items_total_price) <= parseInt($scope.declaration.last_assigned_to.max_declaration_price)) {
+            showMessageInputForDeclarationAction(
+                "Declaratie goedkeuren",
+                "Goedkeuren",
+                "U heeft gekozen om de declaratie goed te keuren.<br /><br />Vul eventueel hieronder nog een opmerking in.",
+                function (data) {
+                    var comment = (data["comment"] == "") ? null : data["comment"]; //Comment is optional.
+
+                    var request_data = {};
+                    if (comment != null) {
+                        request_data["comment"] = comment;
+                    }
+
+                    handleSentDeclaration("/declaration/" + $scope.declaration.id + "/approve_by_supervisor", "PUT",
+                        request_data, function () {
+                            $state.go("template.sentDeclarations");
+                        });
+                }
+            );
+        } else {
+            showMessage("<p>U mag deze declaratie niet goedkeuren omdat het bedrag te hoog is!</p>" +
+                    "<p>Uw maximaal goed te keuren bedrag is: &euro;" + $scope.declaration.last_assigned_to.max_declaration_price +
+                    "</p><p>Terwijl deze declaratie een totaal bedrag heeft van: &euro;" +
+                    $scope.declaration.items_total_price + "</p><p>U mag deze declaratie alleen doorsturen.</p>",
+                "Error!");
+        }
+    }
+
+    function forwardDeclarationSupervisor() {
+        var new_supervisor_id = $scope.supervisorId; //This is the index value of the selection box
         var new_supervisor_name = "";
         if (new_supervisor_id != $scope.declaration.last_assigned_to.id) {
             for (var i in $scope.supervisorList) {
@@ -694,12 +699,32 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
                     });
             }
         );
-    };
+    }
 
-    //Decline Supervisor declaration button
-    $scope.declineDeclarationSupervisorBtn = function () {
+    function declineDeclarationHR() {
         showMessageInputForDeclarationAction(
-            "Declaration afwijzen",
+            "Declaratie afwijzen",
+            "Afwijzen",
+            "U heeft gekozen om de declaratie af te wijzen.<br /><br />Geef hieronder eventueel nog de reden van afwijzing op.",
+            function (data) {
+                var comment = (data["comment"] == "") ? null : data["comment"];
+
+                var request_data = {};
+                if (comment != null) {
+                    request_data["comment"] = comment;
+                } //Comment is optional for HR!
+
+                handleSentDeclaration("/declaration/" + $scope.declaration.id + "/decline_by_hr", "PUT",
+                    request_data, function () {
+                        $state.go("template.sentDeclarations");
+                    });
+            }
+        );
+    }
+
+    function declineDeclarationSupervisor() {
+        showMessageInputForDeclarationAction(
+            "Declaratie afwijzen",
             "Afwijzen",
             "U heeft gekozen om de declaratie af te wijzen.<br /><br />Geef hieronder de reden van afwijzing op (verplicht).",
             function (data) {
@@ -724,29 +749,32 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
                     });
             }
         );
+    }
+
+    //Approve declaration button
+    $scope.approveDeclarationBtn = function () {
+        if ($scope.userClass == "supervisor") {
+            approveDeclarationSupervisor();
+        } else {
+            approveDeclarationHR();
+        }
     };
 
 
-    //Decline HR declaration button
-    $scope.declineDeclarationHRBtn = function () {
-        showMessageInputForDeclarationAction(
-            "Declaration afwijzen",
-            "Afwijzen",
-            "U heeft gekozen om de declaratie af te wijzen.<br /><br />Geef hieronder eventueel nog de reden van afwijzing op.",
-            function (data) {
-                var comment = (data["comment"] == "") ? null : data["comment"];
+    //Forward declaration button
+    $scope.forwardDeclarationBtn = function () {
+        if ($scope.userClass == "supervisor") {
+            forwardDeclarationSupervisor();
+        } //HR can't forward; no else
+    };
 
-                var request_data = {};
-                if (comment != null) {
-                    request_data["comment"] = comment;
-                } //Comment is optional for HR!
-
-                handleSentDeclaration("/declaration/" + $scope.declaration.id + "/decline_by_hr", "PUT",
-                    request_data, function () {
-                        $state.go("template.sentDeclarations");
-                    });
-            }
-        );
+    //Decline declaration button
+    $scope.declineDeclarationBtn = function () {
+        if ($scope.userClass == "supervisor") {
+            declineDeclarationSupervisor();
+        } else {
+            declineDeclarationHR();
+        }
     };
 
     function handleSentDeclaration(target_url, request_type, request_data, callback_function, should_pass_data_into_callback) {

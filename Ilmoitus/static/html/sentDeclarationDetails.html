@@ -1,15 +1,19 @@
 <div>
-    <div>
+    <div id="declarationUpperSection">
         <div id="declarationControls">
-            <div ng-hide="userClass != 'human_resources'">
-                <input type="button" value="Afwijzen" ng-disabled="!declaration" ng-click="declineDeclarationHRBtn();"/>
-                <input type="button" value="Goedkeuren" ng-disabled="!declaration" ng-click="approveDeclarationHRBtn();"/>
-            </div>
-            <div ng-hide="userClass != 'supervisor'">
-                <input type="button" value="Afwijzen" ng-disabled="!declaration" ng-click="declineDeclarationSupervisorBtn();"/>
-                <input type="button" value="Doorsturen" ng-disabled="!declaration" ng-click="forwardDeclarationSupervisorBtn();"/>
-                <input type="button" value="Goedkeuren" ng-disabled="!declaration" ng-click="approveDeclarationSupervisorBtn();"/>
-            </div>
+            <input type="button" value="Afwijzen"
+                   ng-disabled="!declaration"
+                   ng-click="declineDeclarationBtn();"/>
+            <input type="button" value="Doorsturen" ng-hide="userClass != 'supervisor'" ng-disabled="!declaration"
+                   ng-click="forwardDeclarationBtn();"/>
+            <input type="button" value="Goedkeuren" ng-disabled="!declaration"
+                   ng-hide="!isAllowedToApprove"
+                   ng-click="approveDeclarationBtn();"/>
+            <br/>
+            <label ng-hide="isAllowedToApprove" id="notAllowedToApprove" class="errorArea">
+                U mag deze declaratie niet doorsturen omdat het totaalbedrag hoger is dan uw maximaal goed te keuren
+                bedrag (€{{max_declaration_price}}).
+            </label>
         </div>
         <table>
             <tr>
@@ -18,13 +22,13 @@
                     {{declaration.created_by.first_name + " " + declaration.created_by.last_name}}
                 </td>
                 <td>Leidinggevende:</td>
-                <td ng-hide="userClass != 'human_resources'">
-                    {{declaration.last_assigned_to.last_name + ", " + declaration.last_assigned_to.first_name}}
-                </td>
-                <td  ng-hide="userClass != 'supervisor'" >
-                    <label>
+                <td>
+                    <label ng-hide="userClass != 'supervisor'">
                         <select ng-model="supervisorId"
                                 ng-options="n.id as (n.last_name + ', ' + n.first_name) for n in supervisorList"></select>
+                    </label>
+                    <label ng-hide="userClass != 'human_resources'">
+                         {{declaration.last_assigned_to.last_name + ", " + declaration.last_assigned_to.first_name}}
                     </label>
                 </td>
             </tr>

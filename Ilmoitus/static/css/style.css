@@ -340,6 +340,16 @@ header {
     margin-right: 5px;
 }
 
+#notAllowedToApprove{
+    float: right;
+    font-weight: normal;
+    max-width: 300px;
+}
+
+#declarationUpperSection{
+    margin-bottom: 20px;
+}
+
 #dialogActionComment{
     width: 75%;
 }
