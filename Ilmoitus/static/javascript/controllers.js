@@ -1,6 +1,6 @@
 var baseurl = 'http://127.0.0.1:8080';
 var userData;
-var pricePattern = /^[0-9]{1}[0-9]{0,3}(\.[0-9]{2})?$/
+var pricePattern = /^[0-9]{1}[0-9]{0,3}(\.[0-9]{0,2})?$/
 
 ilmoitusApp.controller('loginController', function($scope, $state) {
 	//Login button. Check for correct credentials.
@@ -18,6 +18,7 @@ ilmoitusApp.controller('loginController', function($scope, $state) {
 				data: jsonData,
 				error: function(jqXHR, textStatus, errorThrown){
 					console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+					showServerMessage(jqXHR, "Inloggen niet gelukt vanwege een onbekende fout.", "Fout");
 				}
 			});
 
@@ -53,6 +54,8 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			showServerMessage(jqXHR, "Inloggen niet gelukt. Kan geen gebruikersgegevens ophalen.", "Fout");
+			$state.go('login');
 		}
 	});
 
@@ -97,9 +100,6 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + "/current_user/declarations",
 		crossDomain: true,
-		error: function(jqXHR, textStatus, errorThrown){
-			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
-		}
 	});
 
 	request.done(function(data){
@@ -118,11 +118,18 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
 				default:
 					$scope.declarationList[i].info = "";
 			}
+			
+			
 			//turn created_at dates to actual javascript dates for comparison and string convertion.
 			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
+			
+			//Format price
+			$scope.declarationList[i].items_total_price = Number($scope.declarationList[i].items_total_price).formatMoney(2, ",", ".");
 		}
 		$scope.$apply();
-	});
+	}).fail(function() {
+    	$scope.declarationList = [];
+    });
 		
 	//Select declaration
 	$scope.selectDeclaration = function(declaration){
@@ -141,8 +148,26 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
 	
 	//Delete declaration button
 	$scope.deleteDeclarationDetailsBtn = function(declarationid){
- 		//TODO: bind DELETE handler
-		alert('Consider declaration "'+$scope.currentdeclaration.id+'" deleted.');
+		var request = $.ajax({
+			type: "DELETE",
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/declaration/"+$scope.currentdeclaration.id,
+			crossDomain: true,
+			error: function(jqXHR, textStatus, errorThrown){
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+				showServerMessage(jqXHR, "Kan de declaratie niet annuleren vanwege een onbekende fout.", "Fout");
+			}
+		});
+
+		request.done(function(){
+			for(var i = 0 ; i < $scope.declarationList.length ; i++){
+				if($scope.declarationList[i].id == $scope.currentdeclaration.id) {
+					$scope.declarationList.splice(i, 1);
+					$scope.$apply();
+					break;
+				}
+			}
+		});
   	}
 });
 
@@ -170,6 +195,8 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 			crossDomain: true,
 			error: function(jqXHR, textStatus, errorThrown){
 				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+				showServerMessage(jqXHR, "Kan de declaratie gegevens niet ophalen vanwege een onbekende fout.", "Fout");
+				$state.go('template.declarations');
 			}
 		});
 
@@ -177,12 +204,24 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 			//Change all the received declaration data to the way the form needs them.
 			$scope.declaration = data;
 			$scope.declaration.supervisor = $scope.declaration.last_assigned_to.id;
+			$scope.declaration.items_total_price = Number($scope.declaration.items_total_price).formatMoney(2, ",", ".")
+		
+		if($scope.declaration.attachments.length > 0){
+			$scope.selectedattachment = $scope.declaration.attachments[0].id;
+		}
+		
+		for(var i = 0 ; i < $scope.declaration.lines.length; i++){
+			//Format price
+			$scope.declaration.lines[i].cost = Number($scope.declaration.lines[i].cost).formatMoney(2, ",", ".");
+		}
+			
 			if($scope.declaration.attachments.length > 0){
 				$scope.selectedattachment = $scope.declaration.attachments[0];
 			}
 			for(var i = 0; i < $scope.declaration.lines.length; i++){ 
 				$scope.declaration.lines[i].receipt_date = new Date($scope.declaration.lines[i].receipt_date).toISOString().substring(0, 10);
-				$scope.declaration.lines[i].cost = $scope.declaration.lines[i].cost+"";
+				$scope.declaration.lines[i].cost = Number($scope.declaration.lines[i].costs).formatMoney(2, ",", ".")+"";
+				
 				$scope.declaration.lines[i].declaration_type = $scope.declaration.lines[i].declaration_type.id;
 				$scope.loadSubList(i);
 				$scope.declaration.lines[i].declaration_sub_type = $scope.declaration.lines[i].declaration_sub_type.id;
@@ -319,7 +358,7 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 			data: JSON.stringify({ 'declaration':declaration }),
 			error: function(jqXHR, textStatus, errorThrown){
 				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
-				showMessage("Kan de declaratie niet verzenden vanwege een onbekende fout.", "Fout");
+				showServerMessage(jqXHR, "Kan de declaratie niet verzenden vanwege een onbekende fout.", "Fout");
 			}
 		});
 		request.done(function(data){
@@ -419,18 +458,13 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 		
 		for(var i = 0; i < $scope.declaration.lines.length; i++){
 			if($scope.declaration.lines[i].approvecosts){
-				$scope.declarationamount += Number($scope.declaration.lines[i].cost.replace(",", "."));
+				var money = $scope.declaration.lines[i].cost.replace(",", ".");
+				//if(money.indexOf(",") == money.length -1){ money = money.substr(0, money.length-1); }
+				$scope.declarationamount += Number(money);
 			}
 		}
-
-		$scope.declarationAmountDisplay = $scope.declarationamount.toString().replace(".", ",");
-		if($scope.declarationAmountDisplay.indexOf(",") == -1) {
-			$scope.declarationAmountDisplay += ",-";
-		} else {
-			if ($scope.declarationAmountDisplay.split(",")[1].length < 2) {
-				$scope.declarationAmountDisplay += "0";
-			}
-		}
+		
+		$scope.declarationAmountDisplay = Number($scope.declarationamount).formatMoney(2, ",", ".");
 	}
 	
 	//Remove attachment
@@ -519,10 +553,7 @@ ilmoitusApp.controller('sentDeclarationsController', function($scope, $state) {
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + url,
-		crossDomain: true,
-		error: function(jqXHR, textStatus, errorThrown){
-			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
-		}
+		crossDomain: true
 	});
 
 	request.done(function(data){
@@ -530,9 +561,14 @@ ilmoitusApp.controller('sentDeclarationsController', function($scope, $state) {
 		for(var i = 0 ; i < $scope.declarationList.length ; i++){
 			//turn created_at dates to actual javascript dates for comparison and string convertion.
 			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
+			
+			//Format price
+			$scope.declarationList[i].items_total_price = Number($scope.declarationList[i].items_total_price).formatMoney(2, ",", ".");
 		}
 		$scope.$apply();
-	});
+	}).fail(function() {
+    	$scope.declarationList = [];
+    });
 		
 	//Select declaration
 	$scope.selectDeclaration = function(declaration){
@@ -590,9 +626,17 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
         $scope.declaration = data;
         $scope.supervisorId = data.last_assigned_to.id;
         $scope.supervisor = data.last_assigned_to.first_name + " " + data.last_assigned_to.last_name;
-        if ($scope.declaration.attachments.length > 0) {
-            $scope.selectedattachment = $scope.declaration.attachments[0].id;
-        }
+        $scope.declaration.items_total_price = Number($scope.declaration.items_total_price).formatMoney(2, ",", ".")
+		
+		if($scope.declaration.attachments.length > 0){
+			$scope.selectedattachment = $scope.declaration.attachments[0].id;
+		}
+		
+		for(var i = 0 ; i < $scope.declaration.lines.length; i++){
+			//Format price
+			$scope.declaration.lines[i].cost = Number($scope.declaration.lines[i].cost).formatMoney(2, ",", ".");
+		}
+		
         $scope.$apply();
         checkIfCanApprove();
         setUpperSectionMargin();
@@ -944,20 +988,22 @@ ilmoitusApp.controller('declarationsHistoryController', function($scope, $state)
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + url,
-		crossDomain: true,
-		error: function(jqXHR, textStatus, errorThrown){
-			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
-		}
+		crossDomain: true
 	});
 
 	request.done(function(data){
 		$scope.declarationList = data;
-		for(var i = 0 ; i < $scope.declarationList.length ; i++){
-			//turn created_at dates to actual javascript dates for comparison and string convertion.
-			$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
-		}
-		$scope.$apply();
-	});
+			for(var i = 0 ; i < $scope.declarationList.length ; i++){
+				//turn created_at dates to actual javascript dates for comparison and string convertion.
+				$scope.declarationList[i].created_at = new Date($scope.declarationList[i].created_at);
+				
+				//Format price
+				$scope.declarationList[i].items_total_price = Number($scope.declarationList[i].items_total_price).formatMoney(2, ",", ".");
+			}
+			$scope.$apply();
+		}).fail(function() {
+			$scope.declarationList = [];
+		});
 		
 	//Select declaration
 	$scope.selectDeclaration = function(declaration){
@@ -1015,6 +1061,8 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $state, 
 		crossDomain: true,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			showServerMessage(jqXHR, "Kan de declaratie gegevens niet ophalen vanwege een onbekende fout.", "Fout");
+			$state.go('template.declarations');
 		}
 	});
 
@@ -1023,9 +1071,17 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $state, 
 		$scope.comments = data.comment;
 		$scope.supervisorId = data.last_assigned_to.employee_number
 		$scope.supervisor = data.last_assigned_to.first_name + " " + data.last_assigned_to.last_name;
+		$scope.declaration.items_total_price = Number($scope.declaration.items_total_price).formatMoney(2, ",", ".")
+		
 		if($scope.declaration.attachments.length > 0){
 			$scope.selectedattachment = $scope.declaration.attachments[0].id;
 		}
+		
+		for(var i = 0 ; i < $scope.declaration.lines.length; i++){
+			//Format price
+			$scope.declaration.lines[i].cost = Number($scope.declaration.lines[i].cost).formatMoney(2, ",", ".");
+		}
+			
 		$scope.$apply();
 	});
 
@@ -1037,7 +1093,7 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $state, 
 			url: baseurl + "/attachment_token/"+$scope.selectedattachment,
 			crossDomain: true,
 			error: function(jqXHR, textStatus, errorThrown){
-				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+				showServerMessage(jqXHR, "Kan de attachment niet ophalen vanwege een onbekende fout.", "Fout");
 			}
 		});	
 		

@@ -8,7 +8,7 @@
 	</div>
 	</br>
 	<table id="DeclarationTable" class="styledTable">
-		<thead>
+		<thead ng-show="declarationList.length > 0">
 			<th>Ingediend op</th>
 			<th>Aantal declaratie items</th>
 			<th>Declaratie bedrag</th>
@@ -27,4 +27,6 @@
 			</tr>
 		</tbody>
 	</table>
+    
+    <h2 ng-hide="declarationList.length > 0" class="EmptyTblMsg">Geen declaraties gevonden</h2>
 </div>

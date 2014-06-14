@@ -371,3 +371,7 @@ header {
 #DeclarationTable select{
 	width:200px !important;	
 }
+
+.EmptyTblMsg{
+	width:100%; text-align:center; margin-top:100px;	
+}
