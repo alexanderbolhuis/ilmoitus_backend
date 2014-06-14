@@ -330,7 +330,9 @@ header {
 .FieldError {
 	background-color:#F88;
 }
-
+#upperSection{
+    overflow: hidden;
+}
 #declarationControls{
     float: right;
 }
@@ -338,6 +340,12 @@ header {
 #declarationControls input{
     margin-top: 3px;
     margin-right: 5px;
+}
+
+.errorArea.notAllowedToUse{
+    float: right;
+    font-weight: normal;
+    max-width: 300px;
 }
 
 #dialogActionComment{
