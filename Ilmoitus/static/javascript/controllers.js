@@ -558,15 +558,31 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
     $scope.hasSupervisor = (userData.supervisor != null);
     $scope.marginUpperSection = {"margin-bottom": 0};
 
+    if ($scope.userClass == "supervisor") {
+        //Lock the declaration since we are now reviewing it
+        var request = $.ajax({
+            type: "PUT",
+            headers: {"Authorization": sessionStorage.token},
+            url: baseurl + "/declaration/" + $scope.declarationId + "/lock",
+            crossDomain: true,
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+                showServerMessage(jqXHR, "Het vergrendelen van de declaratie is niet gelukt", "Error!");
+            }
+        });
+
+        //No done callback; we don't need to wait for the declaration to get locked
+    }
+
     //Get declaration details
-    var request = $.ajax({
+    request = $.ajax({
         type: "GET",
         headers: {"Authorization": sessionStorage.token},
         url: baseurl + "/declaration/" + $scope.declarationId,
         crossDomain: true,
         error: function (jqXHR, textStatus, errorThrown) {
-            showMessage(jqXHR.responseJSON.user_message, "Error!");
             console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+            showMessage(jqXHR.responseJSON.user_message, "Error!");
         }
     });
 
@@ -582,23 +598,26 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
         setUpperSectionMargin();
     });
 
-    //Preload supervisors
-    request = $.ajax({
-        type: "GET",
-        headers: {"Authorization": sessionStorage.token},
-        url: baseurl + "/current_user/supervisors",
-        crossDomain: true,
-        error: function (jqXHR, textStatus, errorThrown) {
-            showMessage(jqXHR.responseJSON.user_message, "Error!");
-            console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
-        }
-    });
-    request.done(function (data) {
-        $scope.supervisorList = data;
-        $scope.supervisorList.unshift(userData);
+    if ($scope.userClass == "supervisor") {
+        //Preload supervisors
+        request = $.ajax({
+            type: "GET",
+            headers: {"Authorization": sessionStorage.token},
+            url: baseurl + "/current_user/supervisors",
+            crossDomain: true,
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+                showMessage(jqXHR.responseJSON.user_message, "Error!");
+            }
+        });
 
-        $scope.$apply();
-    });
+        request.done(function (data) {
+            $scope.supervisorList = data;
+            $scope.supervisorList.unshift(userData);
+
+            $scope.$apply();
+        });
+    }
 
     $scope.openAttachment = function () {
         window.open("/attachment/" + $scope.selectedattachment, '_blank');

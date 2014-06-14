@@ -21,6 +21,7 @@ class OpenToLockedDeclarationHandler(BaseRequestHandler):
 
         #Action
         declaration.locked_at = datetime.datetime.now()
+        declaration.class_name = "locked_declaration"
         declaration.put()
         give_response(self, declaration.get_object_json_data())
 
