@@ -99,7 +99,7 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + "/current_user/declarations",
-		crossDomain: true,
+		crossDomain: true
 	});
 
 	request.done(function(data){
@@ -590,35 +590,19 @@ ilmoitusApp.controller('sentDeclarationsController', function($scope, $state) {
 ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $stateParams, $state) {
     // Get declaration ID from url parameter.
     $scope.declarationId = $stateParams.declarationId;
-    $scope.isAllowedToApprove = false;
+    $scope.isAllowedToApprove = true;
     $scope.hasSupervisor = (userData.supervisor != null);
     $scope.marginUpperSection = {"margin-bottom": 0};
 
-    if ($scope.userClass == "supervisor") {
-        //Lock the declaration since we are now reviewing it
-        var request = $.ajax({
-            type: "PUT",
-            headers: {"Authorization": sessionStorage.token},
-            url: baseurl + "/declaration/" + $scope.declarationId + "/lock",
-            crossDomain: true,
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
-                showServerMessage(jqXHR, "Het vergrendelen van de declaratie is niet gelukt", "Error!");
-            }
-        });
-
-        //No done callback; we don't need to wait for the declaration to get locked
-    }
-
     //Get declaration details
-    request = $.ajax({
+    var request = $.ajax({
         type: "GET",
         headers: {"Authorization": sessionStorage.token},
         url: baseurl + "/declaration/" + $scope.declarationId,
         crossDomain: true,
         error: function (jqXHR, textStatus, errorThrown) {
             console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
-            showMessage(jqXHR.responseJSON.user_message, "Error!");
+            showServerMessage(jqXHR, "Er is iets fout gegaan bij het ophalen van de gegevens van deze declaratie.", "Error!");
         }
     });
 
@@ -626,7 +610,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
         $scope.declaration = data;
         $scope.supervisorId = data.last_assigned_to.id;
         $scope.supervisor = data.last_assigned_to.first_name + " " + data.last_assigned_to.last_name;
-        $scope.declaration.items_total_price = Number($scope.declaration.items_total_price).formatMoney(2, ",", ".")
+        $scope.declaration.items_total_price = Number($scope.declaration.items_total_price).formatMoney(2, ",", ".");
 		
 		if($scope.declaration.attachments.length > 0){
 			$scope.selectedattachment = $scope.declaration.attachments[0].id;
@@ -638,9 +622,27 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
 		}
 		
         $scope.$apply();
+        lockIfNeeded();
         checkIfCanApprove();
         setUpperSectionMargin();
     });
+
+    function lockIfNeeded() {
+        if ($scope.userClass == "supervisor" && $scope.declaration.class_name == "open_declaration") {
+            //Lock the declaration since we are now reviewing it
+            var request = $.ajax({
+                type: "PUT",
+                headers: {"Authorization": sessionStorage.token},
+                url: baseurl + "/declaration/" + $scope.declarationId + "/lock",
+                crossDomain: true,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+                    showServerMessage(jqXHR, "Het vergrendelen van de declaratie is niet gelukt.", "Fout bij het vergrendelen!");
+                }
+            });
+            //No done callback; we don't need to wait for the declaration to get locked
+        }
+    }
 
     if ($scope.userClass == "supervisor") {
         //Preload supervisors
@@ -651,7 +653,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
             crossDomain: true,
             error: function (jqXHR, textStatus, errorThrown) {
                 console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
-                showMessage(jqXHR.responseJSON.user_message, "Error!");
+                showServerMessage(jqXHR, "Er is iets fout gegaan bij het ophalen van uw leidinggevenden.", "Error!");
             }
         });
 
@@ -692,7 +694,6 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
             $scope.max_declaration_price = "0.0";
         }
         $scope.$apply();
-        console.log($scope);
     }
 
     function approveDeclarationHR() {
@@ -725,7 +726,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
     }
 
     function approveDeclarationSupervisor() {
-        if (parseInt($scope.declaration.items_total_price) <= parseInt($scope.declaration.last_assigned_to.max_declaration_price)) {
+        if (parseInt($scope.declaration.items_total_price) <= parseInt($scope.max_declaration_price)) {
             showMessageInputForDeclarationAction(
                 "Declaratie goedkeuren",
                 "Goedkeuren",
@@ -880,14 +881,9 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
             crossDomain: true,
             error: function (jqXHR, textStatus, errorThrown) {
                 console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
-
                 closeMessage();
                 setTimeout(function () {
-                    //TODO: find out and fix --> request body (data field above) is being appended to error response's responseText
-                    //Clean the message up because for some strange reason, we get the request data appended after the wanted response
-                    //This will fail if any text within this object contains a '}' character (escaped)
-                    var cleanMessage = jqXHR.responseText.substring(0, jqXHR.responseText.indexOf("}") + 1);
-                    showMessage(JSON.parse(cleanMessage).user_message, "Error!");
+                    showServerMessage(jqXHR, "Een onbekende fout is opgetereden bij deze actie", "Error!");
                 }, 601); // 1 millisecond more than the close message timer
 
             }
