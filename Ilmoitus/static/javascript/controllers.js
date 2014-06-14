@@ -665,17 +665,33 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
     }
 
     $scope.openAttachment = function () {
-        window.open("/attachment/" + $scope.selectedattachment, '_blank');
+		var request = $.ajax({
+			type: "GET",
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/attachment_token/"+$scope.selectedattachment,
+			crossDomain: true,
+			error: function(jqXHR, textStatus, errorThrown){
+                console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+				showServerMessage(jqXHR, "Kan de attachment niet ophalen vanwege een onbekende fout.", "Fout");
+			}
+		});
+
+        request.done(function(data){
+			var token = data["attachment_token"];
+			window.open(baseurl + "/attachment/"+$scope.selectedattachment+"/"+token, '_blank');
+		});
     };
 
     function checkIfCanApprove() {
-        var userMaxPrice = parseInt(userData.max_declaration_price);
-        $scope.isAllowedToApprove = (parseInt($scope.declaration.items_total_price) <= userMaxPrice);
-        if (userMaxPrice) {
-            $scope.max_declaration_price = userMaxPrice;
-        }
-        else {
-            $scope.max_declaration_price = "0.0";
+        if($scope.userClass == "supervisor") {
+            var userMaxPrice = parseInt(userData.max_declaration_price);
+            $scope.isAllowedToApprove = (parseInt($scope.declaration.items_total_price) <= userMaxPrice);
+            if (userMaxPrice) {
+                $scope.max_declaration_price = userMaxPrice;
+            }
+            else {
+                $scope.max_declaration_price = "0.0";
+            }
         }
     }
 
