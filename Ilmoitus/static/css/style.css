@@ -330,7 +330,9 @@ header {
 .FieldError {
 	background-color:#F88;
 }
-
+#upperSection{
+    overflow: hidden;
+}
 #declarationControls{
     float: right;
 }
