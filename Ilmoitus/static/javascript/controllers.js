@@ -555,6 +555,8 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
     // Get declaration ID from url parameter.
     $scope.declarationId = $stateParams.declarationId;
     $scope.isAllowedToApprove = false;
+    $scope.hasSupervisor = (userData.supervisor != null);
+    $scope.marginUpperSection = {"margin-bottom": 0};
 
     //Get declaration details
     var request = $.ajax({
@@ -577,6 +579,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
         }
         $scope.$apply();
         checkIfCanApprove();
+        setUpperSectionMargin();
     });
 
     //Preload supervisors
@@ -601,10 +604,32 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
         window.open("/attachment/" + $scope.selectedattachment, '_blank');
     };
 
-    function checkIfCanApprove() {
-        $scope.isAllowedToApprove = (parseInt($scope.declaration.items_total_price) <= parseInt(userData.max_declaration_price));
-        $scope.max_declaration_price = userData.max_declaration_price;
+    function setUpperSectionMargin() {
+        var marginBottom = {"margin-bottom" : 0};
+        var neededMargin = 0;
+        var margins = [0, 20, 90];
+        if (!$scope.isAllowedToApprove){
+            neededMargin++;
+        }
+        if(!$scope.hasSupervisor){
+            neededMargin++;
+        }
+        marginBottom["margin-bottom"] = margins[neededMargin];
+        $scope.marginUpperSection = marginBottom;
         $scope.$apply();
+    }
+
+    function checkIfCanApprove() {
+        var userMaxPrice = parseInt(userData.max_declaration_price);
+        $scope.isAllowedToApprove = (parseInt($scope.declaration.items_total_price) <= userMaxPrice);
+        if (userMaxPrice) {
+            $scope.max_declaration_price = userMaxPrice;
+        }
+        else {
+            $scope.max_declaration_price = "0.0";
+        }
+        $scope.$apply();
+        console.log($scope);
     }
 
     function approveDeclarationHR() {
