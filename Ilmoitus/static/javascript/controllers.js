@@ -82,8 +82,8 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 			}
 		});
 
-	sessionStorage.removeItem("token");
-	$state.go('login');
+		sessionStorage.removeItem("token");
+		$state.go('login');
 	}
 
 	$scope.navBtnClick = function(targetState, params) {
