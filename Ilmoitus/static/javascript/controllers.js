@@ -68,9 +68,9 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 
 	$scope.selectedNavBtn;
 
-		// Button listeners
-		$scope.logoutBtnClick = function(){ 
-			var request = $.ajax({
+	// Button listeners
+	$scope.logoutBtnClick = function(){ 
+		var request = $.ajax({
 			type: "GET",
 			async: false,
 			headers: {"Authorization": sessionStorage.token},
@@ -82,8 +82,8 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 			}
 		});
 
-		sessionStorage.removeItem("token");
-		$state.go('login');
+	sessionStorage.removeItem("token");
+	$state.go('login');
 	}
 
 	$scope.navBtnClick = function(targetState, params) {
