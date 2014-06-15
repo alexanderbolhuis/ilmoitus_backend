@@ -70,6 +70,7 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 
 	// Button listeners
 	$scope.logoutBtnClick = function(){ 
+		sessionStorage.removeItem("token");
 		$state.go('login');
 	}
 
