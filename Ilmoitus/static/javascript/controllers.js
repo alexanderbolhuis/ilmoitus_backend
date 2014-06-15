@@ -68,8 +68,20 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 
 	$scope.selectedNavBtn;
 
-	// Button listeners
-	$scope.logoutBtnClick = function(){ 
+		// Button listeners
+		$scope.logoutBtnClick = function(){ 
+			var request = $.ajax({
+			type: "GET",
+			async: false,
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/auth/logout",
+			crossDomain: true,
+			error: function(jqXHR, textStatus, errorThrown){
+				//Not a big problem if server logout fails, only show console error. The token is removed client-side and a new one will be required. 
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			}
+		});
+
 		sessionStorage.removeItem("token");
 		$state.go('login');
 	}
