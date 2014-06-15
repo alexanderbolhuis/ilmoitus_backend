@@ -75,6 +75,7 @@ class Declaration(ndb.Model):
     created_at = ndb.DateTimeProperty(auto_now_add=True)
     created_by = ndb.KeyProperty(kind=Person)
     assigned_to = ndb.KeyProperty(kind=Person, repeated=True)
+    last_assigned = ndb.ComputedProperty(lambda self: self.assigned_to[len(self.assigned_to)-1])
     lines = ndb.KeyProperty(kind="DeclarationLine", repeated=True)
     attachments = ndb.KeyProperty(kind="Attachment", repeated=True)
     comment = ndb.StringProperty()
