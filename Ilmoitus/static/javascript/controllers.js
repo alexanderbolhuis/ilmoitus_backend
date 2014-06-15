@@ -842,6 +842,25 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
     }
 });
 
+ilmoitusApp.controller('employeeSummaryController', function($scope, $state) {
+	$scope.navBtnSelect("employeeSummaryBtn");
+	
+	var request = $.ajax({
+		type: "GET",
+		headers: {"Authorization": sessionStorage.token},
+		url: baseurl + "/employee_summary",
+		crossDomain: true
+	});
+
+	request.done(function(data){
+		$scope.employeelist = data;
+		$scope.$apply();
+	}).fail(function() {
+		$scope.declarationList = [];
+	});
+		
+});
+
 ilmoitusApp.controller('declarationsHistoryController', function($scope, $state) {
 	$scope.navBtnSelect("declarationsHistoryBtn");
 

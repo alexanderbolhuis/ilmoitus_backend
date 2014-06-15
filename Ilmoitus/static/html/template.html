@@ -9,6 +9,9 @@
 				<input id="sentDeclarationsBtn" type="button" value="Ingediende declaraties" ng-click="navBtnClick('template.sentDeclarations')" />
 				<input id="declarationsHistoryBtn" type="button" value="Declaratie historie" ng-click="navBtnClick('template.declarationsHistory')"/>
 			</div>
+            <div ng-if="userClass == 'supervisor'">
+            	<input id="employeeSummaryBtn" type="button" value="Employee summary" ng-click="navBtnClick('template.employeeSummary')"/>
+            </div>
 		</div>
 	</header>
 	<div id="content" autoscroll="false" ui-view></div>
