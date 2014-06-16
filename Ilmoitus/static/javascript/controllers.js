@@ -642,19 +642,6 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
         $scope.$apply();
     });
 
-    //Preload supervisors
-    request = $.ajax({
-        type: "GET",
-        headers: {"Authorization": sessionStorage.token},
-        url: baseurl + "/current_user/supervisors",
-        crossDomain: true,
-        cache: false,
-        error: function (jqXHR, textStatus, errorThrown) {
-            showMessage(jqXHR.responseJSON.user_message, "Error!");
-            console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
-		}
-    });
-
     function lockIfNeeded() {
         if ($scope.userClass == "supervisor" && $scope.declaration.class_name == "open_declaration") {
             //Lock the declaration since we are now reviewing it
