@@ -52,6 +52,7 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + "/current_user/details",
 		crossDomain: true,
+		cache: false,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 			showServerMessage(jqXHR, "Inloggen niet gelukt. Kan geen gebruikersgegevens ophalen.", "Fout");
@@ -99,7 +100,8 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + "/current_user/declarations",
-		crossDomain: true
+		crossDomain: true,
+		cache: false
 	});
 
 	request.done(function(data){
@@ -193,6 +195,7 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 			headers: {"Authorization": sessionStorage.token},
 			url: baseurl + "/declaration/"+$scope.declarationId,
 			crossDomain: true,
+			cache: false,
 			error: function(jqXHR, textStatus, errorThrown){
 				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 				showServerMessage(jqXHR, "Kan de declaratie gegevens niet ophalen vanwege een onbekende fout.", "Fout");
@@ -206,21 +209,16 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 			$scope.declaration.supervisor = $scope.declaration.last_assigned_to.id;
 			$scope.declaration.items_total_price = Number($scope.declaration.items_total_price).formatMoney(2, ",", ".")
 		
-		if($scope.declaration.attachments.length > 0){
-			$scope.selectedattachment = $scope.declaration.attachments[0].id;
-		}
-		
-		for(var i = 0 ; i < $scope.declaration.lines.length; i++){
-			//Format price
-			$scope.declaration.lines[i].cost = Number($scope.declaration.lines[i].cost).formatMoney(2, ",", ".");
-		}
+			if($scope.declaration.attachments.length > 0){
+				$scope.selectedattachment = $scope.declaration.attachments[0].id;
+			}
 			
 			if($scope.declaration.attachments.length > 0){
 				$scope.selectedattachment = $scope.declaration.attachments[0];
 			}
-			for(var i = 0; i < $scope.declaration.lines.length; i++){ 
-				$scope.declaration.lines[i].receipt_date = new Date($scope.declaration.lines[i].receipt_date).toISOString().substring(0, 10);
-				$scope.declaration.lines[i].cost = Number($scope.declaration.lines[i].costs).formatMoney(2, ",", ".")+"";
+			for(var i = 0; i < $scope.declaration.lines.length; i++){
+				$scope.declaration.lines[i].receipt_date = $scope.declaration.lines[i].receipt_date.substring(0, 10);
+				$scope.declaration.lines[i].cost = Number($scope.declaration.lines[i].cost).formatMoney(2, ",", ".")+"";
 				
 				$scope.declaration.lines[i].declaration_type = $scope.declaration.lines[i].declaration_type.id;
 				$scope.loadSubList(i);
@@ -241,6 +239,7 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + "/current_user/supervisors",
 		crossDomain: true,
+		cache: false,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 		}
@@ -261,6 +260,7 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + "/declarationtypes",
 		crossDomain: true,
+		cache: false,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 		}
@@ -401,6 +401,7 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 			headers: {"Authorization": sessionStorage.token},
 			url: baseurl + "/declarationtype/" + $scope.declaration.lines[row].declaration_type,
 			crossDomain: true,
+			cache: false,
 			error: function(jqXHR, textStatus, errorThrown){
 				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 			}
@@ -553,7 +554,8 @@ ilmoitusApp.controller('sentDeclarationsController', function($scope, $state) {
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + url,
-		crossDomain: true
+		crossDomain: true,
+		cache: false
 	});
 
 	request.done(function(data){
@@ -599,6 +601,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
         headers: {"Authorization": sessionStorage.token},
         url: baseurl + "/declaration/" + $scope.declarationId,
         crossDomain: true,
+        cache: false,
         error: function (jqXHR, textStatus, errorThrown) {
             showMessage(jqXHR.responseJSON.user_message, "Error!");
             console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
@@ -631,6 +634,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
         headers: {"Authorization": sessionStorage.token},
         url: baseurl + "/current_user/supervisors",
         crossDomain: true,
+        cache: false,
         error: function (jqXHR, textStatus, errorThrown) {
             showMessage(jqXHR.responseJSON.user_message, "Error!");
             console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
@@ -842,6 +846,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
             url: baseurl + target_url,
             data: JSON.stringify(request_data),
             crossDomain: true,
+            cache: false,
             error: function (jqXHR, textStatus, errorThrown) {
                 console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
 
@@ -946,7 +951,8 @@ ilmoitusApp.controller('employeeSummaryController', function($scope, $state) {
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + "/employee_summary",
-		crossDomain: true
+		crossDomain: true,
+		cache: false
 	});
 
 	request.done(function(data){
@@ -971,7 +977,8 @@ ilmoitusApp.controller('declarationsHistoryController', function($scope, $state)
 		type: "GET",
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + url,
-		crossDomain: true
+		crossDomain: true,
+		cache: false
 	});
 
 	request.done(function(data){
@@ -1042,6 +1049,7 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $state, 
 		headers: {"Authorization": sessionStorage.token},
 		url: baseurl + "/declaration/"+$scope.declarationId,
 		crossDomain: true,
+		cache: false,
 		error: function(jqXHR, textStatus, errorThrown){
 			console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
 			showServerMessage(jqXHR, "Kan de declaratie gegevens niet ophalen vanwege een onbekende fout.", "Fout");
@@ -1075,6 +1083,7 @@ ilmoitusApp.controller('declarationDetailsController', function($scope, $state, 
 			headers: {"Authorization": sessionStorage.token},
 			url: baseurl + "/attachment_token/"+$scope.selectedattachment,
 			crossDomain: true,
+			cache: false,
 			error: function(jqXHR, textStatus, errorThrown){
 				showServerMessage(jqXHR, "Kan de attachment niet ophalen vanwege een onbekende fout.", "Fout");
 			}
