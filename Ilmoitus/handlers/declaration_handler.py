@@ -306,7 +306,7 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                     found = True
 
             if not found:
-                ndb.delete(attachment_id)
+                attachment_id.delete()
             else:
                 attachments.append(attachment_id)
 
