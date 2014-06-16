@@ -49,6 +49,7 @@ class ForwardDeclarationHandler(BaseRequestHandler):
         declaration.assigned_to.append(new_supervisor.key)
         declaration.supervisor_comment = comment
         declaration.put()
+        send_mail_new_declaration_submitted(self, declaration)
 
         give_response(self, json.dumps(declaration.get_object_as_data_dict()))
 
@@ -74,7 +75,6 @@ class DeclineBySupervisorHandler(BaseRequestHandler):
         declaration.put()
         send_message_declaration_status_changed(self, declaration)
 
-        send_message_declaration_status_changed(self, declaration)
         give_response(self, json.dumps(declaration.get_object_as_data_dict()))
 
 
@@ -305,7 +305,7 @@ class SpecificDeclarationHandler(BaseRequestHandler):
                     found = True
 
             if not found:
-                ndb.delete(attachment_id)
+                attachment_id.delete()
             else:
                 attachments.append(attachment_id)
 

@@ -7,7 +7,7 @@ from google.appengine.api import mail
 from ilmoitus_model import *
 from error_response_module import give_error_response
 
-default_sender = "info.sns-ilmoitus@gmail.com"  # TODO: Check
+default_sender = "developers.42IN11EWa@gmail.com"  # TODO: Check
 
 
 def send_email_to_user(request_handler, sender, to, subject, body, html_body=None):
