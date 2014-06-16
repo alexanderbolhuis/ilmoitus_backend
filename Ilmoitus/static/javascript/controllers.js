@@ -71,6 +71,19 @@ ilmoitusApp.controller('templateController', function($scope, $state) {
 
 	// Button listeners
 	$scope.logoutBtnClick = function(){ 
+		var request = $.ajax({
+			type: "GET",
+			async: false,
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/auth/logout",
+			crossDomain: true,
+			error: function(jqXHR, textStatus, errorThrown){
+				//Not a big problem if server logout fails, only show console error. The token is removed client-side and a new one will be required. 
+				console.error( "Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: "+errorThrown );
+			}
+		});
+
+		sessionStorage.removeItem("token");
 		$state.go('login');
 	}
 
@@ -592,7 +605,7 @@ ilmoitusApp.controller('sentDeclarationsController', function($scope, $state) {
 ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $stateParams, $state) {
     // Get declaration ID from url parameter.
     $scope.declarationId = $stateParams.declarationId;
-    $scope.isAllowedToApprove = false;
+    $scope.isAllowedToApprove = true;
     $scope.hasSupervisor = (userData.supervisor != null);
 
     //Get declaration details
@@ -603,8 +616,8 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
         crossDomain: true,
         cache: false,
         error: function (jqXHR, textStatus, errorThrown) {
-            showMessage(jqXHR.responseJSON.user_message, "Error!");
             console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+            showServerMessage(jqXHR, "Er is iets fout gegaan bij het ophalen van de gegevens van deze declaratie.", "Error!");
         }
     });
 
@@ -623,6 +636,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
 			$scope.declaration.lines[i].cost = Number($scope.declaration.lines[i].cost).formatMoney(2, ",", ".");
 		}
 		
+        lockIfNeeded();
         checkIfCanApprove();
 
         $scope.$apply();
@@ -638,29 +652,76 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
         error: function (jqXHR, textStatus, errorThrown) {
             showMessage(jqXHR.responseJSON.user_message, "Error!");
             console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
-        }
+		}
     });
-    request.done(function (data) {
-        $scope.supervisorList = data;
-        $scope.supervisorList.unshift(userData);
 
-        $scope.$apply();
-    });
+    function lockIfNeeded() {
+        if ($scope.userClass == "supervisor" && $scope.declaration.class_name == "open_declaration") {
+            //Lock the declaration since we are now reviewing it
+            var request = $.ajax({
+                type: "PUT",
+                headers: {"Authorization": sessionStorage.token},
+                url: baseurl + "/declaration/" + $scope.declarationId + "/lock",
+                crossDomain: true,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+                    showServerMessage(jqXHR, "Het vergrendelen van de declaratie is niet gelukt.", "Fout bij het vergrendelen!");
+                }
+            });
+            //No done callback; we don't need to wait for the declaration to get locked
+        }
+    }
+
+    if ($scope.userClass == "supervisor") {
+        //Preload supervisors
+        request = $.ajax({
+            type: "GET",
+            headers: {"Authorization": sessionStorage.token},
+            url: baseurl + "/current_user/supervisors",
+            crossDomain: true,
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+                showServerMessage(jqXHR, "Er is iets fout gegaan bij het ophalen van uw leidinggevenden.", "Error!");
+            }
+        });
+
+        request.done(function (data) {
+            $scope.supervisorList = data;
+            $scope.supervisorList.unshift(userData);
+
+            $scope.$apply();
+        });
+    }
 
     $scope.openAttachment = function () {
-        window.open("/attachment/" + $scope.selectedattachment, '_blank');
+		var request = $.ajax({
+			type: "GET",
+			headers: {"Authorization": sessionStorage.token},
+			url: baseurl + "/attachment_token/"+$scope.selectedattachment,
+			crossDomain: true,
+			error: function(jqXHR, textStatus, errorThrown){
+                console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
+				showServerMessage(jqXHR, "Kan de attachment niet ophalen vanwege een onbekende fout.", "Fout");
+			}
+		});
+
+        request.done(function(data){
+			var token = data["attachment_token"];
+			window.open(baseurl + "/attachment/"+$scope.selectedattachment+"/"+token, '_blank');
+		});
     };
 
     function checkIfCanApprove() {
-        var userMaxPrice = parseInt(userData.max_declaration_price);
-        $scope.isAllowedToApprove = (parseInt($scope.declaration.items_total_price) <= userMaxPrice);
-        if (userMaxPrice) {
-            $scope.max_declaration_price = userMaxPrice;
+        if($scope.userClass == "supervisor") {
+            var userMaxPrice = parseInt(userData.max_declaration_price);
+            $scope.isAllowedToApprove = (parseInt($scope.declaration.items_total_price) <= userMaxPrice);
+            if (userMaxPrice) {
+                $scope.max_declaration_price = userMaxPrice;
+            }
+            else {
+                $scope.max_declaration_price = "0.0";
+            }
         }
-        else {
-            $scope.max_declaration_price = "0.0";
-        }
-        console.log($scope);
     }
 
     function approveDeclarationHR() {
@@ -693,7 +754,7 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
     }
 
     function approveDeclarationSupervisor() {
-        if (parseInt($scope.declaration.items_total_price) <= parseInt($scope.declaration.last_assigned_to.max_declaration_price)) {
+        if (parseInt($scope.declaration.items_total_price) <= parseInt($scope.max_declaration_price)) {
             showMessageInputForDeclarationAction(
                 "Declaratie goedkeuren",
                 "Goedkeuren",
@@ -849,14 +910,9 @@ ilmoitusApp.controller('sentDeclarationDetailsController', function ($scope, $st
             cache: false,
             error: function (jqXHR, textStatus, errorThrown) {
                 console.error("Request failed: \ntextStatus: " + textStatus + " \nerrorThrown: " + errorThrown);
-
                 closeMessage();
                 setTimeout(function () {
-                    //TODO: find out and fix --> request body (data field above) is being appended to error response's responseText
-                    //Clean the message up because for some strange reason, we get the request data appended after the wanted response
-                    //This will fail if any text within this object contains a '}' character (escaped)
-                    var cleanMessage = jqXHR.responseText.substring(0, jqXHR.responseText.indexOf("}") + 1);
-                    showMessage(JSON.parse(cleanMessage).user_message, "Error!");
+                    showServerMessage(jqXHR, "Een onbekende fout is opgetereden bij deze actie", "Error!");
                 }, 601); // 1 millisecond more than the close message timer
 
             }
