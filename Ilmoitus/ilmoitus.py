@@ -42,6 +42,7 @@ application = webapp.WSGIApplication(
 
         #Employee handlers
         ('/employees', AllEmployeesHandler),
+        ('/employee_summary', SupervisorEmployeeTotalHandler),
         ('/employee/(.*)/total_declarations', SpecificEmployeeTotalDeclarationsHandler),
         ('/employee/(.*)', SpecificEmployeeDetailsHandler),
 

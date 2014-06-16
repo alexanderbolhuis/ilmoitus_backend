@@ -15,7 +15,7 @@ class AllDeclarationsForSupervisorHandler(BaseRequestHandler):
         if self.is_logged_in():
             declaration_query = Declaration.query(ndb.OR(Declaration.class_name == 'open_declaration',
                                                          Declaration.class_name == 'locked_declaration'),
-                                                  self.logged_in_person().key == Declaration.assigned_to).order(Declaration.created_at)
+                                                  Declaration.last_assigned == self.logged_in_person().key).order(Declaration.created_at)
             respond_with_object_collection_with_query(self, declaration_query)
 
 
