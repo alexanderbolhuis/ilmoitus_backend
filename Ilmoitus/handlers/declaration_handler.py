@@ -49,6 +49,7 @@ class ForwardDeclarationHandler(BaseRequestHandler):
         declaration.assigned_to.append(new_supervisor.key)
         declaration.supervisor_comment = comment
         declaration.put()
+        send_mail_new_declaration_submitted(self, declaration)
 
         give_response(self, json.dumps(declaration.get_object_as_data_dict()))
 
