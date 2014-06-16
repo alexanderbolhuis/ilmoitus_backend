@@ -75,7 +75,6 @@ class DeclineBySupervisorHandler(BaseRequestHandler):
         declaration.put()
         send_message_declaration_status_changed(self, declaration)
 
-        send_message_declaration_status_changed(self, declaration)
         give_response(self, json.dumps(declaration.get_object_as_data_dict()))
 
 
