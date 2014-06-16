@@ -45,4 +45,9 @@ ilmoitusApp.config(function($stateProvider, $urlRouterProvider) {
 		templateUrl: "html/declarationDetails.html",
 		controller: "declarationDetailsController"
 	})
+	.state('template.employeeSummary', {
+		url: "/employeeSummary",
+		templateUrl: "html/employeeSummary.html",
+		controller: "employeeSummaryController"
+	})
 });

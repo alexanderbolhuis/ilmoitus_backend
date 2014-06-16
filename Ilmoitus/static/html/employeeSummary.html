@@ -1,0 +1,24 @@
+<div>
+
+	<table ng-show="employeelist.length > 0" id="employeeTable" class="styledTable">
+		<thead>
+			<th>Naam</th>
+			<th>Afdeling</th>
+			<th>Open declaraties</th>
+			<th>Goedgekeurd</th>
+			<th>Afgekeurd</th>
+			<th>Totaal bedrag</th>
+		</thead>
+		<tbody>
+			<tr ng-repeat="employee in employeelist">
+				<td>{{ employee.employee.first_name }} {{ employee.employee.last_name }}</td>
+				<td>{{ employee.employee.department.name }} </td>
+				<td>{{ employee.open_declarations }}</td>
+				<td>{{ employee.accepted_declarations }}</td>
+                <td>{{ employee.denied_declarations }}</td>
+                <td>&euro; {{ employee.total_declarated_price }}</td>
+		</tbody>
+	</table>
+    
+    <h2 ng-hide="employeelist.length > 0" class="EmptyTblMsg">Geen employees gevonden</h2>
+</div>
