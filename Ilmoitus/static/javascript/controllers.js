@@ -1,4 +1,5 @@
-var baseurl = 'http://127.0.0.1:8080';
+//var baseurl = 'http://127.0.0.1:8080';
+var baseurl = 'sns-ilmoitus.appspot.com';
 var userData;
 var pricePattern = /^[0-9]{1}[0-9]{0,3}(\.[0-9]{0,2})?$/
 
