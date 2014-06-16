@@ -324,17 +324,21 @@ ilmoitusApp.controller('declarationFormController', function($scope, $state, $st
 			errorReasons.push("Voeg minimaal 1 bewijsstuk toe.<br/>");
 		}
 
+		var wrongDateReason = false, wrongTypeReason = false, wrongCostReason = false;
 		for(var i = 0; i < declaration.lines.length - 1; i++){
-			if(!declaration.lines[i].approvedate) {
+			if(!declaration.lines[i].approvedate && !wrongDateReason) {
 				errorReasons.push("Niet alle declaratie items hebben een geldige datum. Een datum mag niet in de toekomst liggen<br/>");
+				wrongDateReason = true;
 			}
 
-			if(!declaration.lines[i].approvesubtype || declaration.lines[i].approvesubtype <= 0){
+			if((!declaration.lines[i].approvesubtype || declaration.lines[i].approvesubtype <= 0) && !wrongTypeReason){
 				errorReasons.push("Niet alle declaratie items hebben een soort en subsoort.<br/>");
+				wrongTypeReason = true;
 			}
 
-			if(!declaration.lines[i].approvecosts){
+			if(!declaration.lines[i].approvecosts && !wrongCostReason){
 				errorReasons.push("Niet alle bedragen zijn correct.<br/>");
+				wrongCostReason = true;
 			}
 		}
 
