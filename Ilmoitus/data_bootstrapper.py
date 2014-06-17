@@ -13,7 +13,7 @@ from google.appengine.ext import ndb
 
 
 def random_date(start, end):
-    return start + timedelta(seconds=randint(0, int((end - start).total_seconds())))
+    return start + timedelta(seconds=randint(0, int((end - start).total_seconds()))) + timedelta(microseconds=randint(0, 1000000))
 
 
 def random_item(list):
