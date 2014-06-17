@@ -119,6 +119,8 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
 	});
 
 	request.done(function(data){
+		var monthNames = [ "januari", "februari", "maart", "april", "mei", "juni",
+			"juli", "augustus", "september", "oktober", "november", "december" ];
 		$scope.declarationList = data;
 		for(var i = 0 ; i < $scope.declarationList.length ; i++){
 			switch($scope.declarationList[i].class_name){
@@ -129,7 +131,8 @@ ilmoitusApp.controller('declarationsController', function($scope, $state) {
 					$scope.declarationList[i].info = $scope.declarationList[i].human_resources_comment;
 					break;
 				case "human_resources_approved_declaration":
-					$scope.declarationList[i].info = "Word uitbetaald op: "+$scope.declarationList[i].will_be_payed_out_on;
+					payDate = new Date($scope.declarationList[i].will_be_payed_out_on);
+					$scope.declarationList[i].info = "Word uitbetaald in: " + (monthNames[payDate.getMonth()]) + " " + payDate.getFullYear();
 					break;
 				default:
 					$scope.declarationList[i].info = "";
