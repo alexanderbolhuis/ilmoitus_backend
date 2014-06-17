@@ -10,6 +10,7 @@ from handlers.currentuser_handler import *
 from ilmoitus_auth import *
 import data_bootstrapper
 import webapp2 as webapp
+from google.appengine.ext.webapp.util import run_wsgi_app
 
 
 class DefaultHandler(BaseRequestHandler):
@@ -28,7 +29,6 @@ class DefaultHandler(BaseRequestHandler):
              </body>
             </html>"""
         give_hard_response(self, html_data)
-
 
 application = webapp.WSGIApplication(
     [
@@ -77,9 +77,16 @@ application = webapp.WSGIApplication(
         #Etc
         ('/clear', data_bootstrapper.ClearHandler),
         ('/fill', data_bootstrapper.FillHandler),
-        ('/create', data_bootstrapper.CreateDataHandler),
+        ('/create/(.*)', data_bootstrapper.CreateDataHandler),
         ('.*', DefaultHandler)
     ],
     debug=True)
 # if debug is set to false,
 # any uncaught exceptions will only trigger a server error without any details
+
+
+def main():
+    run_wsgi_app(application)
+
+if __name__ == "__main__":
+    main()
